@@ -1,2 +1,2 @@
-# alouette
-Pascal UCI chess engine
+# Alouette
+Pascal UCI chess engine by Roland Chastain.
