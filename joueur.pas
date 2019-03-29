@@ -5,6 +5,7 @@ unit Joueur;
 
 interface
 
+function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
 procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
@@ -16,7 +17,25 @@ implementation
 
 uses
   SysUtils, Journal, Echecs, Placement, Meilleur;
-  
+
+function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
+begin
+  result := (Length(AChaine) >= 4)
+    and (AChaine[1] in ['a'..'h'])
+    and (AChaine[2] in ['1'..'8'])
+    and (AChaine[3] in ['a'..'h'])
+    and (AChaine[4] in ['1'..'8']);
+  if result then
+  begin
+    ADepart := 8 * (Ord(AChaine[2]) - Ord('1')) + (Ord(AChaine[1]) - Ord('a'));
+    AArrivee := 8 * (Ord(AChaine[4]) - Ord('1')) + (Ord(AChaine[3]) - Ord('a'));
+  end else
+  begin
+    ADepart := CIndisponible;
+    AArrivee := CIndisponible;
+  end;
+end;
+
 var
   p: TPosition;
   c960: boolean;

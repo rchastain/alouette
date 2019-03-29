@@ -6,12 +6,12 @@
 program Alouette;
 
 uses
-  Classes, SysUtils, StrUtils, Journal, Utiles, Joueur;
+  Classes, SysUtils, StrUtils, Journal, Joueur;
 
 {$I version.inc}
 
 type
-  {** Processus indépendant pour le calcul du meilleur coup. }
+  {** Processus de calcul du meilleur coup. }
   TProcessus = class(TThread)
     protected
       procedure Execute; override;
@@ -29,9 +29,8 @@ var
   LCoup: string;
   
 begin
-  WriteLn(output, Format('%s v%s', [CApplication, CVersion]));
+  WriteLn(output, Format('%s %s', [CApplication, CVersion]));
   Flush(output);
-  TJournal.Ajoute(Format('%s v%s %s %s', [CApplication, CVersion, ChaineDateHeure, ChaineCompilateur]));
 
   while TRUE do
   begin
