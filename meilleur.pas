@@ -4,7 +4,7 @@ unit Meilleur;
 interface
 
 uses
-  Echecs, Placement, Coups, Roque, Damier, Journal;
+  Echecs, Placement, Coups, Roque, Damier, Tables, Journal;
 
 function MeilleurCoup(const APos: TPosition): string;
 
@@ -21,8 +21,20 @@ var
   function Estime(const APiecesMenacees: TDamier): integer;
   begin
     result := 0;
+    (*
     if (APiecesMenacees and p.Rois) <> CDamierVide then
       Inc(result);
+    *)
+    if (APiecesMenacees and p.Rois) <> CDamierVide then
+      Inc(result, 1000) else
+    if (APiecesMenacees and p.Dames) <> CDamierVide then
+      Inc(result, 10 * CompteCases(APiecesMenacees and p.Dames)) else
+    if (APiecesMenacees and p.Tours) <> CDamierVide then
+      Inc(result, 5 * CompteCases(APiecesMenacees and p.Tours)) else
+    if (APiecesMenacees and p.Fous) <> CDamierVide then
+      Inc(result, 3 * CompteCases(APiecesMenacees and p.Fous)) else
+    if (APiecesMenacees and p.Cavaliers) <> CDamierVide then
+      Inc(result, 2 * CompteCases(APiecesMenacees and p.Cavaliers));
   end;
 
 begin

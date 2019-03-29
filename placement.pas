@@ -120,17 +120,17 @@ begin
             exit(FALSE);
           end; 
       end;
-    APos.Roque[APos.Trait].XTourRoi := -1;
-    APos.Roque[APos.Trait].XTourDame := -1;
+    APos.Roque[APos.Trait].XTourRoi := CIndisponible;
+    APos.Roque[APos.Trait].XTourDame := CIndisponible;
   end;
   
   { Si la pièce déplacée est une tour... }
   if LType = @APos.Tours then
     if LDep mod 8 = APos.Roque[APos.Trait].XTourRoi then
-      APos.Roque[APos.Trait].XTourRoi := -1
+      APos.Roque[APos.Trait].XTourRoi := CIndisponible
     else
     if LDep mod 8 = APos.Roque[APos.Trait].XTourDame then
-      APos.Roque[APos.Trait].XTourDame := -1;
+      APos.Roque[APos.Trait].XTourDame := CIndisponible;
   
   { S'il y a une pièce sur la case d'arrivée. }
   if Allumee(LAdversaire^, CCase[LArr]) then

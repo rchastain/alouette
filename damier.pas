@@ -12,7 +12,7 @@ interface
 type
   {** Le damier est représenté par un nombre entier à 64 chiffres binaires. }
   TDamier = int64;
-  TPiece = (PionBlanc, PionNoir, PionBlancPrise, PionNoirPrise, Tour, Cavalier, Fou, Dame, Roi);
+  TPiece = (PionBlancPrise, PionNoirPrise, Tour, Cavalier, Fou, Dame, Roi);
 
 function FCase(const ACase: integer): TDamier; overload;
 { Case binaire pour un nombre de 0 à 63. }
@@ -208,10 +208,6 @@ var
   dx, dy: integer;
 begin
   case APiece of
-    PionBlanc:      result := (Ax2 = Ax1)
-                      and ((Ay2 - Ay1 = +1) or (Ay2 - Ay1 = +2) and (Ay1 = 1));
-    PionNoir:       result := (Ax2 = Ax1)
-                      and ((Ay2 - Ay1 = -1) or (Ay2 - Ay1 = -2) and (Ay1 = 6));
     PionBlancPrise: result := ((Ay2 - Ay1) = +1)
                       and (Abs(Ax2 - Ax1) = 1);
     PionNoirPrise:  result := ((Ay2 - Ay1) = -1)
