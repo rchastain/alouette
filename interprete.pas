@@ -4,7 +4,7 @@
 Complément de l'unité échecs.
 }
 
-unit Placement;
+unit Interprete;
 
 interface
 

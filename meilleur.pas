@@ -4,7 +4,7 @@ unit Meilleur;
 interface
 
 uses
-  Echecs, Placement, Coups, Roque, Damier, Tables, Journal;
+  Echecs, Interprete, Coups, Roque, Damier, Tables, Journal;
 
 function MeilleurCoup(const APos: TPosition): string;
 

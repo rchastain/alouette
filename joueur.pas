@@ -16,7 +16,7 @@ procedure NouvellePosition(const APos: string);
 implementation
 
 uses
-  SysUtils, Journal, Echecs, Placement, Meilleur;
+  SysUtils, Journal, Echecs, Interprete, Meilleur;
 
 function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
 begin
