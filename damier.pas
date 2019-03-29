@@ -37,7 +37,6 @@ procedure Deplace(var AType, ACouleur: TDamier; const ACaseDep, ACaseArr: TDamie
 { Éteint une case et en allume une autre. }
 function Chaine(const ADamier: TDamier): string;
 { Chaîne de chiffres binaires. }
-procedure Affiche(const ADamier: TDamier);
 function Affiche_(const ADamier: TDamier): string;
 { Affichage de chiffres binaires en forme d'échiquier. }
 function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
@@ -167,23 +166,6 @@ begin
   SetLength(result, 64);
   for i := 63 downto 0 do
     result[64 - i] := CCaractere[Allumee(ADamier, FCase(i))];
-end;
-
-procedure Affiche(const ADamier: TDamier);
-var
-  x, y: integer;
-  LDamier: string;
-begin
-  LDamier := Chaine(ADamier);
-  WriteLn('+   abcdefgh   +'#13#10);
-  for y := 7 downto 0 do
-  begin
-    Write(Succ(y), '   ');
-    for x := 0 to 7 do
-      Write(LDamier[64 - 8 * y - x]);
-    WriteLn('   ', Succ(y));
-  end;
-  WriteLn(#13#10'+   abcdefgh   +');
 end;
 
 function Affiche_(const ADamier: TDamier): string;
