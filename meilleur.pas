@@ -4,45 +4,59 @@ unit Meilleur;
 interface
 
 uses
-  Echecs, Interprete, Coups, Roque, Damier, Tables, Journal;
+  Echecs;
 
-function MeilleurCoup(const APos: TPosition): string;
+function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
 
 implementation
 
 uses
-  SysUtils;
+  SysUtils, Interprete, Coups, Roque, Damier, Tables, Journal, Histoire;
+
+function Inverse(const ACoup: string): string;
+begin
+  result := Concat(Copy(ACoup, 3, 2), Copy(ACoup, 1, 2));
+end;
 
 function Evalue(const APos: TPosition; ACoup: integer): integer;
 var
   p: TPosition;
-  actives, passives, toutes, menaces: TDamier;
 
-  function Estime(const APiecesMenacees: TDamier): integer;
+  function Estime(const APieces: TDamier): integer;
+  var
+    LPieces: TDamier;
   begin
     result := 0;
     (*
-    if (APiecesMenacees and p.Rois) <> CDamierVide then
+    if (APieces and p.Rois) <> 0 then
       Inc(result);
     *)
-    if (APiecesMenacees and p.Rois) <> CDamierVide then
-      Inc(result, 1000) else
-    if (APiecesMenacees and p.Dames) <> CDamierVide then
-      Inc(result, 10 * CompteCases(APiecesMenacees and p.Dames)) else
-    if (APiecesMenacees and p.Tours) <> CDamierVide then
-      Inc(result, 5 * CompteCases(APiecesMenacees and p.Tours)) else
-    if (APiecesMenacees and p.Fous) <> CDamierVide then
-      Inc(result, 3 * CompteCases(APiecesMenacees and p.Fous)) else
-    if (APiecesMenacees and p.Cavaliers) <> CDamierVide then
-      Inc(result, 2 * CompteCases(APiecesMenacees and p.Cavaliers));
+    LPieces := APieces and p.Rois;
+    if LPieces <> 0 then Inc(result, 1000);
+    LPieces := APieces and p.Dames;
+    if LPieces <> 0 then Inc(result, 10 * CompteCases(LPieces));
+    LPieces := APieces and p.Tours;
+    if LPieces <> 0 then Inc(result,  4 * CompteCases(LPieces));
+    LPieces := APieces and p.Fous;
+    if LPieces <> 0 then Inc(result,  3 * CompteCases(LPieces));
+    LPieces := APieces and p.Cavaliers;
+    if LPieces <> 0 then Inc(result,  2 * CompteCases(LPieces));
+    LPieces := APieces and p.Pions;
+    if LPieces <> 0 then Inc(result,  1 * CompteCases(LPieces));
   end;
 
+var
+  actives, passives, menaces: TDamier;
+  bonusRoque, malusPiecesMenacees, bonusNombreCoups: integer;
+  
 begin
-  result := 0;
   p := APos;
-  Rejoue_(p, NomCoup(ACoup)); 
+  bonusRoque := 100 * Ord(EstUnRoque(p, ACoup));
+  result := Low(integer);
+  if not Rejoue_(p, NomCoup(ACoup)) then
+    exit; 
+  
   with p do
-  begin
     if Trait then
     begin
       actives := Noires;
@@ -52,13 +66,21 @@ begin
       actives := Blanches;
       passives := Noires;
     end;
-    toutes := Blanches or Noires;
-  end;
+  
   menaces := GenereCoups(p);
-  result := -1 * Estime(menaces and passives);
+  malusPiecesMenacees := Estime(menaces and passives);
+  p.Trait := not p.Trait;
+  bonusNombreCoups := GenereCoupsNombre(p);
+  result :=
+    0
+    + bonusRoque
+    + bonusNombreCoups
+    - malusPiecesMenacees
+    //- Ord(NomCoup(ACoup) = Inverse(Dernier));
+    - Ord(NomCoup(ACoup) = AvantDernier);
 end;
 
-function MeilleurCoup(const APos: TPosition): string;
+function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
   procedure Trie(var a, b: array of integer; const n: integer);
     procedure Echange(var x: array of integer; const i: integer);
     var
@@ -84,7 +106,7 @@ function MeilleurCoup(const APos: TPosition): string;
     until fin;
   end;
 const
-  CVirguleSi: array[boolean] of string = ('', ', ');
+  CSeparateur: array[boolean] of string = ('', ' ');
 var
   liste, eval: array[0..99] of integer;
   n, i: integer;
@@ -100,10 +122,17 @@ begin
   
   info := '';
   for i := 0 to Pred(n) do
-    info := Concat(info, NomCoup(liste[i]), Format('{%d}', [eval[i]]), CVirguleSi[i < Pred(n)]);
+    info := Concat(info, NomCoup(liste[i]), Format('{%d}', [eval[i]]), CSeparateur[i < Pred(n)]);
   TJournal.Ajoute(info);
   
+  if EstUnRoque(APos, liste[0]) and not AEchecs960 then
+  begin
+    Assert((liste[0] div 100) mod 8 = CColE);
+    Reformule(liste[0]);
+  end;
+  
   result := NomCoup(liste[0]);
+  
   if EstUnePromotion(APos, result) then
     result := Concat(result, 'q');
 end;

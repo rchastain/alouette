@@ -6,16 +6,17 @@ interface
 uses
   Echecs, Damier;
 
-function GenereCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ACourt: boolean = FALSE): TDamier; overload;
+function GenereCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): TDamier; overload;
 {** Renvoie un damier représentant les cases menacées par un coup de l'adversaire. Les coups ne sont pas conservés. }
 function GenereCoups(const APos: TPosition): TDamier; overload;
+function GenereCoupsNombre(const APos: TPosition): integer;
 
 implementation
 
 uses
   SysUtils, Tables;
 
-function GenereCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ACourt: boolean): TDamier;
+function GenereCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean): TDamier;
 var
   LCompte: integer = 0;
 procedure Accepte(const i, j: integer; const ACondition: boolean = TRUE);
@@ -23,11 +24,12 @@ begin
   if ACondition then
   begin
     Allume(result, CCase[j]);
-    if ACourt then
-      exit;
     Inc(LCompte);
-    Assert(LCompte <= Length(AListe));
-    AListe[Pred(LCompte)] := EncodeCoup(i, j);
+    if not ARapide then
+    begin
+      Assert(LCompte <= Length(AListe));
+      AListe[Pred(LCompte)] := EncodeCoup(i, j);
+    end;
   end;
 end;
 var
@@ -45,17 +47,17 @@ begin
   with APos do
     toutes := Blanches or Noires;
   
-  result := CDamierVide;
+  result := 0; { Damier vide. }
   
-  for i := A1 to H8 do if Allumee(actives, CCase[i]) then
+  for i := A1 to H8 do if EstAllumee(actives, CCase[i]) then
   begin
     { Pion. }
-    if Allumee(APos.Pions, CCase[i]) then
+    if EstAllumee(APos.Pions, CCase[i]) then
     begin
       { Pas en avant. }
       k := 8 - 16 * Ord(APos.Trait);
       j := i + k;
-      if not Allumee(toutes, CCase[j]) then
+      if not EstAllumee(toutes, CCase[j]) then
       begin
         Accepte(i, j);
         { Second pas en avant. }
@@ -63,7 +65,7 @@ begin
         or ((j div 8 = 5) and APos.Trait) then
         begin
           j := j + k;
-          Accepte(i, j, not Allumee(toutes, CCase[j]));
+          Accepte(i, j, not EstAllumee(toutes, CCase[j]));
         end;
       end;
       { Prise côté dame. }
@@ -71,7 +73,7 @@ begin
       begin
         j := Pred(i + k);
         Accepte(i, j,
-          Allumee(passives, CCase[j])
+          EstAllumee(passives, CCase[j])
           xor (j = APos.EnPassant)
         );
       end;
@@ -80,57 +82,57 @@ begin
       begin
         j := Succ(i + k);
         Accepte(i, j,
-          Allumee(passives, CCase[j])
+          EstAllumee(passives, CCase[j])
           xor (j = APos.EnPassant)
         );
       end;
     end else
     { Tour. }
-    if Allumee(APos.Tours, CCase[i]) then
+    if EstAllumee(APos.Tours, CCase[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          Allumee(CCibles[Tour, i], CCase[j])
-          and (not Allumee(actives, CCase[j]))
+          EstAllumee(CCibles[Tour, i], CCase[j])
+          and (not EstAllumee(actives, CCase[j]))
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
     { Cavalier. }
-    if Allumee(APos.Cavaliers, CCase[i]) then
+    if EstAllumee(APos.Cavaliers, CCase[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          Allumee(CCibles[Cavalier, i], CCase[j])
-          and not Allumee(actives, CCase[j])
+          EstAllumee(CCibles[Cavalier, i], CCase[j])
+          and not EstAllumee(actives, CCase[j])
         );
     end else
     { Fou. }
-    if Allumee(APos.Fous, CCase[i]) then
+    if EstAllumee(APos.Fous, CCase[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          Allumee(CCibles[Fou, i], CCase[j])
-          and (not Allumee(actives, CCase[j]))
+          EstAllumee(CCibles[Fou, i], CCase[j])
+          and (not EstAllumee(actives, CCase[j]))
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
     { Dame. }
-    if Allumee(APos.Dames, CCase[i]) then
+    if EstAllumee(APos.Dames, CCase[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          Allumee(CCibles[Dame, i], CCase[j])
-          and (not Allumee(actives, CCase[j]))
+          EstAllumee(CCibles[Dame, i], CCase[j])
+          and (not EstAllumee(actives, CCase[j]))
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
     { Roi. }
-    if Allumee(APos.Rois, CCase[i]) then
+    if EstAllumee(APos.Rois, CCase[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          Allumee(CCibles[Roi, i], CCase[j])
-          and not Allumee(actives, CCase[j])
+          EstAllumee(CCibles[Roi, i], CCase[j])
+          and not EstAllumee(actives, CCase[j])
         );
     end;
   end;
@@ -140,9 +142,16 @@ end;
 function GenereCoups(const APos: TPosition): TDamier;
 var
   LListe: array[0..0] of integer;
-  ACompte: integer;
+  LCompte: integer;
 begin
-  result := GenereCoups(APos, LListe, ACompte, TRUE);
+  result := GenereCoups(APos, LListe, LCompte, TRUE);
+end;
+
+function GenereCoupsNombre(const APos: TPosition): integer;
+var
+  LListe: array[0..0] of integer;
+begin
+  GenereCoups(APos, LListe, result, TRUE);
 end;
 
 end.

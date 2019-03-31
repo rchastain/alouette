@@ -13,7 +13,7 @@ uses
 const
   CBlanc = FALSE;
   CNoir = TRUE;
-  CIndisponible = -1;
+  CNeant = -1;
   
 type
   TDonneesRoque = record
@@ -48,15 +48,34 @@ const
     Rois: 0;
     Trait: FALSE;
     Roque: (
-      (XTourRoi: CIndisponible; XTourDame: CIndisponible),
-      (XTourRoi: CIndisponible; XTourDame: CIndisponible)
+      (XTourRoi: CNeant; XTourDame: CNeant),
+      (XTourRoi: CNeant; XTourDame: CNeant)
     );
-    EnPassant: CIndisponible;
+    EnPassant: CNeant;
     PositionRoi: (0, 0)
   );
 
 const
   CPositionDepart = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -';
+type
+  TCaseRoque = array[boolean] of integer;
+const
+  { Arrivée tour, côté roi. }
+  CATCR: TCaseRoque = (F1, F8);
+  { Arrivée tour, côté dame. }
+  CATCD: TCaseRoque = (D1, D8);
+  { Départ tour, côté roi. }
+  CDTCR: TCaseRoque = (H1, H8);
+  { Départ tour, côté dame. }
+  CDTCD: TCaseRoque = (A1, A8);
+  CColC = 2;
+  CColD = 3;
+  CColE = 4;
+  CColF = 5;
+  CColG = 6;
+  CLig8 = 7;
+  CLig1 = 0;
+  CLigRoq: array[boolean] of integer = (0, 7);
   
 function EncodePosition(const APos: string = CPositionDepart; const AEchecs960: boolean = FALSE): TPosition;
 function DecodePosition(const APos: TPosition; const AEchecs960: boolean = FALSE): string;
@@ -74,8 +93,8 @@ begin
   for LCouleur := CBlanc to CNoir do
   with ARoque[LCouleur] do
   begin
-    XTourRoi := -1;
-    XTourDame := -1;
+    XTourRoi := CNeant;
+    XTourDame := CNeant;
   end;
 end;
 
@@ -137,10 +156,10 @@ function Colonne(const ACase: TDamier): integer;
 var
   x: integer;
 begin
-  result := CIndisponible;
+  result := CNeant;
   x := 0;
-  while (result = CIndisponible) and (x <= 7) do
-    if Allumee(CColonne[x], ACase) then
+  while (result = CNeant) and (x <= 7) do
+    if EstAllumee(CColonne[x], ACase) then
       result := x
     else
       Inc(x);
@@ -150,6 +169,9 @@ const
   CSymboleTrait: array[boolean] of char = ('w', 'b');
   
 function EncodePosition(const APos: string; const AEchecs960: boolean): TPosition;
+const
+  CEpdNum = 4;
+  CFenNum = 6;
 var
   x, y, i: integer;
   c: char;
@@ -159,7 +181,7 @@ begin
   with TStringList.Create, result do
   begin
     DelimitedText := APos;
-    Assert(Count in [4, 6]);
+    Assert(Count in [CEpdNum, CFenNum]);
     begin
       x := 0;
       y := 7;
@@ -209,7 +231,7 @@ begin
       else
         Roque := DecodeChaineRoqueTradition(Strings[2]);
       if Strings[3] = '-' then
-        EnPassant := CIndisponible
+        EnPassant := CNeant
       else
         EnPassant := DecodeNomCase(Strings[3]);
     end;
@@ -265,7 +287,7 @@ begin
         Dec(y);
       end;
     end;
-    if EnPassant = CIndisponible then
+    if EnPassant = CNeant then
       s := '-'
     else
       s := NomCase(EnPassant);

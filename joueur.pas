@@ -10,13 +10,13 @@ procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
 function Coup: string;
-procedure ActiveMode960(const AValeur: boolean);
+procedure Change960(const AValeur: boolean);
 procedure NouvellePosition(const APos: string);
 
 implementation
 
 uses
-  SysUtils, Journal, Echecs, Interprete, Meilleur;
+  SysUtils, Journal, Echecs, Interprete, Meilleur, Histoire;
 
 function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
 begin
@@ -31,14 +31,14 @@ begin
     AArrivee := 8 * (Ord(AChaine[4]) - Ord('1')) + (Ord(AChaine[3]) - Ord('a'));
   end else
   begin
-    ADepart := CIndisponible;
-    AArrivee := CIndisponible;
+    ADepart := CNeant;
+    AArrivee := CNeant;
   end;
 end;
 
 var
   p: TPosition;
-  c960: boolean;
+  LMode960: boolean;
   
 procedure Oublie;
 begin
@@ -47,37 +47,41 @@ end;
 
 procedure PositionDepart;
 begin
-  Assert(not c960);
+  Assert(not LMode960);
   p := EncodePosition();
+  NouvelleHistoire;
 end;
 
 procedure Rejoue(const ACoup: string);
 begin
-  if not Rejoue_(p, ACoup) then
+  if Rejoue_(p, ACoup) then
+    Histoire.Ajoute(ACoup)
+  else
     TJournal.Ajoute(Format('Coup refusé "%s".', [ACoup]));
 end;
 
 function Coup: string;
 begin
-  result := MeilleurCoup(p);
+  result := MeilleurCoup(p, LMode960);
 end;
 
-procedure ActiveMode960(const AValeur: boolean);
+procedure Change960(const AValeur: boolean);
 const
   CPrefixe: array[boolean] of string = ('dés', '');
 begin
   TJournal.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
-  c960 := AValeur;
+  LMode960 := AValeur;
 end;
 
 procedure NouvellePosition(const APos: string);
 begin
-  p := EncodePosition(APos, c960);
+  p := EncodePosition(APos, LMode960);
+  NouvelleHistoire;
 end;
 
 initialization
   Oublie;
-  c960 := FALSE;
+  LMode960 := FALSE;
   
 finalization
 

@@ -17,6 +17,7 @@ type
       procedure Execute; override;
   end;
 
+{** L'action du processus consiste a demander un coup au joueur d'échecs artificiel, et a envoyer ce coup a l'utilisateur. }
 procedure TProcessus.Execute;
 begin
   WriteLn(output, Format('bestmove %s', [Joueur.Coup]));
@@ -25,7 +26,7 @@ end;
 
 var
   LCommande: ansistring;
-  LIndex, LDepart, LArrivee: integer;
+  LIndex, LDep, LArr: integer;
   LCoup: string;
   
 begin
@@ -35,7 +36,7 @@ begin
   while TRUE do
   begin
     ReadLn(input, LCommande);
-    TJournal.Ajoute(Concat('>>> ', LCommande));
+    //TJournal.Ajoute(Concat('>>> ', LCommande));
     if LCommande = 'quit' then
       Break
     else
@@ -70,7 +71,7 @@ begin
                 for LIndex := 4 to WordCount(LCommande, [' ']) do
                 begin
                   LCoup := ExtractWord(LIndex, LCommande, [' ']);
-                  if DecodeChaineCoup(LCoup, LDepart, LArrivee) then
+                  if DecodeChaineCoup(LCoup, LDep, LArr) then
                     Joueur.Rejoue(LCoup);
                 end;
             end else
@@ -83,9 +84,9 @@ begin
               end else
                 if Pos('setoption name UCI_Chess960 value', LCommande) = 1 then
                   if Pos('false', LCommande) > 0 then
-                    ActiveMode960(FALSE)
+                    Change960(FALSE)
                   else if Pos('true', LCommande) > 0 then
-                    ActiveMode960(TRUE);
+                    Change960(TRUE);
                 
   end;
 end.
