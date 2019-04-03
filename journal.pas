@@ -29,7 +29,8 @@ var
   vName: string;
   
 initialization
-  vName := ChangeFileExt(ParamStr(0), '.log');
+  //vName := ChangeFileExt(ParamStr(0), '.log');
+  vName := FormatDateTime('yyyymmddhhnnss".log"', Now);
 {$IFDEF DEBUG}
   Assign(vLog, vName);
   if FileExists(vName) then

@@ -5,6 +5,9 @@ unit Joueur;
 
 interface
 
+uses
+  Echecs;
+  
 function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
 procedure Oublie;
 procedure PositionDepart;
@@ -12,11 +15,12 @@ procedure Rejoue(const ACoup: string);
 function Coup: string;
 procedure Change960(const AValeur: boolean);
 procedure NouvellePosition(const APos: string);
+function PositionCourante: TPosition;
 
 implementation
 
 uses
-  SysUtils, Journal, Echecs, Interprete, Meilleur, Histoire;
+  SysUtils, Journal, Interprete, Meilleur, Histoire;
 
 function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
 begin
@@ -57,7 +61,7 @@ begin
   if Rejoue_(p, ACoup) then
     Histoire.Ajoute(ACoup)
   else
-    TJournal.Ajoute(Format('Coup refusé "%s".', [ACoup]));
+    TJournal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
 end;
 
 function Coup: string;
@@ -77,6 +81,11 @@ procedure NouvellePosition(const APos: string);
 begin
   p := EncodePosition(APos, LMode960);
   NouvelleHistoire;
+end;
+
+function PositionCourante: TPosition;
+begin
+  result := p;
 end;
 
 initialization

@@ -6,17 +6,17 @@ interface
 uses
   Echecs, Damier;
 
-function GenereCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): TDamier; overload;
+function ChercheCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): TDamier; overload;
 {** Renvoie un damier représentant les cases menacées par un coup de l'adversaire. Les coups ne sont pas conservés. }
-function GenereCoups(const APos: TPosition): TDamier; overload;
-function GenereCoupsNombre(const APos: TPosition): integer;
+function ChercheCoups(const APos: TPosition): TDamier; overload;
+function ChercheNombre(const APos: TPosition): integer;
 
 implementation
 
 uses
   SysUtils, Tables;
 
-function GenereCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean): TDamier;
+function ChercheCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean): TDamier;
 var
   LCompte: integer = 0;
 procedure Accepte(const i, j: integer; const ACondition: boolean = TRUE);
@@ -139,19 +139,19 @@ begin
   ACompte := LCompte;
 end;
 
-function GenereCoups(const APos: TPosition): TDamier;
+function ChercheCoups(const APos: TPosition): TDamier;
 var
   LListe: array[0..0] of integer;
   LCompte: integer;
 begin
-  result := GenereCoups(APos, LListe, LCompte, TRUE);
+  result := ChercheCoups(APos, LListe, LCompte, TRUE);
 end;
 
-function GenereCoupsNombre(const APos: TPosition): integer;
+function ChercheNombre(const APos: TPosition): integer;
 var
   LListe: array[0..0] of integer;
 begin
-  GenereCoups(APos, LListe, result, TRUE);
+  ChercheCoups(APos, LListe, result, TRUE);
 end;
 
 end.

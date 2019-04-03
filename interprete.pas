@@ -26,6 +26,7 @@ function Rejoue_(var APos: TPosition; const ACoup: string): boolean;
 var
   LDep, LArr, LColDep, LColArr, LLigDep, LLigArr, LPris: integer;
   LType, LCouleur, LAdv: ^TDamier;
+  LPreserveCouleur: boolean;
 begin
   result := TRUE;
   { Conversion de la chaîne en index des cases de départ et d'arrivée. L'index est un nombre de 0 à 63. }
@@ -66,37 +67,41 @@ begin
   LColArr := LArr mod 8;
   LLigDep := LDep div 8;
   LLigArr := LArr div 8;
+  LPreserveCouleur := FALSE;
   
   { Si la pièce déplacée est un roi... }
   if LType = @APos.Rois then
   begin
     if EstAllumee_(APos.Tours and LCouleur^, LArr) then
     begin
+      
       if LColArr = APos.Roque[APos.Trait].XTourRoi then
       begin
-        TJournal.Ajoute(Format('[Rejoue_] Roque échecs 960 côté roi (%s).', [ACoup]));
+        TJournal.Ajoute(Format('[Rejoue_] Roque 960 roi %s.', [ACoup]));
         Deplace_(APos.Tours, LCouleur^, LArr, CATCR[APos.Trait]);
         LArr := FIndex(CColG, LLigArr);
+        LPreserveCouleur := LColDep = CATCR[APos.Trait] mod 8;
       end else
         if LColArr = APos.Roque[APos.Trait].XTourDame then
         begin
-          TJournal.Ajoute(Format('[Rejoue_] Roque échecs 960 côté dame (%s).', [ACoup]));
+          TJournal.Ajoute(Format('[Rejoue_] Roque 960 dame %s.', [ACoup]));
           Deplace_(APos.Tours, LCouleur^, LArr, CATCD[APos.Trait]);
           LArr := FIndex(CColC, LLigArr);
+          LPreserveCouleur := LColDep = CATCD[APos.Trait] mod 8;
         end else
-            exit(FALSE);
-
+          exit(FALSE);
+      
     end else
       if Abs(LColArr - LColDep) = 2 then
       begin
         if LColArr = CColG then
         begin
-          TJournal.Ajoute(Format('[Rejoue_] Roque vieux échecs côté roi (%s).', [ACoup]));
+          TJournal.Ajoute(Format('[Rejoue_] Roque roi %s.', [ACoup]));
           Deplace_(APos.Tours, LCouleur^, CDTCR[APos.Trait], CATCR[APos.Trait]);
         end else
           if LColArr = CColC then
           begin
-            TJournal.Ajoute(Format('[Rejoue_] Roque vieux échecs côté dame (%s).', [ACoup]));
+            TJournal.Ajoute(Format('[Rejoue_] Roque dame %s.', [ACoup]));
             Deplace_(APos.Tours, LCouleur^, CDTCD[APos.Trait], CATCD[APos.Trait]);
           end else
             exit(FALSE);
@@ -189,7 +194,7 @@ begin
     APos.EnPassant := CNeant;
   
   { Déplacement de la pièce. }
-  Deplace_(LType^, LCouleur^, LDep, LArr);
+  Deplace_(LType^, LCouleur^, LDep, LArr, LPreserveCouleur);
   { Changement du trait. }
   APos.Trait := not APos.Trait;
 end;
@@ -216,7 +221,7 @@ begin
     (EstAllumee_(APos.Blanches, LDep) and EstAllumee_(APos.Blanches, LArr)) or
     (EstAllumee_(APos.Noires, LDep) and EstAllumee_(APos.Noires, LArr));
   if result then
-    TJournal.Ajoute(Format('[EstUnRoque] Roque détecté (%s).', [NomCoup(ACoup)]));
+    TJournal.Ajoute(Format('[EstUnRoque] Roque détecté %s.', [NomCoup(ACoup)]));
 end;
 
 procedure Reformule(var ARoque: integer);
@@ -237,7 +242,7 @@ begin
     LColArr := CColC;
   LArr := 8 * LLigArr + LColArr;
   ARoque := EncodeCoup(LDep, LArr);
-  TJournal.Ajoute(Format('[Reformule] Reformulé "%s" en "%s".', [LAncienNom, Concat(CNomCase[LDep], CNomCase[LArr])]));
+  TJournal.Ajoute(Format('[Reformule] Reformulé %s en %s.', [LAncienNom, Concat(CNomCase[LDep], CNomCase[LArr])]));
 end;
 
 end.

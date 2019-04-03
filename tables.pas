@@ -20,7 +20,7 @@ const
 function EstAllumee_(const ADamier: TDamier; const AIndex: integer): boolean;
 procedure Allume_(var ADamier: TDamier; const AIndex: integer);
 procedure Eteint_(var ADamier: TDamier; const AIndex: integer);
-procedure Deplace_(var AType, ACouleur: TDamier; const ADep, AArr: integer);
+procedure Deplace_(var AType, ACouleur: TDamier; const ADep, AArr: integer; const APreserveCouleur: boolean = FALSE);
 function CompteCases(const ADamier: TDamier): integer;
 
 implementation
@@ -41,11 +41,14 @@ begin
   ADamier := ADamier and not CCase[AIndex];
 end;
 
-procedure Deplace_(var AType, ACouleur: TDamier; const ADep, AArr: integer);
+procedure Deplace_(var AType, ACouleur: TDamier; const ADep, AArr: integer; const APreserveCouleur: boolean);
 begin
   Assert((ADep >= 0) and (ADep <= 63) and (AArr >= 0) and (AArr <= 63));
   AType := AType and not CCase[ADep] or CCase[AArr];
-  ACouleur := ACouleur and not CCase[ADep] or CCase[AArr];
+  if APreserveCouleur then
+    ACouleur := ACouleur or CCase[AArr]
+  else
+    ACouleur := ACouleur and not CCase[ADep] or CCase[AArr];
 end;
 
 function CompteCases(const ADamier: TDamier): integer;

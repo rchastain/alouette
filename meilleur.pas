@@ -32,17 +32,17 @@ var
       Inc(result);
     *)
     LPieces := APieces and p.Rois;
-    if LPieces <> 0 then Inc(result, 1000);
+    if LPieces <> 0 then Inc(result, 10000);
     LPieces := APieces and p.Dames;
-    if LPieces <> 0 then Inc(result, 10 * CompteCases(LPieces));
+    if LPieces <> 0 then Inc(result, 100 * CompteCases(LPieces));
     LPieces := APieces and p.Tours;
-    if LPieces <> 0 then Inc(result,  4 * CompteCases(LPieces));
+    if LPieces <> 0 then Inc(result,  50 * CompteCases(LPieces));
     LPieces := APieces and p.Fous;
-    if LPieces <> 0 then Inc(result,  3 * CompteCases(LPieces));
+    if LPieces <> 0 then Inc(result,  30 * CompteCases(LPieces));
     LPieces := APieces and p.Cavaliers;
-    if LPieces <> 0 then Inc(result,  2 * CompteCases(LPieces));
+    if LPieces <> 0 then Inc(result,  25 * CompteCases(LPieces));
     LPieces := APieces and p.Pions;
-    if LPieces <> 0 then Inc(result,  1 * CompteCases(LPieces));
+    if LPieces <> 0 then Inc(result,  10 * CompteCases(LPieces));
   end;
 
 var
@@ -67,14 +67,14 @@ begin
       passives := Noires;
     end;
   
-  menaces := GenereCoups(p);
+  menaces := ChercheCoups(p);
   malusPiecesMenacees := Estime(menaces and passives);
   p.Trait := not p.Trait;
-  bonusNombreCoups := GenereCoupsNombre(p);
+  bonusNombreCoups := ChercheNombre(p);
   result :=
     0
     + bonusRoque
-    + bonusNombreCoups
+    + bonusNombreCoups div 3
     - malusPiecesMenacees
     //- Ord(NomCoup(ACoup) = Inverse(Dernier));
     - Ord(NomCoup(ACoup) = AvantDernier);
@@ -113,18 +113,18 @@ var
   info: string;
 begin
   result := 'a1a1';
-  GenereCoups(APos, liste, n);
+  ChercheCoups(APos, liste, n);
   GenereRoque(APos, liste, n);
   
   for i := 0 to Pred(n) do
     eval[i] := Evalue(APos, liste[i]);
   Trie(liste, eval, n);
-  
+{$IFDEF DEBUG}
   info := '';
   for i := 0 to Pred(n) do
     info := Concat(info, NomCoup(liste[i]), Format('{%d}', [eval[i]]), CSeparateur[i < Pred(n)]);
-  TJournal.Ajoute(info);
-  
+  WriteLn('info ', info);
+{$ENDIF}
   if EstUnRoque(APos, liste[0]) and not AEchecs960 then
   begin
     Assert((liste[0] div 100) mod 8 = CColE);

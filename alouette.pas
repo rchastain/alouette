@@ -1,12 +1,12 @@
 
 {**
-  @abstract(Programme principal du moteur d'�checs UCI.)
+  @abstract(Programme principal du moteur d'échecs UCI.)
   Dialogue avec l'utilisateur au moyen du protocole UCI. }
 
 program Alouette;
 
 uses
-  Classes, SysUtils, StrUtils, Journal, Joueur;
+  Classes, SysUtils, StrUtils, Journal, Joueur, Echecs;
 
 {$I version.inc}
 
@@ -17,7 +17,7 @@ type
       procedure Execute; override;
   end;
 
-{** L'action du processus consiste a demander un coup au joueur d'�checs artificiel, et a envoyer ce coup a l'utilisateur. }
+{** L'action du processus consiste à demander un coup au joueur d'échecs artificiel, et à envoyer ce coup à l'utilisateur. }
 procedure TProcessus.Execute;
 begin
   WriteLn(output, Format('bestmove %s', [Joueur.Coup]));
@@ -36,7 +36,7 @@ begin
   while TRUE do
   begin
     ReadLn(input, LCommande);
-    //TJournal.Ajoute(Concat('>>> ', LCommande));
+    TJournal.Ajoute(Concat('>>> ', LCommande));
     if LCommande = 'quit' then
       Break
     else
@@ -83,10 +83,16 @@ begin
                 Start;
               end else
                 if Pos('setoption name UCI_Chess960 value', LCommande) = 1 then
+                begin
                   if Pos('false', LCommande) > 0 then
                     Change960(FALSE)
                   else if Pos('true', LCommande) > 0 then
                     Change960(TRUE);
-                
+                end else
+                  if LCommande = 'voir' then
+                  begin
+                    WriteLn(output, VoirPosition(PositionCourante));
+                    Flush(output);
+                  end;
   end;
 end.

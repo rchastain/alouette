@@ -37,6 +37,8 @@ procedure Recherche(const ACAR, ACAT: integer); { Colonne arrivée roi, colonne 
 var
   i, j, k, l: integer;
   b, c, d: boolean;
+  parcours: TDamier; { Le chemin, y compris la case d'arrivée. }
+  autorisees: TDamier; { Les pièces autorisées sur le parcours. }
 begin
   i := FIndex(LColDepRoi, LLigRoq); k := FIndex(ACAR, LLigRoq);
   j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
@@ -45,9 +47,13 @@ begin
     //TJournal.Ajoute('Position tour vérifiée (condition 1/3).')
   else exit;
   
-  b := (CChemin[i, k] and toutes) = (CChemin[i, k] and APos.Tours and actives);
-  c := (CompteCases(CChemin[i, k] and APos.Tours and actives) <= 1);
-  d := (CChemin[j, l] and toutes) = (CChemin[i, k] and APos.Rois and actives);
+  parcours := CChemin[i, k] or CCase[k];
+  autorisees := APos.Tours and actives;
+  b := (parcours and toutes) = (parcours and autorisees);
+  c := (CompteCases(parcours and autorisees) <= 1);
+  parcours := CChemin[j, l] or CCase[l];
+  autorisees := APos.Rois and actives;
+  d := (parcours and toutes) = (parcours and autorisees);
   if b and c and d then
     //TJournal.Ajoute('Liberté du passage vérifiée (condition 2/3).')
   else exit;
@@ -75,7 +81,7 @@ begin
   end;
   LPos := APos;
   LPos.Trait := not LPos.Trait;
-  menacees := GenereCoups(LPos);
+  menacees := ChercheCoups(LPos);
   caseRoi := APos.PositionRoi[APos.Trait];
   LColDepRoi := Colonne(caseRoi);
   LColDepTour := APos.Roque[APos.Trait].XTourRoi;

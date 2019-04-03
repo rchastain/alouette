@@ -175,12 +175,12 @@ begin
   result := '+   abcdefgh   +'#13#10#13#10;
   for y := 7 downto 0 do
   begin
-    result := concat(result, IntToStr(Succ(y)), '   ');
+    result := Concat(result, IntToStr(Succ(y)), '   ');
     for x := 0 to 7 do
-      result := concat(result, LDamier[64 - 8 * y - x]);
-    result := concat(result, '   ', IntToStr(Succ(y)), #13#10);
+      result := Concat(result, LDamier[64 - 8 * y - x]);
+    result := Concat(result, '   ', IntToStr(Succ(y)), #13#10);
   end;
-  result := concat(result, #13#10'+   abcdefgh   +');
+  result := Concat(result, #13#10'+   abcdefgh   +');
 end;
 
 function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;

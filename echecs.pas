@@ -80,6 +80,7 @@ const
 function EncodePosition(const APos: string = CPositionDepart; const AEchecs960: boolean = FALSE): TPosition;
 function DecodePosition(const APos: TPosition; const AEchecs960: boolean = FALSE): string;
 function Colonne(const ACase: TDamier): integer;
+function VoirPosition(const APos: TPosition): string;
 
 implementation
 
@@ -301,6 +302,43 @@ begin
       ]
     );
   end;
+end;
+
+function VoirPosition(const APos: TPosition): string;
+var
+  x, y: integer;
+  c: char;
+  i: integer;
+begin
+  result := '+    a b c d e f g h    +'#13#10#13#10;
+  for y := 7 downto 0 do
+  begin
+    result := Concat(result, IntToStr(Succ(y)), '   ');
+    for x := 0 to 7 do
+    begin
+      i := 8 * y + x;
+      c := '?';
+      if EstAllumee_(APos.Pions, i) then
+        c := 'p'
+      else if EstAllumee_(APos.Tours, i) then
+        c := 'r'
+      else if EstAllumee_(APos.Cavaliers, i) then
+        c := 'n'
+      else if EstAllumee_(APos.Fous, i) then
+        c := 'b'
+      else if EstAllumee_(APos.Dames, i) then
+        c := 'q'
+      else if EstAllumee_(APos.Rois, i) then
+        c := 'k'
+      else
+        c := '.';
+      if EstAllumee_(APos.Blanches, i) then
+        c := UpCase(c);
+      result := Concat(result, ' ', c);
+    end;
+    result := Concat(result, '    ', IntToStr(Succ(y)), #13#10);
+  end;
+  result := Concat(result, #13#10'+    a b c d e f g h    +');
 end;
 
 end.
