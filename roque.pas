@@ -6,14 +6,14 @@ interface
 uses
   Echecs, Journal;
 
-procedure GenereRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
+procedure ChercheRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
 
 implementation
 
 uses
   SysUtils, Damier, Tables, Coups;
   
-procedure GenereRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
+procedure ChercheRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
   procedure Accepte(const i, j: integer; const ACondition: boolean = TRUE);
   begin
     if ACondition then
@@ -43,15 +43,15 @@ begin
   i := FIndex(LColDepRoi, LLigRoq); k := FIndex(ACAR, LLigRoq);
   j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
   //TJournal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
-  if EstAllumee(actives and APos.Tours, CCase[j]) then
+  if EstAllumee(actives and APos.Tours, CCaseIndex[j]) then
     //TJournal.Ajoute('Position tour vérifiée (condition 1/3).')
   else exit;
   
-  parcours := CChemin[i, k] or CCase[k];
+  parcours := CChemin[i, k] or CCaseIndex[k];
   autorisees := APos.Tours and actives;
   b := (parcours and toutes) = (parcours and autorisees);
   c := (CompteCases(parcours and autorisees) <= 1);
-  parcours := CChemin[j, l] or CCase[l];
+  parcours := CChemin[j, l] or CCaseIndex[l];
   autorisees := APos.Rois and actives;
   d := (parcours and toutes) = (parcours and autorisees);
   if b and c and d then

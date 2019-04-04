@@ -7,7 +7,7 @@ uses
   Echecs, Damier;
 
 function ChercheCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): TDamier; overload;
-{** Renvoie un damier représentant les cases menacées par un coup de l'adversaire. Les coups ne sont pas conservés. }
+{** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
 function ChercheCoups(const APos: TPosition): TDamier; overload;
 function ChercheNombre(const APos: TPosition): integer;
 
@@ -23,7 +23,7 @@ procedure Accepte(const i, j: integer; const ACondition: boolean = TRUE);
 begin
   if ACondition then
   begin
-    Allume(result, CCase[j]);
+    Allume(result, CCaseIndex[j]);
     Inc(LCompte);
     if not ARapide then
     begin
@@ -49,15 +49,15 @@ begin
   
   result := 0; { Damier vide. }
   
-  for i := A1 to H8 do if EstAllumee(actives, CCase[i]) then
+  for i := A1 to H8 do if EstAllumee(actives, CCaseIndex[i]) then
   begin
     { Pion. }
-    if EstAllumee(APos.Pions, CCase[i]) then
+    if EstAllumee(APos.Pions, CCaseIndex[i]) then
     begin
       { Pas en avant. }
       k := 8 - 16 * Ord(APos.Trait);
       j := i + k;
-      if not EstAllumee(toutes, CCase[j]) then
+      if not EstAllumee(toutes, CCaseIndex[j]) then
       begin
         Accepte(i, j);
         { Second pas en avant. }
@@ -65,7 +65,7 @@ begin
         or ((j div 8 = 5) and APos.Trait) then
         begin
           j := j + k;
-          Accepte(i, j, not EstAllumee(toutes, CCase[j]));
+          Accepte(i, j, not EstAllumee(toutes, CCaseIndex[j]));
         end;
       end;
       { Prise côté dame. }
@@ -73,7 +73,7 @@ begin
       begin
         j := Pred(i + k);
         Accepte(i, j,
-          EstAllumee(passives, CCase[j])
+          EstAllumee(passives, CCaseIndex[j])
           xor (j = APos.EnPassant)
         );
       end;
@@ -82,57 +82,57 @@ begin
       begin
         j := Succ(i + k);
         Accepte(i, j,
-          EstAllumee(passives, CCase[j])
+          EstAllumee(passives, CCaseIndex[j])
           xor (j = APos.EnPassant)
         );
       end;
     end else
     { Tour. }
-    if EstAllumee(APos.Tours, CCase[i]) then
+    if EstAllumee(APos.Tours, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          EstAllumee(CCibles[Tour, i], CCase[j])
-          and (not EstAllumee(actives, CCase[j]))
+          EstAllumee(CCibles[Tour, i], CCaseIndex[j])
+          and (not EstAllumee(actives, CCaseIndex[j]))
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
     { Cavalier. }
-    if EstAllumee(APos.Cavaliers, CCase[i]) then
+    if EstAllumee(APos.Cavaliers, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          EstAllumee(CCibles[Cavalier, i], CCase[j])
-          and not EstAllumee(actives, CCase[j])
+          EstAllumee(CCibles[Cavalier, i], CCaseIndex[j])
+          and not EstAllumee(actives, CCaseIndex[j])
         );
     end else
     { Fou. }
-    if EstAllumee(APos.Fous, CCase[i]) then
+    if EstAllumee(APos.Fous, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          EstAllumee(CCibles[Fou, i], CCase[j])
-          and (not EstAllumee(actives, CCase[j]))
+          EstAllumee(CCibles[Fou, i], CCaseIndex[j])
+          and (not EstAllumee(actives, CCaseIndex[j]))
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
     { Dame. }
-    if EstAllumee(APos.Dames, CCase[i]) then
+    if EstAllumee(APos.Dames, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          EstAllumee(CCibles[Dame, i], CCase[j])
-          and (not EstAllumee(actives, CCase[j]))
+          EstAllumee(CCibles[Dame, i], CCaseIndex[j])
+          and (not EstAllumee(actives, CCaseIndex[j]))
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
     { Roi. }
-    if EstAllumee(APos.Rois, CCase[i]) then
+    if EstAllumee(APos.Rois, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
         Accepte(i, j,
-          EstAllumee(CCibles[Roi, i], CCase[j])
-          and not EstAllumee(actives, CCase[j])
+          EstAllumee(CCibles[Roi, i], CCaseIndex[j])
+          and not EstAllumee(actives, CCaseIndex[j])
         );
     end;
   end;

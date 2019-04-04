@@ -11,53 +11,56 @@ uses
   Damier;
 
 const  
-  CCibles: array[TPiece, A1..H8] of TDamier = ({$I cibles.inc});
-  CChemin: array[A1..H8, A1..H8] of TDamier = ({$I chemin.inc});
-  CCase: array[A1..H8] of TDamier           = ({$I index.inc});
-  CCaseXY: array[0..7, 0..7] of TDamier     = ({$I coord.inc});
-  CColonne: array[0..7] of TDamier          = ({$I colonne.inc});
+  CCibles:    array[TPiece, A1..H8] of TDamier = ({$I cibles.inc});
+  CChemin:    array[A1..H8, A1..H8] of TDamier = ({$I chemin.inc});
+  CCaseIndex: array[A1..H8]         of TDamier = ({$I index.inc});
+  CCaseCoord: array[0..7, 0..7]     of TDamier = ({$I coord.inc});
+  CColonne:   array[0..7]           of TDamier = ({$I colonne.inc});
 
-function EstAllumee_(const ADamier: TDamier; const AIndex: integer): boolean;
-procedure Allume_(var ADamier: TDamier; const AIndex: integer);
-procedure Eteint_(var ADamier: TDamier; const AIndex: integer);
-procedure Deplace_(var AType, ACouleur: TDamier; const ADep, AArr: integer; const APreserveCouleur: boolean = FALSE);
-function CompteCases(const ADamier: TDamier): integer;
+function EstAllumeeIndex(const ADam: TDamier; const AInd: integer): boolean;
+procedure AllumeIndex(var ADam: TDamier; const AInd: integer);
+procedure EteintIndex(var ADam: TDamier; const AInd: integer);
+procedure DeplaceIndex(var AType, ACoul: TDamier; const ADep, AArr: integer; const ASuper: boolean = FALSE);
+function CompteCases(const ADam: TDamier): integer;
 
 implementation
 
-function EstAllumee_(const ADamier: TDamier; const AIndex: integer): boolean;
+function EstAllumeeIndex(const ADam: TDamier; const AInd: integer): boolean;
 begin
-  Assert(CCase[AIndex] <> 0);
-  result := (ADamier and CCase[AIndex]) = CCase[AIndex];
+  Assert(CCaseIndex[AInd] <> 0);
+  result := (ADam and CCaseIndex[AInd]) = CCaseIndex[AInd];
 end;
 
-procedure Allume_(var ADamier: TDamier; const AIndex: integer);
+procedure AllumeIndex(var ADam: TDamier; const AInd: integer);
 begin
-  ADamier := ADamier or CCase[AIndex];
+  ADam := ADam or CCaseIndex[AInd];
 end;
 
-procedure Eteint_(var ADamier: TDamier; const AIndex: integer);
+procedure EteintIndex(var ADam: TDamier; const AInd: integer);
 begin
-  ADamier := ADamier and not CCase[AIndex];
+  ADam := ADam and not CCaseIndex[AInd];
 end;
 
-procedure Deplace_(var AType, ACouleur: TDamier; const ADep, AArr: integer; const APreserveCouleur: boolean);
+procedure DeplaceIndex(var AType, ACoul: TDamier; const ADep, AArr: integer; const ASuper: boolean);
 begin
-  Assert((ADep >= 0) and (ADep <= 63) and (AArr >= 0) and (AArr <= 63));
-  AType := AType and not CCase[ADep] or CCase[AArr];
-  if APreserveCouleur then
-    ACouleur := ACouleur or CCase[AArr]
+  Assert((ADep >= 0) and (ADep <= 63));
+  Assert((AArr >= 0) and (AArr <= 63));
+  
+  AType := AType and not CCaseIndex[ADep] or CCaseIndex[AArr];
+  
+  if ASuper then
+    ACoul := ACoul or CCaseIndex[AArr]
   else
-    ACouleur := ACouleur and not CCase[ADep] or CCase[AArr];
+    ACoul := ACoul and not CCaseIndex[ADep] or CCaseIndex[AArr];
 end;
 
-function CompteCases(const ADamier: TDamier): integer;
+function CompteCases(const ADam: TDamier): integer;
 var
   LIndex: integer;
 begin
   result := 0;
   for LIndex := A1 to H8 do
-    if EstAllumee_(ADamier, LIndex) then
+    if EstAllumeeIndex(ADam, LIndex) then
       Inc(result);
 end;
 

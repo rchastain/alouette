@@ -60,14 +60,10 @@ const
 type
   TCaseRoque = array[boolean] of integer;
 const
-  { Arrivée tour, côté roi. }
-  CATCR: TCaseRoque = (F1, F8);
-  { Arrivée tour, côté dame. }
-  CATCD: TCaseRoque = (D1, D8);
-  { Départ tour, côté roi. }
-  CDTCR: TCaseRoque = (H1, H8);
-  { Départ tour, côté dame. }
-  CDTCD: TCaseRoque = (A1, A8);
+  CATCR: TCaseRoque = (F1, F8); { Arrivée tour, côté roi. }
+  CATCD: TCaseRoque = (D1, D8); { Arrivée tour, côté dame. }
+  CDTCR: TCaseRoque = (H1, H8); { Départ  tour, côté roi. }
+  CDTCD: TCaseRoque = (A1, A8); { Départ  tour, côté dame. }
   CColC = 2;
   CColD = 3;
   CColE = 4;
@@ -171,18 +167,18 @@ const
   
 function EncodePosition(const APos: string; const AEchecs960: boolean): TPosition;
 const
-  CEpdNum = 4;
-  CFenNum = 6;
+  CEpdCount = 4;
+  CFenCount = 6;
 var
   x, y, i: integer;
   c: char;
-  cb: TDamier;
+  LCase: TDamier;
 begin
   result := CPositionVierge;
   with TStringList.Create, result do
   begin
     DelimitedText := APos;
-    Assert(Count in [CEpdNum, CFenNum]);
+    Assert(Count in [CEpdCount, CFenCount]);
     begin
       x := 0;
       y := 7;
@@ -204,21 +200,21 @@ begin
             end;
         else
           begin
-            cb := CCaseXY[x, y];
+            LCase := CCaseCoord[x, y];
             if c in ['a'..'z'] then
-              Allume(Noires, cb)
+              Allume(Noires, LCase)
             else
-              Allume(Blanches, cb);
+              Allume(Blanches, LCase);
             case UpCase(c) of
-              'P': Allume(Pions, cb);
-              'R': Allume(Tours, cb);
-              'N': Allume(Cavaliers, cb);
-              'B': Allume(Fous, cb); 
-              'Q': Allume(Dames, cb);
+              'P': Allume(Pions, LCase);
+              'R': Allume(Tours, LCase);
+              'N': Allume(Cavaliers, LCase);
+              'B': Allume(Fous, LCase); 
+              'Q': Allume(Dames, LCase);
               'K':
                 begin
-                  Allume(Rois, cb);
-                  PositionRoi[c = 'k'] := cb;
+                  Allume(Rois, LCase);
+                  PositionRoi[c = 'k'] := LCase;
                 end;
             end;
             Inc(x);
@@ -253,29 +249,23 @@ begin
     y := 7;
     while y >= 0 do
     begin
-      if (Blanches or Noires) and CCaseXY[x, y] = 0 then
+      if (Blanches or Noires) and CCaseCoord[x, y] = 0 then
       begin
         n := 0;
-        while (x + n <= 7) and ((Blanches or Noires) and CCaseXY[x + n, y] = 0) do
+        while (x + n <= 7) and ((Blanches or Noires) and CCaseCoord[x + n, y] = 0) do
           Inc(n);
         result := Concat(result, IntToStr(n));
         Inc(x, n);
       end else
       begin
         c := '?';
-        if (Pions and CCaseXY[x, y]) = CCaseXY[x, y] then
-          c := 'P' else
-        if (Tours and CCaseXY[x, y]) = CCaseXY[x, y] then
-          c := 'R' else
-        if (Cavaliers and CCaseXY[x, y]) = CCaseXY[x, y] then
-          c := 'N' else
-        if (Fous and CCaseXY[x, y]) = CCaseXY[x, y] then
-          c := 'B' else
-        if (Dames and CCaseXY[x, y]) = CCaseXY[x, y] then
-          c := 'Q' else
-        if (Rois and CCaseXY[x, y]) = CCaseXY[x, y] then
-          c := 'K';
-        if (Noires and CCaseXY[x, y]) = CCaseXY[x, y] then
+        if EstAllumeeIndex(Pions,     CCaseCoord[x, y]) then c := 'P' else
+        if EstAllumeeIndex(Tours,     CCaseCoord[x, y]) then c := 'R' else
+        if EstAllumeeIndex(Cavaliers, CCaseCoord[x, y]) then c := 'N' else
+        if EstAllumeeIndex(Fous,      CCaseCoord[x, y]) then c := 'B' else
+        if EstAllumeeIndex(Dames,     CCaseCoord[x, y]) then c := 'Q' else
+        if EstAllumeeIndex(Rois,      CCaseCoord[x, y]) then c := 'K';
+        if EstAllumeeIndex(Noires,    CCaseCoord[x, y]) then
           c := Chr(Ord(c) + 32);
         result := Concat(result, c);
         Inc(x);
@@ -318,21 +308,14 @@ begin
     begin
       i := 8 * y + x;
       c := '?';
-      if EstAllumee_(APos.Pions, i) then
-        c := 'p'
-      else if EstAllumee_(APos.Tours, i) then
-        c := 'r'
-      else if EstAllumee_(APos.Cavaliers, i) then
-        c := 'n'
-      else if EstAllumee_(APos.Fous, i) then
-        c := 'b'
-      else if EstAllumee_(APos.Dames, i) then
-        c := 'q'
-      else if EstAllumee_(APos.Rois, i) then
-        c := 'k'
-      else
+      if EstAllumeeIndex(APos.Pions,     i) then c := 'p' else
+      if EstAllumeeIndex(APos.Tours,     i) then c := 'r' else
+      if EstAllumeeIndex(APos.Cavaliers, i) then c := 'n' else
+      if EstAllumeeIndex(APos.Fous,      i) then c := 'b' else
+      if EstAllumeeIndex(APos.Dames,     i) then c := 'q' else
+      if EstAllumeeIndex(APos.Rois,      i) then c := 'k' else
         c := '.';
-      if EstAllumee_(APos.Blanches, i) then
+      if EstAllumeeIndex(APos.Blanches, i) then
         c := UpCase(c);
       result := Concat(result, ' ', c);
     end;

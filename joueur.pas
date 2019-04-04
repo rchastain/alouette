@@ -7,13 +7,12 @@ interface
 
 uses
   Echecs;
-  
-function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
+
 procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
 function Coup: string;
-procedure Change960(const AValeur: boolean);
+procedure ActiveEchecs960(const AValeur: boolean);
 procedure NouvellePosition(const APos: string);
 function PositionCourante: TPosition;
 
@@ -21,24 +20,6 @@ implementation
 
 uses
   SysUtils, Journal, Interprete, Meilleur, Histoire;
-
-function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
-begin
-  result := (Length(AChaine) >= 4)
-    and (AChaine[1] in ['a'..'h'])
-    and (AChaine[2] in ['1'..'8'])
-    and (AChaine[3] in ['a'..'h'])
-    and (AChaine[4] in ['1'..'8']);
-  if result then
-  begin
-    ADepart := 8 * (Ord(AChaine[2]) - Ord('1')) + (Ord(AChaine[1]) - Ord('a'));
-    AArrivee := 8 * (Ord(AChaine[4]) - Ord('1')) + (Ord(AChaine[3]) - Ord('a'));
-  end else
-  begin
-    ADepart := CNeant;
-    AArrivee := CNeant;
-  end;
-end;
 
 var
   p: TPosition;
@@ -69,7 +50,7 @@ begin
   result := MeilleurCoup(p, LMode960);
 end;
 
-procedure Change960(const AValeur: boolean);
+procedure ActiveEchecs960(const AValeur: boolean);
 const
   CPrefixe: array[boolean] of string = ('dés', '');
 begin

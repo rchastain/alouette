@@ -6,9 +6,16 @@
 program Alouette;
 
 uses
-  Classes, SysUtils, StrUtils, Journal, Joueur, Echecs;
+  Classes, SysUtils, Journal, Joueur, Echecs, Outils;
 
 {$I version.inc}
+
+procedure Ecrire(const AChaine: string; const AFlush: boolean = TRUE);
+begin
+  WriteLn(output, AChaine);
+  if AFlush then
+    Flush(output);
+end;
 
 type
   {** Processus de calcul du meilleur coup. }
@@ -17,11 +24,10 @@ type
       procedure Execute; override;
   end;
 
-{** L'action du processus consiste à demander un coup au joueur d'échecs artificiel, et à envoyer ce coup à l'utilisateur. }
+{** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TProcessus.Execute;
 begin
-  WriteLn(output, Format('bestmove %s', [Joueur.Coup]));
-  Flush(output);
+  Ecrire(Format('bestmove %s', [Joueur.Coup]));
 end;
 
 var
@@ -30,8 +36,7 @@ var
   LCoup: string;
   
 begin
-  WriteLn(output, Format('%s %s', [CApplication, CVersion]));
-  Flush(output);
+  Ecrire(Format('%s %s', [CApplication, CVersion]));
 
   while TRUE do
   begin
@@ -42,57 +47,44 @@ begin
     else
       if LCommande = 'uci' then
       begin
-        WriteLn(output, Format('id name %s %s', [CApplication, CVersion]));
-        WriteLn(output, Format('id author %s', [CAuteur]));
-        WriteLn(output, 'option name UCI_Chess960 type check default false');
-        WriteLn(output, 'uciok');
-        Flush(output);
+        Ecrire(Format('id name %s %s', [CApplication, CVersion]), FALSE);
+        Ecrire(Format('id author %s', [CAuteur]), FALSE);
+        Ecrire('option name UCI_Chess960 type check default false', FALSE);
+        Ecrire('uciok');
       end else
         if LCommande = 'isready' then
         begin
-          WriteLn(output, 'readyok');
-          Flush(output);
+          Ecrire('readyok');
         end else
           if LCommande = 'ucinewgame' then
             Joueur.Oublie
           else
-            if Pos('position', LCommande) = 1 then
+            if CommencePar('position ', LCommande) then
             begin
-              if IsWordPresent('startpos', LCommande, [' ']) then
+              if Contient('startpos', LCommande) then
                 Joueur.PositionDepart
-              else if IsWordPresent('fen', LCommande, [' ']) then
-                Joueur.NouvellePosition(Format('%s %s %s %s', [
-                  ExtractWord(3, LCommande, [' ']),
-                  ExtractWord(4, LCommande, [' ']),
-                  ExtractWord(5, LCommande, [' ']),
-                  ExtractWord(6, LCommande, [' '])
-                ]));
-              if IsWordPresent('moves', LCommande, [' ']) then
-                for LIndex := 4 to WordCount(LCommande, [' ']) do
+              else if Contient('fen', LCommande) then
+                Joueur.NouvellePosition(ExtraitEpd(LCommande));
+              
+              if Contient('moves', LCommande) then
+                for LIndex := 4 to NombreMots(LCommande) do
                 begin
-                  LCoup := ExtractWord(LIndex, LCommande, [' ']);
+                  LCoup := Extrait(LIndex, LCommande);
                   if DecodeChaineCoup(LCoup, LDep, LArr) then
                     Joueur.Rejoue(LCoup);
                 end;
             end else
-              if Pos('go', LCommande) = 1 then
+              if CommencePar('go', LCommande) then
               with TProcessus.Create(TRUE) do
               begin
                 FreeOnTerminate := TRUE;
                 Priority := tpHigher;
                 Start;
               end else
-                if Pos('setoption name UCI_Chess960 value', LCommande) = 1 then
-                begin
-                  if Pos('false', LCommande) > 0 then
-                    Change960(FALSE)
-                  else if Pos('true', LCommande) > 0 then
-                    Change960(TRUE);
-                end else
+                if CommencePar('setoption name UCI_Chess960 value ', LCommande) then
+                  ActiveEchecs960(Contient('true', LCommande))
+                else
                   if LCommande = 'voir' then
-                  begin
-                    WriteLn(output, VoirPosition(PositionCourante));
-                    Flush(output);
-                  end;
+                    Ecrire(VoirPosition(PositionCourante));
   end;
 end.

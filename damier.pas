@@ -14,36 +14,37 @@ type
   TDamier = type Int64;
   TPiece = (PionB, PionN, Tour, Cavalier, Fou, Dame, Roi);
 
-function FCase(const AIndex: integer): TDamier; overload;
-{ Case binaire pour un nombre de 0 à 63. }
+{** Case pour un nombre de 0 à 63. }
+function FCase(const AInd: integer): TDamier; overload;
+{** Case pour deux nombres de 0 à 7. }
 function FCase(const ACol, ALig: integer): TDamier; overload;
-{ Case binaire pour deux nombres de 0 à 7. }
 function FIndex(const ACol, ALig: integer): integer;
 function NomCase(const ACol, ALig: integer; const AMaj: boolean = FALSE): string; overload;
-function NomCase(const AIndex: integer; const AMaj: boolean = FALSE): string; overload;
+function NomCase(const AInd: integer; const AMaj: boolean = FALSE): string; overload;
 function NomCoup(const ADep, AArr: integer): string; overload;
 function NomCoup(const ACoup: integer): string; overload;
 function EncodeCoup(const i, j: integer): integer;
 procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer);
+{** Convertit une chaîne de la forme "a1" en un nombre de 0 à 63. }
 function DecodeNomCase(const ANom: string): integer;
-{ Accepte une chaîne de la forme "e2e4". Renvoie un nombre de 0 à 63. }
-function EstAllumee(const ADamier, ACase: TDamier): boolean;
-{ Pour savoir si une case est allumée dans un damier. }
-procedure Allume(var ADamier: TDamier; const ACase: TDamier);
-{ Allume une case dans un damier. }
-procedure Eteint(var ADamier: TDamier; const ACase: TDamier);
-{ Éteint une case dans un damier. }
-procedure Deplace(var AType, ACouleur: TDamier; const ACaseDep, ACaseArr: TDamier);
-{ Éteint une case et en allume une autre. }
-function Chaine(const ADamier: TDamier): string;
-{ Chaîne de chiffres binaires. }
-function Affiche_(const ADamier: TDamier): string;
-{ Affichage de chiffres binaires en forme d'échiquier. }
+{** Pour savoir si une case est allumée dans un damier. }
+function EstAllumee(const ADam, ACase: TDamier): boolean;
+{** Allume une case dans un damier. }
+procedure Allume(var ADam: TDamier; const ACase: TDamier);
+{** Éteint une case. }
+procedure Eteint(var ADam: TDamier; const ACase: TDamier);
+{** Éteint une case et en allume une autre. }
+procedure Deplace(var AType, ACoul: TDamier; const ACaseDep, ACaseArr: TDamier);
+{** Chaîne de chiffres binaires. }
+function Chaine(const ADam: TDamier): string;
+{** Chaîne de chiffres binaires en forme d'échiquier. }
+function Affiche_(const ADam: TDamier): string;
+{** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
 function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
-function Cibles(const APiece: TPiece; const AIndex: integer): TDamier;
-{ Toutes les cases que la pièce, selon son type, peut atteindre. }
+{** Toutes les cases que la pièce, selon son type, peut atteindre. }
+function Cibles(const APiece: TPiece; const AInd: integer): TDamier;
+{** Les cases à survoler pour aller d'un endroit à un autre. }
 function Chemin(const ACase1, ACase2: integer): TDamier;
-{ Les cases à survoler pour aller d'un endroit à un autre. }
 
 const  
   {** Numérotation des cases, de 0 à 63. }
@@ -72,10 +73,10 @@ implementation
 uses
   SysUtils;
   
-function FCase(const AIndex: integer): TDamier;
+function FCase(const AInd: integer): TDamier;
 begin
-  Assert((AIndex >= 0) and (AIndex <= 63));
-  result := TDamier(1) shl AIndex;
+  Assert((AInd >= 0) and (AInd <= 63));
+  result := TDamier(1) shl AInd;
 end;
 
 function FCase(const ACol, ALig: integer): TDamier;
@@ -98,9 +99,9 @@ begin
   );
 end;
 
-function NomCase(const AIndex: integer; const AMaj: boolean): string;
+function NomCase(const AInd: integer; const AMaj: boolean): string;
 begin
-  result := NomCase(AIndex mod 8, AIndex div 8, AMaj);
+  result := NomCase(AInd mod 8, AInd div 8, AMaj);
 end;
 
 function NomCoup(const ADep, AArr: integer): string;
@@ -133,29 +134,29 @@ begin
   result := 8 * (Ord(ANom[2]) - Ord('1')) + (Ord(ANom[1]) - Ord('a'));
 end;
 
-function EstAllumee(const ADamier, ACase: TDamier): boolean;
+function EstAllumee(const ADam, ACase: TDamier): boolean;
 begin
   Assert(ACase <> 0);
-  result := (ADamier and ACase) = ACase;
+  result := (ADam and ACase) = ACase;
 end;
 
-procedure Allume(var ADamier: TDamier; const ACase: TDamier);
+procedure Allume(var ADam: TDamier; const ACase: TDamier);
 begin
-  ADamier := ADamier or ACase;
+  ADam := ADam or ACase;
 end;
 
-procedure Eteint(var ADamier: TDamier; const ACase: TDamier);
+procedure Eteint(var ADam: TDamier; const ACase: TDamier);
 begin
-  ADamier := ADamier and not ACase;
+  ADam := ADam and not ACase;
 end;
 
-procedure Deplace(var AType, ACouleur: TDamier; const ACaseDep, ACaseArr: TDamier);
+procedure Deplace(var AType, ACoul: TDamier; const ACaseDep, ACaseArr: TDamier);
 begin
   AType := AType and not ACaseDep or ACaseArr;
-  ACouleur := ACouleur and not ACaseDep or ACaseArr;
+  ACoul := ACoul and not ACaseDep or ACaseArr;
 end;
 
-function Chaine(const ADamier: TDamier): string;
+function Chaine(const ADam: TDamier): string;
 const
   CCaractere: array[boolean] of char = ('0', '1');
 var
@@ -163,15 +164,15 @@ var
 begin
   SetLength(result, 64);
   for i := 63 downto 0 do
-    result[64 - i] := CCaractere[EstAllumee(ADamier, FCase(i))];
+    result[64 - i] := CCaractere[EstAllumee(ADam, FCase(i))];
 end;
 
-function Affiche_(const ADamier: TDamier): string;
+function Affiche_(const ADam: TDamier): string;
 var
   x, y: integer;
   LDamier: string;
 begin
-  LDamier := Chaine(ADamier);
+  LDamier := Chaine(ADam);
   result := '+   abcdefgh   +'#13#10#13#10;
   for y := 7 downto 0 do
   begin
@@ -207,12 +208,12 @@ begin
   end;
 end;
 
-function Cibles(const APiece: TPiece; const AIndex: integer): TDamier;
+function Cibles(const APiece: TPiece; const AInd: integer): TDamier;
 var
   x1, y1, x2, y2: integer;
 begin
-  x1 := AIndex mod 8;
-  y1 := AIndex div 8;
+  x1 := AInd mod 8;
+  y1 := AInd div 8;
   result := 0;
   for y2 := 7 downto 0 do
     for x2 := 0 to 7 do

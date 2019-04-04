@@ -13,14 +13,38 @@ implementation
 uses
   SysUtils, Interprete, Coups, Roque, Damier, Tables, Journal, Histoire;
 
+function Materiel(const APos: TPosition): integer;
+var
+  LInd, LCoul: integer;
+begin
+  result := 0;
+  for LInd := A1 to H8 do
+  begin
+    if EstAllumeeIndex(APos.Blanches, LInd) then
+      LCoul := 1
+    else if EstAllumeeIndex(APos.Noires, LInd) then
+      LCoul := -1
+    else
+      continue;
+    if EstAllumeeIndex(APos.Pions,     LInd) then Inc(result,    1 * LCoul) else
+    if EstAllumeeIndex(APos.Cavaliers, LInd) then Inc(result,    3 * LCoul) else
+    if EstAllumeeIndex(APos.Fous,      LInd) then Inc(result,    4 * LCoul) else
+    if EstAllumeeIndex(APos.Tours,     LInd) then Inc(result,    7 * LCoul) else
+    if EstAllumeeIndex(APos.Dames,     LInd) then Inc(result,   15 * LCoul) else
+    if EstAllumeeIndex(APos.Rois,      LInd) then Inc(result, 1000 * LCoul);
+  end;
+  if APos.Trait then
+    result := -1 * result;
+end;
+
 function Inverse(const ACoup: string): string;
 begin
   result := Concat(Copy(ACoup, 3, 2), Copy(ACoup, 1, 2));
 end;
 
-function Evalue(const APos: TPosition; ACoup: integer): integer;
+function Evalue(const APos: TPosition; const ACoup: integer): integer;
 var
-  p: TPosition;
+  LPos: TPosition;
 
   function Estime(const APieces: TDamier): integer;
   var
@@ -28,110 +52,114 @@ var
   begin
     result := 0;
     (*
-    if (APieces and p.Rois) <> 0 then
+    if (APieces and LPos.Rois) <> 0 then
       Inc(result);
     *)
-    LPieces := APieces and p.Rois;
-    if LPieces <> 0 then Inc(result, 10000);
-    LPieces := APieces and p.Dames;
-    if LPieces <> 0 then Inc(result, 100 * CompteCases(LPieces));
-    LPieces := APieces and p.Tours;
-    if LPieces <> 0 then Inc(result,  50 * CompteCases(LPieces));
-    LPieces := APieces and p.Fous;
-    if LPieces <> 0 then Inc(result,  30 * CompteCases(LPieces));
-    LPieces := APieces and p.Cavaliers;
-    if LPieces <> 0 then Inc(result,  25 * CompteCases(LPieces));
-    LPieces := APieces and p.Pions;
-    if LPieces <> 0 then Inc(result,  10 * CompteCases(LPieces));
+    LPieces := APieces and LPos.Rois;      if LPieces <> 0 then Inc(result, 10000);
+    LPieces := APieces and LPos.Dames;     if LPieces <> 0 then Inc(result,    15 * CompteCases(LPieces));
+    LPieces := APieces and LPos.Tours;     if LPieces <> 0 then Inc(result,     7 * CompteCases(LPieces));
+    LPieces := APieces and LPos.Fous;      if LPieces <> 0 then Inc(result,     4 * CompteCases(LPieces));
+    LPieces := APieces and LPos.Cavaliers; if LPieces <> 0 then Inc(result,     3 * CompteCases(LPieces));
+    LPieces := APieces and LPos.Pions;     if LPieces <> 0 then Inc(result,     1 * CompteCases(LPieces));
   end;
 
 var
-  actives, passives, menaces: TDamier;
-  bonusRoque, malusPiecesMenacees, bonusNombreCoups: integer;
+  LActives, LPassives, LMenaces: TDamier;
+  LBonusRoque, LMalusPiecesMenacees, LBonusNombreCoups, LBalanceMateriel: integer;
   
 begin
-  p := APos;
-  bonusRoque := 100 * Ord(EstUnRoque(p, ACoup));
+  LPos := APos;
+  LBonusRoque := 100 * Ord(EstUnRoque(LPos, ACoup));
   result := Low(integer);
-  if not Rejoue_(p, NomCoup(ACoup)) then
+  if not Rejoue_(LPos, NomCoup(ACoup)) then
     exit; 
   
-  with p do
+  with LPos do
     if Trait then
     begin
-      actives := Noires;
-      passives := Blanches;
+      LActives := Noires;
+      LPassives := Blanches;
     end else
     begin
-      actives := Blanches;
-      passives := Noires;
+      LActives := Blanches;
+      LPassives := Noires;
     end;
   
-  menaces := ChercheCoups(p);
-  malusPiecesMenacees := Estime(menaces and passives);
-  p.Trait := not p.Trait;
-  bonusNombreCoups := ChercheNombre(p);
+  LMenaces := ChercheCoups(LPos);
+  LMalusPiecesMenacees := Estime(LMenaces and LPassives);
+  LPos.Trait := not LPos.Trait;
+  LBonusNombreCoups := ChercheNombre(LPos);
+  LBalanceMateriel := Materiel(LPos);
+  
   result :=
     0
-    + bonusRoque
-    + bonusNombreCoups div 3
-    - malusPiecesMenacees
-    //- Ord(NomCoup(ACoup) = Inverse(Dernier));
+    + LBalanceMateriel
+    + LBonusRoque
+    + LBonusNombreCoups div 10
+    - LMalusPiecesMenacees
+    - Ord(NomCoup(ACoup) = Inverse(Dernier))
     - Ord(NomCoup(ACoup) = AvantDernier);
 end;
 
 function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
-  procedure Trie(var a, b: array of integer; const n: integer);
-    procedure Echange(var x: array of integer; const i: integer);
+  procedure Trie(var ACoup, ANote: array of integer; const n: integer);
+    procedure Echange(var ATab: array of integer; const i: integer);
     var
       j: integer;
     begin
-      j := x[i];
-      x[i] := x[i + 1];
-      x[i + 1] := j;
+      j := ATab[i];
+      ATab[i] := ATab[i + 1];
+      ATab[i + 1] := j;
     end;
   var
-    i: integer;
-    fin: boolean;
+    LInd: integer;
+    LFin: boolean;
   begin
     repeat
-      fin := TRUE;
-      for i := 0 to n - 2 do
-        if b[i] < b[i + 1] then
+      LFin := TRUE;
+      for LInd := 0 to n - 2 do
+        if ANote[LInd] < ANote[LInd + 1] then
         begin
-          Echange(a, i);
-          Echange(b, i);
-          fin := FALSE;
+          Echange(ACoup, LInd);
+          Echange(ANote, LInd);
+          LFin := FALSE;
         end;
-    until fin;
+    until LFin;
   end;
 const
   CSeparateur: array[boolean] of string = ('', ' ');
 var
-  liste, eval: array[0..99] of integer;
+  LListe, LEval: array[0..99] of integer;
   n, i: integer;
-  info: string;
+procedure Informe;
+var
+  i: integer;
+  s: string;
+begin
+{$ifdef DEBUG}
+  s := '';
+  for i := 0 to Pred(n) do
+    s := Concat(s, NomCoup(LListe[i]), CSeparateur[i < Pred(n)]);
+  WriteLn('info ', s);
+{$endif}
+end;
 begin
   result := 'a1a1';
-  ChercheCoups(APos, liste, n);
-  GenereRoque(APos, liste, n);
+  ChercheCoups(APos, LListe, n);
+  ChercheRoque(APos, LListe, n);
   
   for i := 0 to Pred(n) do
-    eval[i] := Evalue(APos, liste[i]);
-  Trie(liste, eval, n);
-{$IFDEF DEBUG}
-  info := '';
-  for i := 0 to Pred(n) do
-    info := Concat(info, NomCoup(liste[i]), Format('{%d}', [eval[i]]), CSeparateur[i < Pred(n)]);
-  WriteLn('info ', info);
-{$ENDIF}
-  if EstUnRoque(APos, liste[0]) and not AEchecs960 then
+    LEval[i] := Evalue(APos, LListe[i]);
+  Trie(LListe, LEval, n);
+  Informe;
+  
+  if EstUnRoque(APos, LListe[0]) and not AEchecs960 then
   begin
-    Assert((liste[0] div 100) mod 8 = CColE);
-    Reformule(liste[0]);
+    Assert((LListe[0] div 100) mod 8 = CColE);
+    Reformule(LListe[0]);
   end;
   
-  result := NomCoup(liste[0]);
+  result := NomCoup(LListe[0]);
   
   if EstUnePromotion(APos, result) then
     result := Concat(result, 'q');
