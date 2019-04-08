@@ -281,7 +281,7 @@ begin
     if EnPassant = CNeant then
       s := '-'
     else
-      s := NomCase(EnPassant);
+      s := CNomCase[EnPassant];
     result := Format(
       '%s %s %s %s',
       [

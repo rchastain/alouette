@@ -19,7 +19,7 @@ function PositionCourante: TPosition;
 implementation
 
 uses
-  SysUtils, Journal, Interprete, Meilleur, Histoire;
+  SysUtils, Journal, Deplacement, Meilleur, Histoire;
 
 var
   p: TPosition;

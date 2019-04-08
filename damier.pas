@@ -11,7 +11,7 @@ interface
 
 type
   {** Le damier est représenté par un nombre entier à 64 chiffres binaires. }
-  TDamier = type Int64;
+  TDamier = Int64;
   TPiece = (PionB, PionN, Tour, Cavalier, Fou, Dame, Roi);
 
 {** Case pour un nombre de 0 à 63. }
@@ -47,7 +47,7 @@ function Cibles(const APiece: TPiece; const AInd: integer): TDamier;
 function Chemin(const ACase1, ACase2: integer): TDamier;
 
 const  
-  {** Numérotation des cases, de 0 à 63. }
+  {** Numérotation des cases de 0 à 63. }
   A1 = 00; B1 = 01; C1 = 02; D1 = 03; E1 = 04; F1 = 05; G1 = 06; H1 = 07;
   A2 = 08; B2 = 09; C2 = 10; D2 = 11; E2 = 12; F2 = 13; G2 = 14; H2 = 15;
   A3 = 16; B3 = 17; C3 = 18; D3 = 19; E3 = 20; F3 = 21; G3 = 22; H3 = 23;
@@ -186,25 +186,27 @@ end;
 
 function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
 var
-  dx, dy: integer;
+  dx, dy, adx, ady: integer;
 begin
+  dx := Ax2 - Ax1;
+  dy := Ay2 - Ay1;
+  adx := Abs(dx);
+  ady := Abs(dy);
   case APiece of
-    PionB: result := ((Ay2 - Ay1) = +1)
-                      and (Abs(Ax2 - Ax1) = 1);
-    PionN:  result := ((Ay2 - Ay1) = -1)
-                      and (Abs(Ax2 - Ax1) = 1);
-    Tour:           result := (Ax2 = Ax1) xor (Ay2 = Ay1);
-    Cavalier:       result := Abs(Ax2 - Ax1) * Abs(Ay2 - Ay1) = 2;
-    Fou:            result := (Ax2 <> Ax1)
-                      and (Abs(Ax2 - Ax1) = Abs(Ay2 - Ay1));
-    Dame:           result := Possible(Tour, Ax1, Ay1, Ax2, Ay2)
-                      or Possible(Fou, Ax1, Ay1, Ax2, Ay2);
-    Roi:            begin
-                      dx := Abs(Ax2 - Ax1);
-                      dy := Abs(Ay2 - Ay1);
-                      result := (dx + dy <= 2)
-                        and ((dx = 1) or (dy = 1));
-                    end;
+    PionB:
+      result := (dy = 1) and (adx = 1);
+    PionN:
+      result := (dy = -1) and (adx = 1);
+    Tour:
+      result := (dx = 0) xor (dy = 0);
+    Cavalier:
+      result := adx * ady = 2;
+    Fou:
+      result := (dx <> 0) and (adx = ady);
+    Dame:
+      result := Possible(Tour, Ax1, Ay1, Ax2, Ay2) or Possible(Fou, Ax1, Ay1, Ax2, Ay2);
+    Roi:
+      result := (adx + ady <= 2) and ((adx = 1) or (ady = 1));
   end;
 end;
 

@@ -58,11 +58,11 @@ begin
     //TJournal.Ajoute('Liberté du passage vérifiée (condition 2/3).')
   else exit;
   
-  if (menacees and ((caseRoi or CChemin[i, k] or CChemin[l, l])) = 0) then
+  if (menacees and ((CCaseIndex[i] or CChemin[i, k] or CCaseIndex[k])) = 0) then
     //TJournal.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
   else exit;
   
-  Accepte(i, j); { /!\ Le coup est noté à la manière des échecs 960 (le roi prenant la tour). }
+  Accepte(i, j);
 end;
 
 begin

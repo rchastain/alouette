@@ -93,7 +93,7 @@ begin
       for j := A1 to H8 do
         Accepte(i, j,
           EstAllumee(CCibles[Tour, i], CCaseIndex[j])
-          and (not EstAllumee(actives, CCaseIndex[j]))
+          and not EstAllumee(actives, CCaseIndex[j])
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
@@ -112,7 +112,7 @@ begin
       for j := A1 to H8 do
         Accepte(i, j,
           EstAllumee(CCibles[Fou, i], CCaseIndex[j])
-          and (not EstAllumee(actives, CCaseIndex[j]))
+          and not EstAllumee(actives, CCaseIndex[j])
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else
@@ -122,7 +122,7 @@ begin
       for j := A1 to H8 do
         Accepte(i, j,
           EstAllumee(CCibles[Dame, i], CCaseIndex[j])
-          and (not EstAllumee(actives, CCaseIndex[j]))
+          and not EstAllumee(actives, CCaseIndex[j])
           and ((CChemin[i, j] and toutes) = 0)
         );
     end else

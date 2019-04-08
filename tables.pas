@@ -14,13 +14,13 @@ const
   CCibles:    array[TPiece, A1..H8] of TDamier = ({$I cibles.inc});
   CChemin:    array[A1..H8, A1..H8] of TDamier = ({$I chemin.inc});
   CCaseIndex: array[A1..H8]         of TDamier = ({$I index.inc});
-  CCaseCoord: array[0..7, 0..7]     of TDamier = ({$I coord.inc});
+  CCaseCoord: array[0..7, 0..7]     of TDamier = ({$I coordonnees.inc});
   CColonne:   array[0..7]           of TDamier = ({$I colonne.inc});
 
 function EstAllumeeIndex(const ADam: TDamier; const AInd: integer): boolean;
 procedure AllumeIndex(var ADam: TDamier; const AInd: integer);
 procedure EteintIndex(var ADam: TDamier; const AInd: integer);
-procedure DeplaceIndex(var AType, ACoul: TDamier; const ADep, AArr: integer; const ASuper: boolean = FALSE);
+procedure DeplaceIndex(var AType, ACoul: TDamier; const ADep, AArr: integer; const APiecesSuperposees: boolean = FALSE);
 function CompteCases(const ADam: TDamier): integer;
 
 implementation
@@ -41,14 +41,14 @@ begin
   ADam := ADam and not CCaseIndex[AInd];
 end;
 
-procedure DeplaceIndex(var AType, ACoul: TDamier; const ADep, AArr: integer; const ASuper: boolean);
+procedure DeplaceIndex(var AType, ACoul: TDamier; const ADep, AArr: integer; const APiecesSuperposees: boolean);
 begin
   Assert((ADep >= 0) and (ADep <= 63));
   Assert((AArr >= 0) and (AArr <= 63));
   
   AType := AType and not CCaseIndex[ADep] or CCaseIndex[AArr];
   
-  if ASuper then
+  if APiecesSuperposees then
     ACoul := ACoul or CCaseIndex[AArr]
   else
     ACoul := ACoul and not CCaseIndex[ADep] or CCaseIndex[AArr];

@@ -8,7 +8,7 @@ function NombreMots(const AChaine: string): integer;
 function Contient(const AMot, AChaine: string): boolean;
 function Extrait(const AIndex: integer; const AChaine: string): string;
 function ExtraitEpd(const AChaine: string): string;
-function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
+function DecodeChaineCoup(const AChaine: string): boolean;
 
 implementation
 
@@ -45,22 +45,13 @@ begin
   ]);
 end;
 
-function DecodeChaineCoup(const AChaine: string; out ADepart, AArrivee: integer): boolean;
+function DecodeChaineCoup(const AChaine: string): boolean;
 begin
   result := (Length(AChaine) >= 4)
     and (AChaine[1] in ['a'..'h'])
     and (AChaine[2] in ['1'..'8'])
     and (AChaine[3] in ['a'..'h'])
     and (AChaine[4] in ['1'..'8']);
-  if result then
-  begin
-    ADepart := 8 * (Ord(AChaine[2]) - Ord('1')) + (Ord(AChaine[1]) - Ord('a'));
-    AArrivee := 8 * (Ord(AChaine[4]) - Ord('1')) + (Ord(AChaine[3]) - Ord('a'));
-  end else
-  begin
-    ADepart := -1;//CNeant;
-    AArrivee := -1;//CNeant;
-  end;
 end;
 
 end.

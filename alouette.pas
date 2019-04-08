@@ -10,10 +10,10 @@ uses
 
 {$I version.inc}
 
-procedure Ecrire(const AChaine: string; const AFlush: boolean = TRUE);
+procedure Ecrire(const AChaine: string; const AEnvoi: boolean = TRUE);
 begin
   WriteLn(output, AChaine);
-  if AFlush then
+  if AEnvoi then
     Flush(output);
 end;
 
@@ -32,10 +32,11 @@ end;
 
 var
   LCommande: ansistring;
-  LIndex, LDep, LArr: integer;
+  LIndex: integer;
   LCoup: string;
   
 begin
+  Randomize;
   Ecrire(Format('%s %s', [CApplication, CVersion]));
 
   while TRUE do
@@ -70,21 +71,21 @@ begin
                 for LIndex := 4 to NombreMots(LCommande) do
                 begin
                   LCoup := Extrait(LIndex, LCommande);
-                  if DecodeChaineCoup(LCoup, LDep, LArr) then
+                  if DecodeChaineCoup(LCoup) then
                     Joueur.Rejoue(LCoup);
                 end;
             end else
               if CommencePar('go', LCommande) then
-              with TProcessus.Create(TRUE) do
-              begin
-                FreeOnTerminate := TRUE;
-                Priority := tpHigher;
-                Start;
-              end else
-                if CommencePar('setoption name UCI_Chess960 value ', LCommande) then
-                  ActiveEchecs960(Contient('true', LCommande))
-                else
-                  if LCommande = 'voir' then
-                    Ecrire(VoirPosition(PositionCourante));
+                with TProcessus.Create(TRUE) do
+                begin
+                  FreeOnTerminate := TRUE;
+                  Priority := tpHigher;
+                  Start;
+                end else
+                  if CommencePar('setoption name UCI_Chess960 value ', LCommande) then
+                    ActiveEchecs960(Contient('true', LCommande))
+                  else
+                    if LCommande = 'see' then
+                      Ecrire(VoirPosition(PositionCourante));
   end;
 end.
