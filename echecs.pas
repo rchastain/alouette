@@ -259,13 +259,13 @@ begin
       end else
       begin
         c := '?';
-        if EstAllumeeIndex(Pions,     CCaseCoord[x, y]) then c := 'P' else
-        if EstAllumeeIndex(Tours,     CCaseCoord[x, y]) then c := 'R' else
-        if EstAllumeeIndex(Cavaliers, CCaseCoord[x, y]) then c := 'N' else
-        if EstAllumeeIndex(Fous,      CCaseCoord[x, y]) then c := 'B' else
-        if EstAllumeeIndex(Dames,     CCaseCoord[x, y]) then c := 'Q' else
-        if EstAllumeeIndex(Rois,      CCaseCoord[x, y]) then c := 'K';
-        if EstAllumeeIndex(Noires,    CCaseCoord[x, y]) then
+        if EstAllumee(Pions,     CCaseCoord[x, y]) then c := 'P' else
+        if EstAllumee(Tours,     CCaseCoord[x, y]) then c := 'R' else
+        if EstAllumee(Cavaliers, CCaseCoord[x, y]) then c := 'N' else
+        if EstAllumee(Fous,      CCaseCoord[x, y]) then c := 'B' else
+        if EstAllumee(Dames,     CCaseCoord[x, y]) then c := 'Q' else
+        if EstAllumee(Rois,      CCaseCoord[x, y]) then c := 'K';
+        if EstAllumee(Noires,    CCaseCoord[x, y]) then
           c := Chr(Ord(c) + 32);
         result := Concat(result, c);
         Inc(x);
@@ -295,33 +295,58 @@ begin
 end;
 
 function VoirPosition(const APos: TPosition): string;
+const
+  GRILLE =
+    '    A   B   C   D   E   F   G   H'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '8 | %s | %s | %s | %s | %s | %s | %s | %s | 8'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '7 | %s | %s | %s | %s | %s | %s | %s | %s | 7'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '6 | %s | %s | %s | %s | %s | %s | %s | %s | 6'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '5 | %s | %s | %s | %s | %s | %s | %s | %s | 5'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '4 | %s | %s | %s | %s | %s | %s | %s | %s | 4'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '3 | %s | %s | %s | %s | %s | %s | %s | %s | 3'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '2 | %s | %s | %s | %s | %s | %s | %s | %s | 2'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '1 | %s | %s | %s | %s | %s | %s | %s | %s | 1'#13#10 +
+    '  +---+---+---+---+---+---+---+---+'#13#10 +
+    '    A   B   C   D   E   F   G   H';
 var
   x, y: integer;
-  c: char;
+  c: array[0..7, 0..7] of char;
   i: integer;
+  
 begin
-  result := '+    a b c d e f g h    +'#13#10#13#10;
   for y := 7 downto 0 do
-  begin
-    result := Concat(result, IntToStr(Succ(y)), '   ');
     for x := 0 to 7 do
     begin
       i := 8 * y + x;
-      c := '?';
-      if EstAllumeeIndex(APos.Pions,     i) then c := 'p' else
-      if EstAllumeeIndex(APos.Tours,     i) then c := 'r' else
-      if EstAllumeeIndex(APos.Cavaliers, i) then c := 'n' else
-      if EstAllumeeIndex(APos.Fous,      i) then c := 'b' else
-      if EstAllumeeIndex(APos.Dames,     i) then c := 'q' else
-      if EstAllumeeIndex(APos.Rois,      i) then c := 'k' else
-        c := '.';
+      c[x, y] := '?';
+      if EstAllumeeIndex(APos.Pions,     i) then c[x, y] := 'p' else
+      if EstAllumeeIndex(APos.Tours,     i) then c[x, y] := 'r' else
+      if EstAllumeeIndex(APos.Cavaliers, i) then c[x, y] := 'n' else
+      if EstAllumeeIndex(APos.Fous,      i) then c[x, y] := 'b' else
+      if EstAllumeeIndex(APos.Dames,     i) then c[x, y] := 'q' else
+      if EstAllumeeIndex(APos.Rois,      i) then c[x, y] := 'k' else
+        c[x, y] := ' ';
       if EstAllumeeIndex(APos.Blanches, i) then
-        c := UpCase(c);
-      result := Concat(result, ' ', c);
+        c[x, y] := UpCase(c[x, y]);
     end;
-    result := Concat(result, '    ', IntToStr(Succ(y)), #13#10);
-  end;
-  result := Concat(result, #13#10'+    a b c d e f g h    +');
+  result := Format(GRILLE, [
+    c[0, 7], c[1, 7], c[2, 7], c[3, 7], c[4, 7], c[5, 7], c[6, 7], c[7, 7],
+    c[0, 6], c[1, 6], c[2, 6], c[3, 6], c[4, 6], c[5, 6], c[6, 6], c[7, 6],
+    c[0, 5], c[1, 5], c[2, 5], c[3, 5], c[4, 5], c[5, 5], c[6, 5], c[7, 5],
+    c[0, 4], c[1, 4], c[2, 4], c[3, 4], c[4, 4], c[5, 4], c[6, 4], c[7, 4],
+    c[0, 3], c[1, 3], c[2, 3], c[3, 3], c[4, 3], c[5, 3], c[6, 3], c[7, 3],
+    c[0, 2], c[1, 2], c[2, 2], c[3, 2], c[4, 2], c[5, 2], c[6, 2], c[7, 2],
+    c[0, 1], c[1, 1], c[2, 1], c[3, 1], c[4, 1], c[5, 1], c[6, 1], c[7, 1],
+    c[0, 0], c[1, 0], c[2, 0], c[3, 0], c[4, 0], c[5, 0], c[6, 0], c[7, 0]
+  ]);
 end;
 
 end.

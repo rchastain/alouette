@@ -6,7 +6,7 @@
 program Alouette;
 
 uses
-  Classes, SysUtils, Journal, Joueur, Echecs, Outils;
+  Classes, SysUtils, Journal, Joueur, Echecs, Outils, {$IFDEF DEBUG}Essais, {$ENDIF}Performance;
 
 {$I version.inc}
 
@@ -85,7 +85,10 @@ begin
                   if CommencePar('setoption name UCI_Chess960 value ', LCommande) then
                     ActiveEchecs960(Contient('true', LCommande))
                   else
-                    if LCommande = 'see' then
-                      Ecrire(VoirPosition(PositionCourante));
+                    if LCommande = 'show' then
+                      Ecrire(VoirPosition(PositionCourante))
+                    else
+                    if LCommande = 'perft' then
+                      EssaiPerformance();
   end;
 end.
