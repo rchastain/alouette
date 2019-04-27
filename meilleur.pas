@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Fonction de recherche du meilleur coup.)
+  Fonction de recherche du meilleur coup.
+}
+
 unit Meilleur;
 
 interface
@@ -11,9 +16,9 @@ function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
 implementation
 
 uses
-  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, TablesPieceCase;
+  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, TablesPieceCase, Tri;
 
-function Position(const APos: TPosition): integer;
+function ResultatTables(const APos: TPosition): integer;
 var
   LActives: TDamier;
   LInd, LIndInv: integer;
@@ -29,7 +34,7 @@ begin
   for LInd := A1 to H8 do
     if EstAllumeeIndex(LActives, LInd) then
     begin
-      if APos.Trait then
+      if not APos.Trait then
         LIndInv := 63 - LInd
       else
         LIndInv := LInd;
@@ -66,7 +71,7 @@ begin
     result := -1 * result;
 end;
 
-function Evalue2(const APos: TPosition; const ACoup: integer): integer;
+function PremiereEvaluation(const APos: TPosition; const ACoup: integer): integer;
 var
   LPos1, LPos2, LPos3: TPosition;
   LListe1, LListe2: array[0..99] of integer;
@@ -109,7 +114,7 @@ begin
   result := Concat(Copy(ACoup, 3, 2), Copy(ACoup, 1, 2));
 end;
 
-function Evalue(const APos: TPosition; const ACoup: integer): integer;
+function DeuxiemeEvaluation(const APos: TPosition; const ACoup: integer): integer;
 var
   LPos: TPosition;
 
@@ -128,9 +133,10 @@ var
 
 var
   LActives, LPassives, LMenaces: TDamier;
-  LBonusRoque, LMalusPiecesMenacees, LBonusNombreCoups, LBalanceMateriel, LPosition: integer;
-  LBonusMenacesActives: integer;
-  
+  LBonusRoque, LMalusCapturesPotentiellesAdv, LBonusNombreCoups, LBalanceMateriel, LBonusTables: integer;
+  LBonusCapturesPotentielles: integer;
+  LBonusProtection: integer;
+  LMalusRepetition, LMalusAnnulation: integer;
 begin
   LPos := APos;
   LBonusRoque := 100 * Ord(EstUnRoque(LPos, ACoup));
@@ -139,103 +145,125 @@ begin
     exit; 
   
   with LPos do
-    if Trait then
-    begin
+    if Trait then begin
       LActives := Noires;
       LPassives := Blanches;
-    end else
-    begin
+    end else begin
       LActives := Blanches;
       LPassives := Noires;
     end;
 
   LMenaces := ChercheCoups(LPos);
-  LMalusPiecesMenacees := Estime(LMenaces and LPassives);
+  LMalusCapturesPotentiellesAdv := Estime(LMenaces and LPassives);
   LPos.Trait := not LPos.Trait;
   LBonusNombreCoups := ChercheNombre(LPos);
-  LPosition := Position(LPos);
-  LBonusMenacesActives := Estime(ChercheCoups(LPos) and LActives);
+  LBonusTables := ResultatTables(LPos);
+  LBonusCapturesPotentielles := Estime(ChercheCoups(LPos) and LActives);
+  LBonusProtection := ChercheProtections(LPos);
+  LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
+  LMalusAnnulation := Ord(NomCoup(ACoup) = Inverse(Dernier));
   
   result :=
     0
-    + LPosition
+    + LBonusTables
     + LBonusRoque
     + LBonusNombreCoups
-    + LBonusMenacesActives
-    - LMalusPiecesMenacees
-    - Ord(NomCoup(ACoup) = Inverse(Dernier))
-    - Ord(NomCoup(ACoup) = AvantDernier);
+    + LBonusCapturesPotentielles
+    + LBonusProtection
+    - LMalusCapturesPotentiellesAdv
+    - LMalusRepetition
+    - LMalusAnnulation;
+  
+  TJournal.Ajoute(
+    Format(
+      '%8s%8d%8d%8d%8d%8d%8d%8d%8d%8d',
+      [
+        NomCoup(ACoup),
+        result,
+        LBonusTables,
+        LBonusRoque,   
+        LBonusNombreCoups,
+        LBonusCapturesPotentielles,
+        LBonusProtection,
+        LMalusCapturesPotentiellesAdv,
+        LMalusRepetition,
+        LMalusAnnulation
+      ]
+    )
+  );
+end;
+
+function LigneInfo1(const ACoups: array of integer; const n: integer; const ASeparateur: string): string;
+var
+  i: integer;
+  LSeparateur: array[boolean] of string = ('', '');
+begin
+  result := '';
+  LSeparateur[TRUE] := ASeparateur;
+  for i := 0 to Pred(n) do
+    result := Format('%s%6s%s', [
+      result,
+      NomCoup(ACoups[i]),
+      LSeparateur[i < Pred(n)]
+    ]);
+end;
+
+function LigneInfo2(const ANotes: array of integer; const n: integer; const ASeparateur: string): string;
+var
+  i: integer;
+  LSeparateur: array[boolean] of string = ('', '');
+begin
+  result := '';
+  LSeparateur[TRUE] := ASeparateur;
+  for i := 0 to Pred(n) do
+    result := Format('%s%6d%s', [
+      result,
+      ANotes[i],
+      LSeparateur[i < Pred(n)]
+    ]);
+end;
+
+function CompteMeilleurs(const ANotes: array of integer): integer;
+begin
+  result := 1;
+  while ANotes[result] = ANotes[0] do
+    Inc(result);
 end;
 
 function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
-  procedure Trie(var ACoup, ANote: array of integer; const n: integer);
-    procedure Echange(var ATab: array of integer; const i: integer);
-    var
-      j: integer;
-    begin
-      j := ATab[i];
-      ATab[i] := ATab[i + 1];
-      ATab[i + 1] := j;
-    end;
-  var
-    LInd: integer;
-    LFin: boolean;
-  begin
-    repeat
-      LFin := TRUE;
-      for LInd := 0 to n - 2 do
-        if ANote[LInd] < ANote[LInd + 1] then
-        begin
-          Echange(ACoup, LInd);
-          Echange(ANote, LInd);
-          LFin := FALSE;
-        end;
-    until LFin;
-  end;
-const
-  CSeparateur: array[boolean] of string = ('', ' ');
 var
   LListe, LEval: array[0..99] of integer;
   n, i, coup: integer;
-procedure Informe;
-var
-  i: integer;
-  LChaine: string;
-begin
-  LChaine := '';
-  for i := 0 to Pred(n) do
-    LChaine := Format('%s%s(%d)%s', [LChaine, NomCoup(LListe[i]), LEval[i], CSeparateur[i < Pred(n)]]);
-  TJournal.Ajoute(LChaine);
-end;
 begin
   result := '0000';
+  
   ChercheCoups(APos, LListe, n);
   ChercheRoque(APos, LListe, n);
+  
   for i := 0 to Pred(n) do
-    LEval[i] := Evalue2(APos, LListe[i]);
+    LEval[i] := PremiereEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
-{$IFDEF DEBUG}
-  Informe;
-{$ENDIF}
-  n := 0;
-  while LEval[n] = LEval[0] do
-    Inc(n);
+  TJournal.Ajoute(LigneInfo1(LListe, n, ' '));
+  TJournal.Ajoute(LigneInfo2(LEval, n, ' '));
+  TJournal.Ajoute('    coup   total  tables   roque   coups    capt  protec  advers   repet   annul');
+  
+  n := CompteMeilleurs(LEval);
   for i := 0 to Pred(n) do
-    LEval[i] := Evalue(APos, LListe[i]);
+    LEval[i] := DeuxiemeEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
-{$IFDEF DEBUG}
-  Informe;
-{$ENDIF}
-  n := 0;
-  while LEval[n] = LEval[0] do
-    Inc(n);
-  coup := LListe[Random(n)];
+  TJournal.Ajoute(LigneInfo1(LListe, n, ' '));
+  TJournal.Ajoute(LigneInfo2(LEval, n, ' '));
+  
+  coup := LListe[0];
+  
   if EstUnRoque(APos, coup) and not AEchecs960 then
   begin
     Assert((coup div 100) mod 8 = CColE);
     Reformule(coup);
   end;
+  
   result := NomCoup(coup);
+  
   if EstUnePromotion(APos, result) then
     result := Concat(result, 'q');
 end;

@@ -1,8 +1,7 @@
 
 {**
   @abstract(Damier binaire.)
-  Représentation d'un damier dans un nombre entier à 64 chiffres binaires.
-  Chaque chiffre binaire représente une case du damier.
+  Représentation d'un damier par un nombre entier de 64 chiffres binaires.
 }
 
 unit Damier;
@@ -10,13 +9,13 @@ unit Damier;
 interface
 
 type
-  {** Le damier est représenté par un nombre entier à 64 chiffres binaires. }
+  {** Le damier est représenté par un nombre entier de 64 chiffres binaires. }
   TDamier = Int64;
-  TPiece = (PionB, PionN, Tour, Cavalier, Fou, Dame, Roi);
+  TPiece = (PionBlanc, PionNoir, Tour, Cavalier, Fou, Dame, Roi);
 
-{** Case pour un nombre de 0 à 63. }
+{** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec un seul chiffre allumé. }
 function FCase(const AInd: integer): TDamier; overload;
-{** Case pour deux nombres de 0 à 7. }
+{** Case pour deux nombres donnés de 0 à 7. }
 function FCase(const ACol, ALig: integer): TDamier; overload;
 function FIndex(const ACol, ALig: integer): integer;
 function NomCase(const ACol, ALig: integer; const AMaj: boolean = FALSE): string; overload;
@@ -37,7 +36,7 @@ procedure Eteint(var ADam: TDamier; const ACase: TDamier);
 procedure Deplace(var AType, ACoul: TDamier; const ACaseDep, ACaseArr: TDamier);
 {** Chaîne de chiffres binaires. }
 function Chaine(const ADam: TDamier): string;
-{** Chaîne de chiffres binaires en forme d'échiquier. }
+{** Chaîne de chiffres binaires en forme de damier. }
 function Affiche_(const ADam: TDamier): string;
 {** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
 function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
@@ -193,9 +192,9 @@ begin
   adx := Abs(dx);
   ady := Abs(dy);
   case APiece of
-    PionB:
+    PionBlanc:
       result := (dy = 1) and (adx = 1);
-    PionN:
+    PionNoir:
       result := (dy = -1) and (adx = 1);
     Tour:
       result := (dx = 0) xor (dy = 0);

@@ -1,5 +1,9 @@
 
-{ Numérotation des positions de départ aux échecs de Fischer, par la méthode de Reinhard Scharnagl. }
+{**
+  @abstract(Numérotation des positions de départ aux échecs de Fischer.)
+  Fonction pour la numérotation des positions de départ aux échecs de Fischer, par la méthode de Reinhard Scharnagl.
+}
+
 unit Numero;
 
 interface
@@ -7,6 +11,21 @@ interface
 function NumeroPosition(const ABlanches: string): integer;
 
 implementation
+
+function ExtraitLigneUn(const AChaine: string): string;
+var
+  i: integer;
+begin
+  result := AChaine;
+  repeat
+    i := Pos('/', result);
+    if i > 0 then
+      Delete(result, 1, i);
+  until i = 0;
+  i := Pos(' ', result);
+  if i > 0 then
+    result := Copy(result, 1, Pred(i));
+end;
 
 function NumeroPosition(const ABlanches: string): integer;
 const
@@ -17,9 +36,10 @@ var
   queenPos: CNotFound..5;
   krnCode: 0..9;
   i, x: integer;
-  s: string; 
+  s, t: string; 
 begin
-  Assert(Length(ABlanches) = 8);
+  s := ExtraitLigneUn(ABlanches);
+  Assert(Length(s) = 8);
   
   whiteSquareBishopPos := CNotFound;
   blackSquareBishopPos := CNotFound;
@@ -27,14 +47,14 @@ begin
   
   i := 0;
   while (i < 4) and (whiteSquareBishopPos = CNotFound) do
-    if ABlanches[2 * i + 2] = 'B' then
+    if s[2 * i + 2] = 'B' then
       whiteSquareBishopPos := i
     else
       Inc(i);
   
   i := 0;
   while (i < 4) and (blackSquareBishopPos = CNotFound) do
-    if ABlanches[2 * i + 1] = 'B' then
+    if s[2 * i + 1] = 'B' then
       blackSquareBishopPos := i
     else
       Inc(i);
@@ -46,33 +66,33 @@ begin
   x := 1;
   while (x < 9) and (queenPos = CNotFound) do
   begin
-    if ABlanches[x] = 'Q' then
+    if s[x] = 'Q' then
       queenPos := i
     else
     begin
       Inc(x);
-      if ABlanches[x] <> 'B' then
+      if s[x] <> 'B' then
         Inc(i);
     end;
   end;
   
-  s := '';
+  t := '';
   for x := 1 to 8 do
-    if ABlanches[x] in ['N', 'R', 'K'] then
-      s := s + ABlanches[x];
+    if s[x] in ['N', 'R', 'K'] then
+      t := t + s[x];
   
-  Assert(Length(s) = 5);
+  Assert(Length(t) = 5);
   
-  if s = 'NNRKR' then krnCode := 0 else
-  if s = 'NRNKR' then krnCode := 1 else
-  if s = 'NRKNR' then krnCode := 2 else
-  if s = 'NRKRN' then krnCode := 3 else
-  if s = 'RNNKR' then krnCode := 4 else
-  if s = 'RNKNR' then krnCode := 5 else
-  if s = 'RNKRN' then krnCode := 6 else
-  if s = 'RKNNR' then krnCode := 7 else
-  if s = 'RKNRN' then krnCode := 8 else
-  if s = 'RKRNN' then krnCode := 9 else
+  if t = 'NNRKR' then krnCode := 0 else
+  if t = 'NRNKR' then krnCode := 1 else
+  if t = 'NRKNR' then krnCode := 2 else
+  if t = 'NRKRN' then krnCode := 3 else
+  if t = 'RNNKR' then krnCode := 4 else
+  if t = 'RNKNR' then krnCode := 5 else
+  if t = 'RNKRN' then krnCode := 6 else
+  if t = 'RKNNR' then krnCode := 7 else
+  if t = 'RKNRN' then krnCode := 8 else
+  if t = 'RKRNN' then krnCode := 9 else
     Assert(FALSE);
   
   result := whiteSquareBishopPos + 4 * blackSquareBishopPos + 16 * queenPos + 96 * krnCode;

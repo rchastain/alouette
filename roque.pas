@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Roque.)
+  Génération du roque.
+}
+
 unit Roque;
 
 interface
@@ -55,7 +60,7 @@ begin
   autorisees := APos.Rois and actives;
   d := (parcours and toutes) = (parcours and autorisees);
   if b and c and d then
-    //TJournal.Ajoute('Liberté du passage vérifiée (condition 2/3).')
+    //TJournal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
   else exit;
   
   if (menacees and ((CCaseIndex[i] or CChemin[i, k] or CCaseIndex[k])) = 0) then

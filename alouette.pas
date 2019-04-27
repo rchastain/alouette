@@ -6,7 +6,11 @@
 program Alouette;
 
 uses
-  Classes, SysUtils, Journal, Joueur, Echecs, Outils, {$IFDEF DEBUG}Essais, {$ENDIF}Performance;
+  Classes, SysUtils, Journal, Joueur, Echecs, Outils,
+{$ifdef DEBUG}
+  Essais,
+{$endif}
+  Performance;
 
 {$I version.inc}
 
@@ -36,7 +40,6 @@ var
   LCoup: string;
   
 begin
-  Randomize;
   Ecrire(Format('%s %s', [CApplication, CVersion]));
 
   while TRUE do

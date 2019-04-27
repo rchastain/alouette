@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Histoire des coups joués.)
+  Histoire des coups joués.
+}
+
 unit Histoire;
 
 interface

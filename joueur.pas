@@ -1,5 +1,8 @@
 
-{** @abstract(Joueur d'échecs artificiel.) }
+{**
+  @abstract(Joueur d'échecs artificiel.)
+  Joueur d'échecs artificiel.
+}
 
 unit Joueur;
 

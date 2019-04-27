@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Génération des coups.)
+  Génération des coups.
+}
+
 unit Coups;
 
 interface
@@ -10,6 +15,9 @@ function ChercheCoups(const APos: TPosition; var AListe: array of integer; out A
 {** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
 function ChercheCoups(const APos: TPosition): TDamier; overload;
 function ChercheNombre(const APos: TPosition): integer;
+function ChercheProtections(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): integer; overload;
+{** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
+function ChercheProtections(const APos: TPosition): integer; overload;
 
 implementation
 
@@ -19,17 +27,14 @@ uses
 function ChercheCoups(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean): TDamier;
 var
   LCompte: integer = 0;
-procedure Accepte(const i, j: integer; const ACondition: boolean = TRUE);
+procedure Accepte(const i, j: integer);
 begin
-  if ACondition then
+  Allume(result, CCaseIndex[j]);
+  Inc(LCompte);
+  if not ARapide then
   begin
-    Allume(result, CCaseIndex[j]);
-    Inc(LCompte);
-    if not ARapide then
-    begin
-      Assert(LCompte <= Length(AListe));
-      AListe[Pred(LCompte)] := EncodeCoup(i, j);
-    end;
+    Assert(LCompte <= Length(AListe));
+    AListe[Pred(LCompte)] := EncodeCoup(i, j);
   end;
 end;
 var
@@ -65,75 +70,67 @@ begin
         or ((j div 8 = 5) and APos.Trait) then
         begin
           j := j + k;
-          Accepte(i, j, not EstAllumee(toutes, CCaseIndex[j]));
+          if not EstAllumee(toutes, CCaseIndex[j]) then
+            Accepte(i, j);
         end;
       end;
       { Prise côté dame. }
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
-        Accepte(i, j,
-          EstAllumee(passives, CCaseIndex[j])
-          xor (j = APos.EnPassant)
-        );
+        if EstAllumee(passives, CCaseIndex[j]) xor (j = APos.EnPassant) then
+          Accepte(i, j);
       end;
       { Prise côté roi. }
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
-        Accepte(i, j,
-          EstAllumee(passives, CCaseIndex[j])
-          xor (j = APos.EnPassant)
-        );
+        if EstAllumee(passives, CCaseIndex[j]) xor (j = APos.EnPassant) then
+          Accepte(i, j);
       end;
     end else
     { Tour. }
     if EstAllumee(APos.Tours, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
-        Accepte(i, j,
-          EstAllumee(CCibles[Tour, i], CCaseIndex[j])
-          and not EstAllumee(actives, CCaseIndex[j])
-          and ((CChemin[i, j] and toutes) = 0)
-        );
+        if EstAllumee(CCibles[Tour, i], CCaseIndex[j])
+        and not EstAllumee(actives, CCaseIndex[j])
+        and ((CChemin[i, j] and toutes) = 0) then
+          Accepte(i, j);
     end else
     { Cavalier. }
     if EstAllumee(APos.Cavaliers, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
-        Accepte(i, j,
-          EstAllumee(CCibles[Cavalier, i], CCaseIndex[j])
-          and not EstAllumee(actives, CCaseIndex[j])
-        );
+        if EstAllumee(CCibles[Cavalier, i], CCaseIndex[j])
+        and not EstAllumee(actives, CCaseIndex[j]) then
+          Accepte(i, j);
     end else
     { Fou. }
     if EstAllumee(APos.Fous, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
-        Accepte(i, j,
-          EstAllumee(CCibles[Fou, i], CCaseIndex[j])
-          and not EstAllumee(actives, CCaseIndex[j])
-          and ((CChemin[i, j] and toutes) = 0)
-        );
+        if EstAllumee(CCibles[Fou, i], CCaseIndex[j])
+        and not EstAllumee(actives, CCaseIndex[j])
+        and ((CChemin[i, j] and toutes) = 0) then
+          Accepte(i, j);
     end else
     { Dame. }
     if EstAllumee(APos.Dames, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
-        Accepte(i, j,
-          EstAllumee(CCibles[Dame, i], CCaseIndex[j])
-          and not EstAllumee(actives, CCaseIndex[j])
-          and ((CChemin[i, j] and toutes) = 0)
-        );
+        if EstAllumee(CCibles[Dame, i], CCaseIndex[j])
+        and not EstAllumee(actives, CCaseIndex[j])
+        and ((CChemin[i, j] and toutes) = 0) then
+          Accepte(i, j);
     end else
     { Roi. }
     if EstAllumee(APos.Rois, CCaseIndex[i]) then
     begin
       for j := A1 to H8 do
-        Accepte(i, j,
-          EstAllumee(CCibles[Roi, i], CCaseIndex[j])
-          and not EstAllumee(actives, CCaseIndex[j])
-        );
+        if EstAllumee(CCibles[Roi, i], CCaseIndex[j])
+        and not EstAllumee(actives, CCaseIndex[j]) then
+          Accepte(i, j);
     end;
   end;
   ACompte := LCompte;
@@ -152,6 +149,124 @@ var
   LListe: array[0..0] of integer;
 begin
   ChercheCoups(APos, LListe, result, TRUE);
+end;
+
+function ChercheProtections(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean): integer;
+procedure Accepte(const i, j: integer);
+begin
+  Inc(result);
+  if not ARapide then
+  begin
+    Assert(result <= Length(AListe));
+    AListe[Pred(result)] := EncodeCoup(i, j);
+  end;
+end;
+var
+  { Pièces. }
+  actives, passives, toutes: TDamier;
+  i, j, k: integer;
+begin
+  if APos.Trait then begin
+    actives := APos.Noires;
+    passives := APos.Blanches;
+  end else begin
+    actives := APos.Blanches;
+    passives := APos.Noires;
+  end;
+  with APos do
+    toutes := Blanches or Noires;
+  
+  result := 0;
+  
+  for i := A1 to H8 do if EstAllumee(actives, CCaseIndex[i]) then
+  begin
+    { Pion. }
+    if EstAllumee(APos.Pions, CCaseIndex[i]) then
+    begin
+      { Pas en avant. }
+      k := 8 - 16 * Ord(APos.Trait);
+      { Prise côté dame. }
+      if i mod 8 > 0 then
+      begin
+        j := Pred(i + k);
+        if EstAllumee(actives and APos.Pions, CCaseIndex[j]) then
+          Accepte(i, j);
+      end;
+      { Prise côté roi. }
+      if i mod 8 < 7 then
+      begin
+        j := Succ(i + k);
+        if EstAllumee(actives and APos.Pions, CCaseIndex[j]) then
+          Accepte(i, j);
+      end;
+    end else
+    { Tour. }
+    if EstAllumee(APos.Tours, CCaseIndex[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Tour, i], CCaseIndex[j])
+        and EstAllumee(actives, CCaseIndex[j])
+        and ((CChemin[i, j] and toutes) = 0) then
+          if EstAllumee(APos.Tours, CCaseIndex[j])
+          or EstAllumee(APos.Fous, CCaseIndex[j])
+          or EstAllumee(APos.Cavaliers, CCaseIndex[j])
+          or EstAllumee(APos.Pions, CCaseIndex[j]) then
+            Accepte(i, j);
+    end else
+    { Cavalier. }
+    if EstAllumee(APos.Cavaliers, CCaseIndex[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Cavalier, i], CCaseIndex[j])
+        and EstAllumee(actives, CCaseIndex[j]) then
+          if EstAllumee(APos.Fous, CCaseIndex[j])
+          or EstAllumee(APos.Cavaliers, CCaseIndex[j])
+          or EstAllumee(APos.Pions, CCaseIndex[j]) then
+            Accepte(i, j);
+    end else
+    { Fou. }
+    if EstAllumee(APos.Fous, CCaseIndex[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Fou, i], CCaseIndex[j])
+        and EstAllumee(actives, CCaseIndex[j])
+        and ((CChemin[i, j] and toutes) = 0) then
+          if EstAllumee(APos.Cavaliers, CCaseIndex[j])
+          or EstAllumee(APos.Pions, CCaseIndex[j]) then
+            Accepte(i, j);
+    end else
+    { Dame. }
+    if EstAllumee(APos.Dames, CCaseIndex[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Dame, i], CCaseIndex[j])
+        and EstAllumee(actives, CCaseIndex[j])
+        and ((CChemin[i, j] and toutes) = 0) then
+          if EstAllumee(APos.Tours, CCaseIndex[j])
+          or EstAllumee(APos.Fous, CCaseIndex[j])
+          or EstAllumee(APos.Cavaliers, CCaseIndex[j])
+          or EstAllumee(APos.Pions, CCaseIndex[j]) then
+            Accepte(i, j);
+    end else
+    { Roi. }
+    if EstAllumee(APos.Rois, CCaseIndex[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Roi, i], CCaseIndex[j])
+        and EstAllumee(actives, CCaseIndex[j]) then
+          if EstAllumee(APos.Pions, CCaseIndex[j]) then
+            Accepte(i, j);
+    end;
+  end;
+  ACompte := result;
+end;
+
+function ChercheProtections(const APos: TPosition): integer;
+var
+  LListe: array[0..0] of integer;
+  LCompte: integer;
+begin
+  result := ChercheProtections(APos, LListe, LCompte, TRUE);
 end;
 
 end.

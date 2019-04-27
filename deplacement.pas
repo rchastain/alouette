@@ -1,7 +1,7 @@
 
 {**
-@abstract(Déplacement des pièces.)
-Complément de l'unité échecs.
+  @abstract(Déplacement des pièces.)
+  Complément de l'unité échecs.
 }
 
 unit Deplacement;

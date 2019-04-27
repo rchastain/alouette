@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Journal.)
+  Unité pour la production d'un journal.
+}
+
 unit Journal;
 
 interface

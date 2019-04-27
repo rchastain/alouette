@@ -1,8 +1,9 @@
 
 {**
-@abstract(Déclarations des tables.)
-Déclarations des tables fabriquées. Fonctions basées sur les tables, remplaçant les fonctions correspondantes de l'unité Damier.
+  @abstract(Déclarations des tables.)
+  Déclarations des tables préfabriquées. Fonctions basées sur les tables, remplaçant les fonctions correspondantes de l'unité Damier.
 }
+
 unit Tables;
 
 interface

@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Manipulation des chaînes de caractères.)
+  Manipulation des chaînes de caractères.
+}
+
 unit Outils;
 
 interface

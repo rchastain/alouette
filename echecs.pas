@@ -1,8 +1,9 @@
 
 {**
-@abstract(Lecture et écriture d'une position dans une chaîne de caractères au format EPD.)
-Les quatre groupes de caractères d'une chaîne au format EPD sont identiques aux quatre premiers groupes de caractères d'une chaîne au format @html(<a href="http://kirill-kryukov.com/chess/doc/fen.html">FEN</a>).
+  @abstract(Lecture et écriture d'une position dans une chaîne de caractères au format EPD.)
+  Les quatre groupes de caractères d'une chaîne EPD correspondent aux quatre premiers groupes de caractères d'une chaîne @html(<a href="http://kirill-kryukov.com/chess/doc/fen.html">FEN</a>).
 }
+
 unit Echecs;
 
 interface

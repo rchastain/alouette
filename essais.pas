@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Essais.)
+  Essais.
+}
+
 unit Essais;
 
 interface

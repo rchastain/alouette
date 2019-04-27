@@ -1,7 +1,7 @@
 
 {**
-@abstract(Tables pièce-case.)
-Tables de Tomasz Michniewski.
+  @abstract(Tables pièce-case.)
+  Tables pièce-case de Tomasz Michniewski.
 }
 
 unit TablesPieceCase;
