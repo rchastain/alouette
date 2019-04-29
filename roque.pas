@@ -86,7 +86,7 @@ begin
   end;
   LPos := APos;
   LPos.Trait := not LPos.Trait;
-  menacees := ChercheCoups(LPos);
+  menacees := ChercheCoups(LPos) or ChercheCoupsPotentielsPion(LPos);
   caseRoi := APos.PositionRoi[APos.Trait];
   LColDepRoi := Colonne(caseRoi);
   LColDepTour := APos.Roque[APos.Trait].XTourRoi;

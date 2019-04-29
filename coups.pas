@@ -18,6 +18,7 @@ function ChercheNombre(const APos: TPosition): integer;
 function ChercheProtections(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): integer; overload;
 {** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
 function ChercheProtections(const APos: TPosition): integer; overload;
+function ChercheCoupsPotentielsPion(const APos: TPosition): TDamier;
 
 implementation
 
@@ -267,6 +268,44 @@ var
   LCompte: integer;
 begin
   result := ChercheProtections(APos, LListe, LCompte, TRUE);
+end;
+
+function ChercheCoupsPotentielsPion(const APos: TPosition): TDamier;
+procedure Accepte(const i, j: integer);
+begin
+  Allume(result, CCaseIndex[j]);
+end;
+var
+  { Pièces. }
+  actives, passives, toutes: TDamier;
+  i, j, k: integer;
+  LPion: TPiece;
+begin
+  if APos.Trait then begin
+    actives := APos.Noires;
+    passives := APos.Blanches;
+    LPion := PionNoir;
+  end else begin
+    actives := APos.Blanches;
+    passives := APos.Noires;
+    LPion := PionBlanc;
+  end;
+  with APos do
+    toutes := Blanches or Noires;
+  
+  result := 0; { Damier vide. }
+  
+  for i := A1 to H8 do if EstAllumee(actives, CCaseIndex[i]) then
+  begin
+    { Pion. }
+    if EstAllumee(APos.Pions, CCaseIndex[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[LPion, i], CCaseIndex[j])
+        and not EstAllumee(actives, CCaseIndex[j]) then
+          Accepte(i, j);
+    end;
+  end;
 end;
 
 end.
