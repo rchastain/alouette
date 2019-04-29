@@ -8,7 +8,7 @@ program Alouette;
 uses
   Classes, SysUtils, Journal, Joueur, Echecs, Outils,
 {$ifdef DEBUG}
-  Essais,
+  //Essais,
 {$endif}
   Performance;
 

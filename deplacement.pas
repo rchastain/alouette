@@ -149,35 +149,41 @@ begin
   if (LType = @APos.Pions) then
   begin
     { Promotion. }
-    if (Length(ACoup) = 5) then
-      case ACoup[5] of
-        'n':
-          begin
-            EteintIndex(LType^, LDep);
-            AllumeIndex(APos.Cavaliers, LDep);
-            LType := @APos.Cavaliers;
-          end;
-        'b':
-          begin
-            EteintIndex(LType^, LDep);
-            AllumeIndex(APos.Fous, LDep);
-            LType := @APos.Fous;
-          end;
-        'r':
-          begin
-            EteintIndex(LType^, LDep);
-            AllumeIndex(APos.Tours, LDep);
-            LType := @APos.Tours;
-          end;
-        'q':
-          begin
-            EteintIndex(LType^, LDep);
-            AllumeIndex(APos.Dames, LDep);
-            LType := @APos.Dames;
-          end;
-        else
-          TJournal.Ajoute(Format('Valeur inattendue %s.', [ACoup[5]]));    
-    end;
+    if (Length(ACoup) = 4) and EstUnePromotion(APos, ACoup) then
+    begin
+      EteintIndex(LType^, LDep);
+      AllumeIndex(APos.Dames, LDep);
+      LType := @APos.Dames;
+    end else
+      if (Length(ACoup) = 5) then
+        case ACoup[5] of
+          'n':
+            begin
+              EteintIndex(LType^, LDep);
+              AllumeIndex(APos.Cavaliers, LDep);
+              LType := @APos.Cavaliers;
+            end;
+          'b':
+            begin
+              EteintIndex(LType^, LDep);
+              AllumeIndex(APos.Fous, LDep);
+              LType := @APos.Fous;
+            end;
+          'r':
+            begin
+              EteintIndex(LType^, LDep);
+              AllumeIndex(APos.Tours, LDep);
+              LType := @APos.Tours;
+            end;
+          'q':
+            begin
+              EteintIndex(LType^, LDep);
+              AllumeIndex(APos.Dames, LDep);
+              LType := @APos.Dames;
+            end;
+          else
+            TJournal.Ajoute(Format('Valeur inattendue %s.', [ACoup[5]]));    
+        end;
     
     { Prise en passant. }
     if LArr = APos.EnPassant then

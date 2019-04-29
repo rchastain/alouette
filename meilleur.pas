@@ -83,11 +83,15 @@ begin
     exit;
   ChercheCoups(LPos1, LListe1, n);
   result := High(integer);
+  
   for i := 0 to Pred(n) do
   begin
     LPos2 := LPos1;
     if not Rejoue_(LPos2, NomCoup(LListe1[i])) then
+    begin
       continue;
+      WriteLn('Impossible de rejouer le coup ', NomCoup(LListe1[i]), '.');
+    end;
     
     if Materiel(LPos2) < 8 * 900 + 2 * 500 + 2 * 330 + 2 * 320 - 20000 then
       exit(Low(integer));
@@ -98,7 +102,10 @@ begin
     begin
       LPos3 := LPos2;
       if not Rejoue_(LPos3, NomCoup(LListe2[j])) then
+      begin
         continue;
+        WriteLn('Impossible de rejouer le coup ', NomCoup(LListe2[i]), '.');
+      end;
       LPos3.Trait := not LPos3.Trait;
       v := Materiel(LPos3);
       if v > vmax then
@@ -246,24 +253,19 @@ begin
   TJournal.Ajoute(LigneInfo1(LListe, n, ' '));
   TJournal.Ajoute(LigneInfo2(LEval, n, ' '));
   TJournal.Ajoute('    coup   total  tables   roque   coups    capt  protec  advers   repet   annul');
-  
   n := CompteMeilleurs(LEval);
   for i := 0 to Pred(n) do
     LEval[i] := DeuxiemeEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
   TJournal.Ajoute(LigneInfo1(LListe, n, ' '));
   TJournal.Ajoute(LigneInfo2(LEval, n, ' '));
-  
   coup := LListe[0];
-  
   if EstUnRoque(APos, coup) and not AEchecs960 then
   begin
     Assert((coup div 100) mod 8 = CColE);
     Reformule(coup);
   end;
-  
   result := NomCoup(coup);
-  
   if EstUnePromotion(APos, result) then
     result := Concat(result, 'q');
 end;
