@@ -4,7 +4,7 @@
   Tables pièce-case de Tomasz Michniewski.
 }
 
-unit TablesPieceCase;
+unit PieceCase;
 
 interface
 

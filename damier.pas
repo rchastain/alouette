@@ -35,9 +35,9 @@ procedure Eteint(var ADam: TDamier; const ACase: TDamier);
 {** Éteint une case et en allume une autre. }
 procedure Deplace(var AType, ACoul: TDamier; const ACaseDep, ACaseArr: TDamier);
 {** Chaîne de chiffres binaires. }
-function Chaine(const ADam: TDamier): string;
+function FChaine(const ADam: TDamier): string;
 {** Chaîne de chiffres binaires en forme de damier. }
-function Affiche_(const ADam: TDamier): string;
+function FChaineDamier(const ADam: TDamier): string;
 {** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
 function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
@@ -155,7 +155,7 @@ begin
   ACoul := ACoul and not ACaseDep or ACaseArr;
 end;
 
-function Chaine(const ADam: TDamier): string;
+function FChaine(const ADam: TDamier): string;
 const
   CCaractere: array[boolean] of char = ('0', '1');
 var
@@ -166,12 +166,12 @@ begin
     result[64 - i] := CCaractere[EstAllumee(ADam, FCase(i))];
 end;
 
-function Affiche_(const ADam: TDamier): string;
+function FChaineDamier(const ADam: TDamier): string;
 var
   x, y: integer;
   LDamier: string;
 begin
-  LDamier := Chaine(ADam);
+  LDamier := FChaine(ADam);
   result := '+   abcdefgh   +'#13#10#13#10;
   for y := 7 downto 0 do
   begin

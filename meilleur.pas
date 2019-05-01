@@ -16,7 +16,7 @@ function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
 implementation
 
 uses
-  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, TablesPieceCase, Tri;
+  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, PieceCase, Tri;
 
 function ResultatTables(const APos: TPosition): integer;
 var
@@ -183,7 +183,7 @@ begin
   
   TJournal.Ajoute(
     Format(
-      '%8s%8d%8d%8d%8d%8d%8d%8d%8d%8d',
+      '%12s%12d%12d%12d%12d%12d%12d%12d%12d%12d',
       [
         NomCoup(ACoup),
         result,
@@ -200,33 +200,27 @@ begin
   );
 end;
 
-function LigneInfo1(const ACoups: array of integer; const n: integer; const ASeparateur: string): string;
+function LigneInfo1(const ACoups: array of integer; const n: integer): string;
 var
   i: integer;
-  LSeparateur: array[boolean] of string = ('', '');
 begin
   result := '';
-  LSeparateur[TRUE] := ASeparateur;
   for i := 0 to Pred(n) do
-    result := Format('%s%6s%s', [
+    result := Format('%s%12s', [
       result,
-      NomCoup(ACoups[i]),
-      LSeparateur[i < Pred(n)]
+      NomCoup(ACoups[i])
     ]);
 end;
 
-function LigneInfo2(const ANotes: array of integer; const n: integer; const ASeparateur: string): string;
+function LigneInfo2(const ANotes: array of integer; const n: integer): string;
 var
   i: integer;
-  LSeparateur: array[boolean] of string = ('', '');
 begin
   result := '';
-  LSeparateur[TRUE] := ASeparateur;
   for i := 0 to Pred(n) do
-    result := Format('%s%6d%s', [
+    result := Format('%s%12d', [
       result,
-      ANotes[i],
-      LSeparateur[i < Pred(n)]
+      ANotes[i]
     ]);
 end;
 
@@ -250,15 +244,16 @@ begin
   for i := 0 to Pred(n) do
     LEval[i] := PremiereEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
-  TJournal.Ajoute(LigneInfo1(LListe, n, ' '));
-  TJournal.Ajoute(LigneInfo2(LEval, n, ' '));
-  TJournal.Ajoute('    coup   total  tables   roque   coups    capt  protec  advers   repet   annul');
+  TJournal.Ajoute(LigneInfo1(LListe, n));
+  TJournal.Ajoute(LigneInfo2(LEval, n));
+  //                          .           .           .           .           .           .           .           .           .           .
+  TJournal.Ajoute('        coup       total      tables       roque       coups    captures  protection  adversaire  répétition  annulation');
   n := CompteMeilleurs(LEval);
   for i := 0 to Pred(n) do
     LEval[i] := DeuxiemeEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
-  TJournal.Ajoute(LigneInfo1(LListe, n, ' '));
-  TJournal.Ajoute(LigneInfo2(LEval, n, ' '));
+  TJournal.Ajoute(LigneInfo1(LListe, n));
+  TJournal.Ajoute(LigneInfo2(LEval, n));
   coup := LListe[0];
   if EstUnRoque(APos, coup) and not AEchecs960 then
   begin
