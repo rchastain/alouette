@@ -6,14 +6,23 @@
 program Alouette;
 
 uses
-  Classes, SysUtils, Journal, Joueur, Echecs, Outils,
-{$ifdef DEBUG}
-  //Essais,
-{$endif}
+{$IFDEF UNIX}
+  cthreads,
+  cwstring,
+{$ENDIF}
+  Classes,
+  SysUtils,
+  Journal,
+  Joueur,
+  Echecs,
+  Outils,
+{$IFDEF DEBUG}
+  Essais,
+{$ENDIF}
   Performance;
 
 {$I version.inc}
-
+  
 procedure Ecrire(const AChaine: string; const AEnvoi: boolean = TRUE);
 begin
   WriteLn(output, AChaine);
@@ -34,6 +43,9 @@ begin
   Ecrire(Format('bestmove %s', [Joueur.Coup]));
 end;
 
+const
+  COptionName = 'nosearch';
+  
 var
   LCommande: ansistring;
   LIndex: integer;
@@ -41,7 +53,7 @@ var
   
 begin
   Ecrire(Format('%s %s', [CApplication, CVersion]));
-
+  
   while TRUE do
   begin
     ReadLn(input, LCommande);

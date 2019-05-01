@@ -153,9 +153,9 @@ begin
 end;
 
 function ChercheProtections(const APos: TPosition; var AListe: array of integer; out ACompte: integer; const ARapide: boolean): integer;
-procedure Accepte(const i, j: integer);
+procedure Accepte(const i, j, k: integer);
 begin
-  Inc(result);
+  Inc(result, k);
   if not ARapide then
   begin
     Assert(result <= Length(AListe));
@@ -191,14 +191,14 @@ begin
       begin
         j := Pred(i + k);
         if EstAllumee(actives and APos.Pions, CCaseIndex[j]) then
-          Accepte(i, j);
+          Accepte(i, j, 5);
       end;
       { Prise côté roi. }
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
         if EstAllumee(actives and APos.Pions, CCaseIndex[j]) then
-          Accepte(i, j);
+          Accepte(i, j, 5);
       end;
     end else
     { Tour. }
@@ -208,11 +208,13 @@ begin
         if EstAllumee(CCibles[Tour, i], CCaseIndex[j])
         and EstAllumee(actives, CCaseIndex[j])
         and ((CChemin[i, j] and toutes) = 0) then
-          if EstAllumee(APos.Tours, CCaseIndex[j])
-          or EstAllumee(APos.Fous, CCaseIndex[j])
-          or EstAllumee(APos.Cavaliers, CCaseIndex[j])
-          or EstAllumee(APos.Pions, CCaseIndex[j]) then
-            Accepte(i, j);
+          if EstAllumee(APos.Tours, CCaseIndex[j]) then
+            Accepte(i, j, 1)
+          else
+            if EstAllumee(APos.Fous, CCaseIndex[j])
+            or EstAllumee(APos.Cavaliers, CCaseIndex[j])
+            or EstAllumee(APos.Pions, CCaseIndex[j]) then
+              Accepte(i, j, 2);
     end else
     { Cavalier. }
     if EstAllumee(APos.Cavaliers, CCaseIndex[i]) then
@@ -221,9 +223,11 @@ begin
         if EstAllumee(CCibles[Cavalier, i], CCaseIndex[j])
         and EstAllumee(actives, CCaseIndex[j]) then
           if EstAllumee(APos.Fous, CCaseIndex[j])
-          or EstAllumee(APos.Cavaliers, CCaseIndex[j])
-          or EstAllumee(APos.Pions, CCaseIndex[j]) then
-            Accepte(i, j);
+          or EstAllumee(APos.Cavaliers, CCaseIndex[j]) then
+            Accepte(i, j, 1)
+          else
+            if EstAllumee(APos.Pions, CCaseIndex[j]) then
+              Accepte(i, j, 2);
     end else
     { Fou. }
     if EstAllumee(APos.Fous, CCaseIndex[i]) then
@@ -234,7 +238,7 @@ begin
         and ((CChemin[i, j] and toutes) = 0) then
           if EstAllumee(APos.Cavaliers, CCaseIndex[j])
           or EstAllumee(APos.Pions, CCaseIndex[j]) then
-            Accepte(i, j);
+            Accepte(i, j, 1);
     end else
     { Dame. }
     if EstAllumee(APos.Dames, CCaseIndex[i]) then
@@ -247,7 +251,7 @@ begin
           or EstAllumee(APos.Fous, CCaseIndex[j])
           or EstAllumee(APos.Cavaliers, CCaseIndex[j])
           or EstAllumee(APos.Pions, CCaseIndex[j]) then
-            Accepte(i, j);
+            Accepte(i, j, 1);
     end else
     { Roi. }
     if EstAllumee(APos.Rois, CCaseIndex[i]) then
@@ -256,7 +260,7 @@ begin
         if EstAllumee(CCibles[Roi, i], CCaseIndex[j])
         and EstAllumee(actives, CCaseIndex[j]) then
           if EstAllumee(APos.Pions, CCaseIndex[j]) then
-            Accepte(i, j);
+            Accepte(i, j, 1);
     end;
   end;
   ACompte := result;
