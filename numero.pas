@@ -12,7 +12,7 @@ function NumeroPosition(const ABlanches: string): integer;
 
 implementation
 
-function ExtraitLigneUn(const AChaine: string): string;
+function LigneUn(const AChaine: string): string;
 var
   i: integer;
 begin
@@ -38,7 +38,7 @@ var
   i, x: integer;
   s, t: string; 
 begin
-  s := ExtraitLigneUn(ABlanches);
+  s := LigneUn(ABlanches);
   Assert(Length(s) = 8);
   
   whiteSquareBishopPos := CNotFound;

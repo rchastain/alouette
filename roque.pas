@@ -11,14 +11,14 @@ interface
 uses
   Echecs, Journal;
 
-procedure ChercheRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
+procedure FRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
 
 implementation
 
 uses
   SysUtils, Damier, Tables, Coups;
   
-procedure ChercheRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
+procedure FRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
   procedure Accepte(const i, j: integer; const ACondition: boolean = TRUE);
   begin
     if ACondition then
@@ -48,22 +48,22 @@ begin
   i := FIndex(LColDepRoi, LLigRoq); k := FIndex(ACAR, LLigRoq);
   j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
   //TJournal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
-  if EstAllumee(actives and APos.Tours, CCaseIndex[j]) then
+  if EstAllumee(actives and APos.Tours, CCaseIdx[j]) then
     //TJournal.Ajoute('Position tour vérifiée (condition 1/3).')
   else exit;
   
-  parcours := CChemin[i, k] or CCaseIndex[k];
+  parcours := CChemin[i, k] or CCaseIdx[k];
   autorisees := APos.Tours and actives;
   b := (parcours and toutes) = (parcours and autorisees);
-  c := (CompteCases(parcours and autorisees) <= 1);
-  parcours := CChemin[j, l] or CCaseIndex[l];
+  c := (CompteCasesAllumees(parcours and autorisees) <= 1);
+  parcours := CChemin[j, l] or CCaseIdx[l];
   autorisees := APos.Rois and actives;
   d := (parcours and toutes) = (parcours and autorisees);
   if b and c and d then
     //TJournal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
   else exit;
   
-  if (menacees and ((CCaseIndex[i] or CChemin[i, k] or CCaseIndex[k])) = 0) then
+  if (menacees and ((CCaseIdx[i] or CChemin[i, k] or CCaseIdx[k])) = 0) then
     //TJournal.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
   else exit;
   
@@ -86,7 +86,7 @@ begin
   end;
   LPos := APos;
   LPos.Trait := not LPos.Trait;
-  menacees := ChercheCoups(LPos) or ChercheCoupsPotentielsPion(LPos);
+  menacees := FCoups(LPos) or FCoupsPotentielsPion(LPos);
   caseRoi := APos.PositionRoi[APos.Trait];
   LColDepRoi := Colonne(caseRoi);
   LColDepTour := APos.Roque[APos.Trait].XTourRoi;

@@ -25,24 +25,24 @@ uses
   SysUtils, Journal, Deplacement, Meilleur, Histoire;
 
 var
-  p: TPosition;
-  LMode960: boolean;
+  GPos: TPosition;
+  GMode960: boolean;
   
 procedure Oublie;
 begin
-  p := CPositionVierge;
+  GPos := CPositionVierge;
 end;
 
 procedure PositionDepart;
 begin
-  Assert(not LMode960);
-  p := EncodePosition();
+  Assert(not GMode960);
+  GPos := EncodePosition();
   NouvelleHistoire;
 end;
 
 procedure Rejoue(const ACoup: string);
 begin
-  if Rejoue_(p, ACoup) then
+  if FRejoue(GPos, ACoup) then
     Histoire.Ajoute(ACoup)
   else
     TJournal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
@@ -50,7 +50,7 @@ end;
 
 function Coup: string;
 begin
-  result := MeilleurCoup(p, LMode960);
+  result := MeilleurCoup(GPos, GMode960);
 end;
 
 procedure ActiveEchecs960(const AValeur: boolean);
@@ -58,23 +58,23 @@ const
   CPrefixe: array[boolean] of string = ('dés', '');
 begin
   TJournal.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
-  LMode960 := AValeur;
+  GMode960 := AValeur;
 end;
 
 procedure NouvellePosition(const APos: string);
 begin
-  p := EncodePosition(APos, LMode960);
+  GPos := EncodePosition(APos, GMode960);
   NouvelleHistoire;
 end;
 
 function PositionCourante: TPosition;
 begin
-  result := p;
+  result := GPos;
 end;
 
 initialization
   Oublie;
-  LMode960 := FALSE;
+  GMode960 := FALSE;
   
 finalization
 

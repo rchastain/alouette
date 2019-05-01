@@ -1,7 +1,8 @@
 
 {**
   @abstract(Programme principal du moteur d'échecs UCI.)
-  Dialogue avec l'utilisateur au moyen du protocole UCI. }
+  Dialogue avec l'utilisateur au moyen du protocole UCI.
+}
 
 program Alouette;
 
@@ -104,6 +105,6 @@ begin
                       Ecrire(VoirPosition(PositionCourante))
                     else
                     if LCommande = 'perft' then
-                      EssaiPerformance();
+                      EssaiPerf();
   end;
 end.

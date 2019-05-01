@@ -14,12 +14,12 @@ type
   TPiece = (PionBlanc, PionNoir, Tour, Cavalier, Fou, Dame, Roi);
 
 {** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec un seul chiffre allumé. }
-function FCase(const AInd: integer): TDamier; overload;
+function FCase(const AIdx: integer): TDamier; overload;
 {** Case pour deux nombres donnés de 0 à 7. }
 function FCase(const ACol, ALig: integer): TDamier; overload;
 function FIndex(const ACol, ALig: integer): integer;
 function NomCase(const ACol, ALig: integer; const AMaj: boolean = FALSE): string; overload;
-function NomCase(const AInd: integer; const AMaj: boolean = FALSE): string; overload;
+function NomCase(const AIdx: integer; const AMaj: boolean = FALSE): string; overload;
 function NomCoup(const ADep, AArr: integer): string; overload;
 function NomCoup(const ACoup: integer): string; overload;
 function EncodeCoup(const i, j: integer): integer;
@@ -41,7 +41,7 @@ function Affiche_(const ADam: TDamier): string;
 {** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
 function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
-function Cibles(const APiece: TPiece; const AInd: integer): TDamier;
+function Cibles(const APiece: TPiece; const AIdx: integer): TDamier;
 {** Les cases à survoler pour aller d'un endroit à un autre. }
 function Chemin(const ACase1, ACase2: integer): TDamier;
 
@@ -72,10 +72,10 @@ implementation
 uses
   SysUtils;
   
-function FCase(const AInd: integer): TDamier;
+function FCase(const AIdx: integer): TDamier;
 begin
-  Assert((AInd >= 0) and (AInd <= 63));
-  result := TDamier(1) shl AInd;
+  Assert((AIdx >= 0) and (AIdx <= 63));
+  result := TDamier(1) shl AIdx;
 end;
 
 function FCase(const ACol, ALig: integer): TDamier;
@@ -98,9 +98,9 @@ begin
   );
 end;
 
-function NomCase(const AInd: integer; const AMaj: boolean): string;
+function NomCase(const AIdx: integer; const AMaj: boolean): string;
 begin
-  result := NomCase(AInd mod 8, AInd div 8, AMaj);
+  result := NomCase(AIdx mod 8, AIdx div 8, AMaj);
 end;
 
 function NomCoup(const ADep, AArr: integer): string;
@@ -209,12 +209,12 @@ begin
   end;
 end;
 
-function Cibles(const APiece: TPiece; const AInd: integer): TDamier;
+function Cibles(const APiece: TPiece; const AIdx: integer): TDamier;
 var
   x1, y1, x2, y2: integer;
 begin
-  x1 := AInd mod 8;
-  y1 := AInd div 8;
+  x1 := AIdx mod 8;
+  y1 := AIdx div 8;
   result := 0;
   for y2 := 7 downto 0 do
     for x2 := 0 to 7 do

@@ -19,34 +19,33 @@ type
 implementation
 
 {$IFDEF DEBUG}
-var vLog: text;
+var GLog: text;
 {$ENDIF}
 
 class procedure TJournal.Ajoute(const aLine: string);
 begin
 {$IFDEF DEBUG}
-  WriteLn(vLog, Concat(DateTimeToStr(Now()), ' ', aLine));
-  Flush(vLog);
+  WriteLn(GLog, Concat(DateTimeToStr(Now()), ' ', aLine));
+  Flush(GLog);
 {$ENDIF}
 end;
 
 var
-  vName: string;
+  LName: string;
   
 initialization
-  //vName := ChangeFileExt(ParamStr(0), '.log');
-  vName := FormatDateTime('yyyymmddhhnnss".log"', Now);
+  LName := FormatDateTime('yyyymmddhhnnss".log"', Now);
 {$IFDEF DEBUG}
-  Assign(vLog, vName);
-  if FileExists(vName) then
-    Append(vLog)
+  Assign(GLog, LName);
+  if FileExists(LName) then
+    Append(GLog)
   else
-    Rewrite(vLog);
+    Rewrite(GLog);
 {$ENDIF}
 
 finalization
 {$IFDEF DEBUG}
-  Close(vLog);
+  Close(GLog);
 {$ENDIF}
 
 end.

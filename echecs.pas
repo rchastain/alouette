@@ -328,14 +328,14 @@ begin
     begin
       i := 8 * y + x;
       c[x, y] := '?';
-      if EstAllumeeIndex(APos.Pions,     i) then c[x, y] := 'p' else
-      if EstAllumeeIndex(APos.Tours,     i) then c[x, y] := 'r' else
-      if EstAllumeeIndex(APos.Cavaliers, i) then c[x, y] := 'n' else
-      if EstAllumeeIndex(APos.Fous,      i) then c[x, y] := 'b' else
-      if EstAllumeeIndex(APos.Dames,     i) then c[x, y] := 'q' else
-      if EstAllumeeIndex(APos.Rois,      i) then c[x, y] := 'k' else
+      if EstAllumeeIdx(APos.Pions,     i) then c[x, y] := 'p' else
+      if EstAllumeeIdx(APos.Tours,     i) then c[x, y] := 'r' else
+      if EstAllumeeIdx(APos.Cavaliers, i) then c[x, y] := 'n' else
+      if EstAllumeeIdx(APos.Fous,      i) then c[x, y] := 'b' else
+      if EstAllumeeIdx(APos.Dames,     i) then c[x, y] := 'q' else
+      if EstAllumeeIdx(APos.Rois,      i) then c[x, y] := 'k' else
         c[x, y] := ' ';
-      if EstAllumeeIndex(APos.Blanches, i) then
+      if EstAllumeeIdx(APos.Blanches, i) then
         c[x, y] := UpCase(c[x, y]);
     end;
   result := Format(GRILLE, [

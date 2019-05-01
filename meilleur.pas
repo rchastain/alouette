@@ -21,7 +21,7 @@ uses
 function ResultatTables(const APos: TPosition): integer;
 var
   LActives: TDamier;
-  LInd, LIndInv: integer;
+  LIdx, LIdxRel: integer;
 begin
   result := 0;
   
@@ -31,41 +31,41 @@ begin
     else
       LActives := Blanches;
   
-  for LInd := A1 to H8 do
-    if EstAllumeeIndex(LActives, LInd) then
+  for LIdx := A1 to H8 do
+    if EstAllumeeIdx(LActives, LIdx) then
     begin
       if not APos.Trait then
-        LIndInv := 63 - LInd
+        LIdxRel := 63 - LIdx
       else
-        LIndInv := LInd;
-      if EstAllumeeIndex(APos.Pions,     LInd) then Inc(result, CTablePionBlanc[LIndInv]) else
-      if EstAllumeeIndex(APos.Cavaliers, LInd) then Inc(result, CTableCavalierBlanc[LIndInv]) else
-      if EstAllumeeIndex(APos.Fous,      LInd) then Inc(result, CTableFouBlanc[LIndInv]) else
-      if EstAllumeeIndex(APos.Tours,     LInd) then Inc(result, CTableTourBlanc[LIndInv]) else
-      if EstAllumeeIndex(APos.Dames,     LInd) then Inc(result, CTableDameBlanc[LIndInv]) else
-      if EstAllumeeIndex(APos.Rois,      LInd) then Inc(result, CTableRoiBlanc[LIndInv]);
+        LIdxRel := LIdx;
+      if EstAllumeeIdx(APos.Pions,     LIdx) then Inc(result, CTablePionBlanc[LIdxRel]) else
+      if EstAllumeeIdx(APos.Cavaliers, LIdx) then Inc(result, CTableCavalierBlanc[LIdxRel]) else
+      if EstAllumeeIdx(APos.Fous,      LIdx) then Inc(result, CTableFouBlanc[LIdxRel]) else
+      if EstAllumeeIdx(APos.Tours,     LIdx) then Inc(result, CTableTourBlanc[LIdxRel]) else
+      if EstAllumeeIdx(APos.Dames,     LIdx) then Inc(result, CTableDameBlanc[LIdxRel]) else
+      if EstAllumeeIdx(APos.Rois,      LIdx) then Inc(result, CTableRoiBlanc[LIdxRel]);
     end;
 end;
 
 function Materiel(const APos: TPosition): integer;
 var
-  LInd, LCoul: integer;
+  LIdx, LCoul: integer;
 begin
   result := 0;
-  for LInd := A1 to H8 do
+  for LIdx := A1 to H8 do
   begin
-    if EstAllumeeIndex(APos.Blanches, LInd) then
+    if EstAllumeeIdx(APos.Blanches, LIdx) then
       LCoul := 1
-    else if EstAllumeeIndex(APos.Noires, LInd) then
+    else if EstAllumeeIdx(APos.Noires, LIdx) then
       LCoul := -1
     else
       continue;
-    if EstAllumeeIndex(APos.Pions,     LInd) then Inc(result,   100 * LCoul) else
-    if EstAllumeeIndex(APos.Cavaliers, LInd) then Inc(result,   320 * LCoul) else
-    if EstAllumeeIndex(APos.Fous,      LInd) then Inc(result,   330 * LCoul) else
-    if EstAllumeeIndex(APos.Tours,     LInd) then Inc(result,   500 * LCoul) else
-    if EstAllumeeIndex(APos.Dames,     LInd) then Inc(result,   900 * LCoul) else
-    if EstAllumeeIndex(APos.Rois,      LInd) then Inc(result, 20000 * LCoul);
+    if EstAllumeeIdx(APos.Pions,     LIdx) then Inc(result,   100 * LCoul) else
+    if EstAllumeeIdx(APos.Cavaliers, LIdx) then Inc(result,   320 * LCoul) else
+    if EstAllumeeIdx(APos.Fous,      LIdx) then Inc(result,   330 * LCoul) else
+    if EstAllumeeIdx(APos.Tours,     LIdx) then Inc(result,   500 * LCoul) else
+    if EstAllumeeIdx(APos.Dames,     LIdx) then Inc(result,   900 * LCoul) else
+    if EstAllumeeIdx(APos.Rois,      LIdx) then Inc(result, 20000 * LCoul);
   end;
   if APos.Trait then
     result := -1 * result;
@@ -79,15 +79,15 @@ var
 begin
   LPos1 := APos;
   result := Low(integer);
-  if not Rejoue_(LPos1, NomCoup(ACoup)) then
+  if not FRejoue(LPos1, NomCoup(ACoup)) then
     exit;
-  ChercheCoups(LPos1, LListe1, n);
+  FCoups(LPos1, LListe1, n);
   result := High(integer);
   
   for i := 0 to Pred(n) do
   begin
     LPos2 := LPos1;
-    if not Rejoue_(LPos2, NomCoup(LListe1[i])) then
+    if not FRejoue(LPos2, NomCoup(LListe1[i])) then
     begin
       continue;
       WriteLn('Impossible de rejouer le coup ', NomCoup(LListe1[i]), '.');
@@ -96,12 +96,12 @@ begin
     if Materiel(LPos2) < 8 * 900 + 2 * 500 + 2 * 330 + 2 * 320 - 20000 then
       exit(Low(integer));
     
-    ChercheCoups(LPos2, LListe2, o);
+    FCoups(LPos2, LListe2, o);
     vmax := Low(integer);
     for j := 0 to Pred(o) do
     begin
       LPos3 := LPos2;
-      if not Rejoue_(LPos3, NomCoup(LListe2[j])) then
+      if not FRejoue(LPos3, NomCoup(LListe2[j])) then
       begin
         continue;
         WriteLn('Impossible de rejouer le coup ', NomCoup(LListe2[i]), '.');
@@ -131,16 +131,16 @@ var
   begin
     result := 0;
     LPieces := APieces and LPos.Rois;      if LPieces <> 0 then Inc(result, 20000);
-    LPieces := APieces and LPos.Dames;     if LPieces <> 0 then Inc(result,   900 * CompteCases(LPieces));
-    LPieces := APieces and LPos.Tours;     if LPieces <> 0 then Inc(result,   500 * CompteCases(LPieces));
-    LPieces := APieces and LPos.Fous;      if LPieces <> 0 then Inc(result,   330 * CompteCases(LPieces));
-    LPieces := APieces and LPos.Cavaliers; if LPieces <> 0 then Inc(result,   320 * CompteCases(LPieces));
-    LPieces := APieces and LPos.Pions;     if LPieces <> 0 then Inc(result,   100 * CompteCases(LPieces));
+    LPieces := APieces and LPos.Dames;     if LPieces <> 0 then Inc(result,   900 * CompteCasesAllumees(LPieces));
+    LPieces := APieces and LPos.Tours;     if LPieces <> 0 then Inc(result,   500 * CompteCasesAllumees(LPieces));
+    LPieces := APieces and LPos.Fous;      if LPieces <> 0 then Inc(result,   330 * CompteCasesAllumees(LPieces));
+    LPieces := APieces and LPos.Cavaliers; if LPieces <> 0 then Inc(result,   320 * CompteCasesAllumees(LPieces));
+    LPieces := APieces and LPos.Pions;     if LPieces <> 0 then Inc(result,   100 * CompteCasesAllumees(LPieces));
   end;
 
 var
   LActives, LPassives, LMenaces: TDamier;
-  LBonusRoque, LMalusCapturesPotentiellesAdv, LBonusNombreCoups, LBalanceMateriel, LBonusTables: integer;
+  LBonusRoque, LMalusCapturesPotentielles, LBonusNombreCoups, LBonusTables: integer;
   LBonusCapturesPotentielles: integer;
   LBonusProtection: integer;
   LMalusRepetition, LMalusAnnulation: integer;
@@ -148,7 +148,7 @@ begin
   LPos := APos;
   LBonusRoque := 100 * Ord(EstUnRoque(LPos, ACoup));
   result := Low(integer);
-  if not Rejoue_(LPos, NomCoup(ACoup)) then
+  if not FRejoue(LPos, NomCoup(ACoup)) then
     exit; 
   
   with LPos do
@@ -160,13 +160,13 @@ begin
       LPassives := Noires;
     end;
 
-  LMenaces := ChercheCoups(LPos);
-  LMalusCapturesPotentiellesAdv := Estime(LMenaces and LPassives);
+  LMenaces := FCoups(LPos);
+  LMalusCapturesPotentielles := Estime(LMenaces and LPassives);
   LPos.Trait := not LPos.Trait;
-  LBonusNombreCoups := ChercheNombre(LPos);
+  LBonusNombreCoups := FNombreCoups(LPos);
   LBonusTables := ResultatTables(LPos);
-  LBonusCapturesPotentielles := Estime(ChercheCoups(LPos) and LActives);
-  LBonusProtection := ChercheProtections(LPos);
+  LBonusCapturesPotentielles := Estime(FCoups(LPos) and LActives);
+  LBonusProtection := FProtections(LPos);
   LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
   LMalusAnnulation := Ord(NomCoup(ACoup) = Inverse(Dernier));
   
@@ -177,7 +177,7 @@ begin
     + LBonusNombreCoups
     + LBonusCapturesPotentielles
     + LBonusProtection
-    - LMalusCapturesPotentiellesAdv
+    - LMalusCapturesPotentielles
     - LMalusRepetition
     - LMalusAnnulation;
   
@@ -192,7 +192,7 @@ begin
         LBonusNombreCoups,
         LBonusCapturesPotentielles,
         LBonusProtection,
-        LMalusCapturesPotentiellesAdv,
+        LMalusCapturesPotentielles,
         LMalusRepetition,
         LMalusAnnulation
       ]
@@ -244,8 +244,8 @@ var
 begin
   result := '0000';
   
-  ChercheCoups(APos, LListe, n);
-  ChercheRoque(APos, LListe, n);
+  FCoups(APos, LListe, n);
+  FRoque(APos, LListe, n);
   
   for i := 0 to Pred(n) do
     LEval[i] := PremiereEvaluation(APos, LListe[i]);

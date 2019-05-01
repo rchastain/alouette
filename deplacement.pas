@@ -12,7 +12,7 @@ uses
   Echecs;
 
 {** Met à jour la position en fonction d'un coup présumé légal. Renvoie FALSE si une impossibilité de jouer le coup est détectée. }
-function Rejoue_(var APos: TPosition; const ACoup: string): boolean;
+function FRejoue(var APos: TPosition; const ACoup: string): boolean;
 function EstUnePromotion(const APos: TPosition; const ACoup: string): boolean;
 function EstUnRoque(const APos: TPosition; const ACoup: integer): boolean;
 procedure Reformule(var ARoque: integer);
@@ -22,7 +22,7 @@ implementation
 uses
   SysUtils, Damier, Tables, Journal;
   
-function Rejoue_(var APos: TPosition; const ACoup: string): boolean;
+function FRejoue(var APos: TPosition; const ACoup: string): boolean;
 var
   LDep, LArr, LColDep, LColArr, LLigDep, LLigArr, LPris: integer;
   LType, LCouleur, LAdv: ^TDamier;
@@ -34,13 +34,13 @@ begin
   LArr := DecodeNomCase(Copy(ACoup, 3, 2));
   { On assigne une valeur aux pointeurs en fonction du trait et dans la foulée on vérifie qu'il y a bien une pièce de la bonne couleur sur la case de départ. }
   if (APos.Trait = CBlanc)
-  and EstAllumeeIndex(APos.Blanches, LDep) then
+  and EstAllumeeIdx(APos.Blanches, LDep) then
   begin
     LCouleur := @APos.Blanches;
     LAdv := @APos.Noires;
   end else
   if (APos.Trait = CNoir)
-  and EstAllumeeIndex(APos.Noires, LDep) then
+  and EstAllumeeIdx(APos.Noires, LDep) then
   begin
     LCouleur := @APos.Noires;
     LAdv := @APos.Blanches;
@@ -48,17 +48,17 @@ begin
     exit(FALSE);
   
   { Pointeur vers le damier contenant la position des pièces de ce type. }
-  if EstAllumeeIndex(APos.Pions, LDep) then
+  if EstAllumeeIdx(APos.Pions, LDep) then
     LType := @APos.Pions
-  else if EstAllumeeIndex(APos.Tours, LDep) then
+  else if EstAllumeeIdx(APos.Tours, LDep) then
     LType := @APos.Tours
-  else if EstAllumeeIndex(APos.Cavaliers, LDep) then
+  else if EstAllumeeIdx(APos.Cavaliers, LDep) then
     LType := @APos.Cavaliers
-  else if EstAllumeeIndex(APos.Fous, LDep) then
+  else if EstAllumeeIdx(APos.Fous, LDep) then
     LType := @APos.Fous
-  else if EstAllumeeIndex(APos.Dames, LDep) then
+  else if EstAllumeeIdx(APos.Dames, LDep) then
     LType := @APos.Dames
-  else if EstAllumeeIndex(APos.Rois, LDep) then
+  else if EstAllumeeIdx(APos.Rois, LDep) then
     LType := @APos.Rois
   else
     exit(FALSE);
@@ -72,20 +72,20 @@ begin
   { Si la pièce déplacée est un roi... }
   if LType = @APos.Rois then
   begin
-    if EstAllumeeIndex(APos.Tours and LCouleur^, LArr) then
+    if EstAllumeeIdx(APos.Tours and LCouleur^, LArr) then
     begin
       
       if LColArr = APos.Roque[APos.Trait].XTourRoi then
       begin
-        TJournal.Ajoute(Format('[Rejoue_] Roque 960 roi %s.', [ACoup]));
-        DeplaceIndex(APos.Tours, LCouleur^, LArr, CATCR[APos.Trait]);
+        TJournal.Ajoute(Format('[FRejoue] Roque 960 roi %s.', [ACoup]));
+        DeplaceIdx(APos.Tours, LCouleur^, LArr, CATCR[APos.Trait]);
         LArr := FIndex(CColG, LLigArr);
         LPreserveCouleur := LColDep = CATCR[APos.Trait] mod 8;
       end else
         if LColArr = APos.Roque[APos.Trait].XTourDame then
         begin
-          TJournal.Ajoute(Format('[Rejoue_] Roque 960 dame %s.', [ACoup]));
-          DeplaceIndex(APos.Tours, LCouleur^, LArr, CATCD[APos.Trait]);
+          TJournal.Ajoute(Format('[FRejoue] Roque 960 dame %s.', [ACoup]));
+          DeplaceIdx(APos.Tours, LCouleur^, LArr, CATCD[APos.Trait]);
           LArr := FIndex(CColC, LLigArr);
           LPreserveCouleur := LColDep = CATCD[APos.Trait] mod 8;
         end else
@@ -96,20 +96,20 @@ begin
       begin
         if LColArr = CColG then
         begin
-          TJournal.Ajoute(Format('[Rejoue_] Roque roi %s.', [ACoup]));
-          DeplaceIndex(APos.Tours, LCouleur^, CDTCR[APos.Trait], CATCR[APos.Trait]);
+          TJournal.Ajoute(Format('[FRejoue] Roque roi %s.', [ACoup]));
+          DeplaceIdx(APos.Tours, LCouleur^, CDTCR[APos.Trait], CATCR[APos.Trait]);
         end else
           if LColArr = CColC then
           begin
-            TJournal.Ajoute(Format('[Rejoue_] Roque dame %s.', [ACoup]));
-            DeplaceIndex(APos.Tours, LCouleur^, CDTCD[APos.Trait], CATCD[APos.Trait]);
+            TJournal.Ajoute(Format('[FRejoue] Roque dame %s.', [ACoup]));
+            DeplaceIdx(APos.Tours, LCouleur^, CDTCD[APos.Trait], CATCD[APos.Trait]);
           end else
             exit(FALSE);
       end;
     
     APos.Roque[APos.Trait].XTourRoi := CNeant;
     APos.Roque[APos.Trait].XTourDame := CNeant;
-    APos.PositionRoi[APos.Trait] := CCaseIndex[LArr];
+    APos.PositionRoi[APos.Trait] := CCaseIdx[LArr];
   end;
   
   { Si la pièce déplacée est une tour... }
@@ -122,9 +122,9 @@ begin
         XTourDame := CNeant;
   
   { S'il y a une pièce sur la case d'arrivée... }
-  if EstAllumeeIndex(LAdv^, LArr) then
+  if EstAllumeeIdx(LAdv^, LArr) then
   begin
-    if EstAllumeeIndex(APos.Tours, LArr)
+    if EstAllumeeIdx(APos.Tours, LArr)
     and (LLigArr = CLigRoq[not APos.Trait]) then
       with APos.Roque[not APos.Trait] do
         if (LColArr = XTourRoi) then
@@ -135,14 +135,14 @@ begin
         
     with APos do
     begin
-      EteintIndex(Pions, LArr);
-      EteintIndex(Tours, LArr);
-      EteintIndex(Cavaliers, LArr);
-      EteintIndex(Fous, LArr);
-      EteintIndex(Dames, LArr);
-      EteintIndex(Rois, LArr);
+      EteintIdx(Pions, LArr);
+      EteintIdx(Tours, LArr);
+      EteintIdx(Cavaliers, LArr);
+      EteintIdx(Fous, LArr);
+      EteintIdx(Dames, LArr);
+      EteintIdx(Rois, LArr);
     end;
-    EteintIndex(LAdv^, LArr);
+    EteintIdx(LAdv^, LArr);
   end;
   
   { Si la pièce déplacée est un pion... }
@@ -151,34 +151,34 @@ begin
     { Promotion. }
     if (Length(ACoup) = 4) and EstUnePromotion(APos, ACoup) then
     begin
-      EteintIndex(LType^, LDep);
-      AllumeIndex(APos.Dames, LDep);
+      EteintIdx(LType^, LDep);
+      AllumeIdx(APos.Dames, LDep);
       LType := @APos.Dames;
     end else
       if (Length(ACoup) = 5) then
         case ACoup[5] of
           'n':
             begin
-              EteintIndex(LType^, LDep);
-              AllumeIndex(APos.Cavaliers, LDep);
+              EteintIdx(LType^, LDep);
+              AllumeIdx(APos.Cavaliers, LDep);
               LType := @APos.Cavaliers;
             end;
           'b':
             begin
-              EteintIndex(LType^, LDep);
-              AllumeIndex(APos.Fous, LDep);
+              EteintIdx(LType^, LDep);
+              AllumeIdx(APos.Fous, LDep);
               LType := @APos.Fous;
             end;
           'r':
             begin
-              EteintIndex(LType^, LDep);
-              AllumeIndex(APos.Tours, LDep);
+              EteintIdx(LType^, LDep);
+              AllumeIdx(APos.Tours, LDep);
               LType := @APos.Tours;
             end;
           'q':
             begin
-              EteintIndex(LType^, LDep);
-              AllumeIndex(APos.Dames, LDep);
+              EteintIdx(LType^, LDep);
+              AllumeIdx(APos.Dames, LDep);
               LType := @APos.Dames;
             end;
           else
@@ -189,8 +189,8 @@ begin
     if LArr = APos.EnPassant then
     begin
       LPris := FIndex(LColArr, LLigDep);
-      EteintIndex(APos.Pions, LPris);
-      EteintIndex(LAdv^, LPris);
+      EteintIdx(APos.Pions, LPris);
+      EteintIdx(LAdv^, LPris);
     end;
   end;
   
@@ -200,7 +200,7 @@ begin
     APos.EnPassant := CNeant;
   
   { Déplacement de la pièce. }
-  DeplaceIndex(LType^, LCouleur^, LDep, LArr, LPreserveCouleur);
+  DeplaceIdx(LType^, LCouleur^, LDep, LArr, LPreserveCouleur);
   { Changement du trait. }
   APos.Trait := not APos.Trait;
 end;
@@ -211,7 +211,7 @@ var
 begin
   LDep := DecodeNomCase(Copy(ACoup, 1, 2));
   LArr := DecodeNomCase(Copy(ACoup, 3, 2)) div 8;
-  result := EstAllumeeIndex(APos.Pions, LDep) and (
+  result := EstAllumeeIdx(APos.Pions, LDep) and (
     not APos.Trait and (LArr = CLig8)
     or  APos.Trait and (LArr = CLig1)
   );
@@ -224,8 +224,8 @@ begin
   LDep := ACoup div 100;
   LArr := ACoup mod 100;
   result :=
-    (EstAllumeeIndex(APos.Blanches, LDep) and EstAllumeeIndex(APos.Blanches, LArr)) or
-    (EstAllumeeIndex(APos.Noires, LDep) and EstAllumeeIndex(APos.Noires, LArr));
+    (EstAllumeeIdx(APos.Blanches, LDep) and EstAllumeeIdx(APos.Blanches, LArr)) or
+    (EstAllumeeIdx(APos.Noires, LDep) and EstAllumeeIdx(APos.Noires, LArr));
   if result then
     TJournal.Ajoute(Format('[EstUnRoque] Roque détecté %s.', [NomCoup(ACoup)]));
 end;
