@@ -246,20 +246,21 @@ begin
   Trie(LListe, LEval, n);
   TJournal.Ajoute(LigneInfo1(LListe, n));
   TJournal.Ajoute(LigneInfo2(LEval, n));
-  //                          .           .           .           .           .           .           .           .           .           .
-  TJournal.Ajoute('        coup       total      tables       roque       coups    captures  protection  adversaire  répétition  annulation');
+  
   n := CompteMeilleurs(LEval);
   for i := 0 to Pred(n) do
     LEval[i] := DeuxiemeEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
   TJournal.Ajoute(LigneInfo1(LListe, n));
   TJournal.Ajoute(LigneInfo2(LEval, n));
+  
   coup := LListe[0];
   if EstUnRoque(APos, coup) and not AEchecs960 then
   begin
     Assert((coup div 100) mod 8 = CColE);
     Reformule(coup);
   end;
+  
   result := NomCoup(coup);
   if EstUnePromotion(APos, result) then
     result := Concat(result, 'q');
