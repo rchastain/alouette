@@ -164,7 +164,7 @@ begin
   LMalusCapturesPotentielles := Estime(LMenaces and LPassives);
   LPos.Trait := not LPos.Trait;
   LBonusNombreCoups := FNombreCoups(LPos);
-  LBonusTables := ResultatTables(LPos);
+  LBonusTables := ResultatTables(LPos) div 5;
   LBonusCapturesPotentielles := Estime(FCoups(LPos) and LActives);
   LBonusProtection := FProtections(LPos);
   LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
@@ -183,12 +183,12 @@ begin
   
   TJournal.Ajoute(
     Format(
-      '%12s%12d%12d%12d%12d%12d%12d%12d%12d%12d',
+      '<tr><td style="text-align: left;">%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>',
       [
         NomCoup(ACoup),
         result,
         LBonusTables,
-        LBonusRoque,   
+        LBonusRoque,
         LBonusNombreCoups,
         LBonusCapturesPotentielles,
         LBonusProtection,
@@ -196,32 +196,9 @@ begin
         LMalusRepetition,
         LMalusAnnulation
       ]
-    )
+    ),
+    TRUE
   );
-end;
-
-function LigneInfo1(const ACoups: array of integer; const n: integer): string;
-var
-  i: integer;
-begin
-  result := '';
-  for i := 0 to Pred(n) do
-    result := Format('%s%12s', [
-      result,
-      NomCoup(ACoups[i])
-    ]);
-end;
-
-function LigneInfo2(const ANotes: array of integer; const n: integer): string;
-var
-  i: integer;
-begin
-  result := '';
-  for i := 0 to Pred(n) do
-    result := Format('%s%12d', [
-      result,
-      ANotes[i]
-    ]);
 end;
 
 function CompteMeilleurs(const ANotes: array of integer): integer;
@@ -237,22 +214,25 @@ var
   n, i, coup: integer;
 begin
   result := '0000';
-  
+  WriteLn({$I %LINE%});
   FCoups(APos, LListe, n);
   FRoque(APos, LListe, n);
-  
+  WriteLn({$I %LINE%});
   for i := 0 to Pred(n) do
     LEval[i] := PremiereEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
-  TJournal.Ajoute(LigneInfo1(LListe, n));
-  TJournal.Ajoute(LigneInfo2(LEval, n));
+  WriteLn({$I %LINE%});
+  TJournal.AjouteTable(LListe, LEval, n, 'Première évaluation');
   
   n := CompteMeilleurs(LEval);
+  TJournal.Ajoute(Format('<p>%s</p>', [DateTimeToStr(Now)]), TRUE);
+  TJournal.Ajoute('<table><caption>Détail deuxième évaluation</caption><tr><th>Coup</th><th>Total</th><th>Bonus tables</th><th>B roque</th><th>B seconds coups</th><th>B captures</th><th>B protection</th><th>Malus captures</th><th>M répétition</th><th>M annulation</th></tr>', TRUE);
   for i := 0 to Pred(n) do
     LEval[i] := DeuxiemeEvaluation(APos, LListe[i]);
+  TJournal.Ajoute('</table>', TRUE);
   Trie(LListe, LEval, n);
-  TJournal.Ajoute(LigneInfo1(LListe, n));
-  TJournal.Ajoute(LigneInfo2(LEval, n));
+  
+  TJournal.AjouteTable(LListe, LEval, n, 'Deuxième évaluation');
   
   coup := LListe[0];
   if EstUnRoque(APos, coup) and not AEchecs960 then
