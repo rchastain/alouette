@@ -17,8 +17,24 @@ order14=0
 order15=0
 order16=0
 [projectoptions]
-projectdir=/C:/Roland/pascal/echecs/alouette
-projectfilename=/C:/Roland/pascal/echecs/alouette/alouette.prj
+projectdir=/C:/Roland/pascal/echecs/alouette/source
+projectfilename=/C:/Roland/pascal/echecs/alouette/source/alouette.prj
+replacedialog=15
+ [replacedialogfo.promptonreplace]
+ value=1
+ [replacedialogfo.selectedonly]
+ value=0
+ [replacedialogfo.replacetext]
+ value=PiecesCouleur[APos.Trait]
+ history=2
+  PiecesCouleur[APos.Trait]
+  
+ [replacedialogfo]
+ stackedunder=
+ x=576
+ y=195
+ cx=427
+ cy=163
 options=131
  [projectoptionsfo.toolshortcuts]
  dropdowncolwidths=3
@@ -113,10 +129,10 @@ options=131
  sortdescend6=0
  sortdescend7=0
  values8=4
-  -l -Mobjfpc -Sh -Fcutf8 -Sa -FuC:\Roland\pascal\echecs\alouette -FUunits -dDEBUG
-  -gl -O-
+  -l -Mobjfpc -Sh -Fcutf8 -FuC:\Roland\pascal\echecs\alouette -FUunits
   -B
-  -O2 -XX -CX -Xs
+  -dDEBUG -gl -O- -Sa
+  -dRELEASE -O2 -XX -CX -Xs
  sortdescend8=0
  [projectoptionsfo.makegroupbox]
  firsttab=0
@@ -151,12 +167,18 @@ options=131
  y=100
  cx=832
  cy=581
-settings=8
- [settings_form]
- x=447
- y=121
- cx=471
- cy=489
+settings=14
+ [settingsfo.macrogrid]
+ propcolwidthref=302
+ width0=151
+ sortdescend0=0
+ width1=144
+ sortdescend1=0
+ [settingsfo]
+ x=100
+ y=106
+ cx=348
+ cy=570
  wsize=0
  active=1
  visible=1
@@ -311,10 +333,10 @@ targpref=-o
 befcommand=0
 aftcommand=0
 makeoptions=4
- -l -Mobjfpc -Sh -Fcutf8 -Sa -FuC:\Roland\pascal\echecs\alouette -FUunits -dDEBUG
- -gl -O-
+ -l -Mobjfpc -Sh -Fcutf8 -FuC:\Roland\pascal\echecs\alouette -FUunits
  -B
- -O2 -XX -CX -Xs
+ -dDEBUG -gl -O- -Sa
+ -dRELEASE -O2 -XX -CX -Xs
 reversepathorder=0
 makeoptpurpose=4
  
@@ -324,9 +346,9 @@ makeoptpurpose=4
 befcommandon=0
 makeoptionson=4
  63
- 31
- 34
- 32
+ 2
+ 4
+ 8
 aftcommandon=0
 unitdirson=2
  65599
@@ -618,18 +640,14 @@ envvarons=0
 [edit]
 hintwidth=462
 hintheight=19
-finddtext=
-findhistory=0
-findoptions=1
-editpos=1
- 39,6
-bookmarks0=0
-sourcefiles=1
- /C:/Roland/pascal/echecs/alouette/meilleur.pas
-relpaths=1
- meilleur.pas
-ismoduletexts=1
- 0
+finddtext=Noires
+findhistory=1
+ Noires
+findoptions=3
+editpos=0
+sourcefiles=0
+relpaths=0
+ismoduletexts=0
 modules=0
 moduleoptions=0
 visiblemodules=0
@@ -637,7 +655,7 @@ nomenumodules=0
 [sourcefo.tabwidget]
 tabsize=60
 firsttab=0
-index=0
+index=-1
 [layout]
 windowlayout=527
  [mainfo.openform]
@@ -681,13 +699,13 @@ windowlayout=527
  ny=0
  ncx=0
  ncy=0
- x=30
- y=81
+ x=425
+ y=203
  cx=883
- cy=628
+ cy=436
  rcx=0
  rcy=0
- wsize=0
+ wsize=6
  active=1
  visible=1
  [targetconsolefo]
@@ -699,8 +717,8 @@ windowlayout=527
  ny=0
  ncx=0
  ncy=0
- x=865
- y=274
+ x=656
+ y=297
  cx=497
  cy=314
  rcx=0
@@ -801,7 +819,7 @@ windowlayout=527
  x=0
  y=0
  cx=205
- cy=532
+ cy=601
  rcx=0
  rcy=0
  [projecttreefo.grid]
@@ -1006,11 +1024,11 @@ windowlayout=527
  ncx=0
  ncy=0
  x=0
- y=505
- cx=873
- cy=89
- rcx=873
- rcy=594
+ y=571
+ cx=1356
+ cy=100
+ rcx=1356
+ rcy=671
  [componentstorefo]
  splitdir=0
  useroptions=268460155
@@ -1107,8 +1125,8 @@ windowlayout=527
  ncy=0
  x=0
  y=0
- cx=873
- cy=59
+ cx=1356
+ cy=67
  rcx=0
  rcy=0
  [sourcefo]
@@ -1123,8 +1141,8 @@ windowlayout=527
  ncy=0
  x=208
  y=0
- cx=665
- cy=532
+ cx=1148
+ cy=601
  rcx=0
  rcy=0
  [actionsmo.watchesonact]
@@ -1162,9 +1180,9 @@ windowlayout=527
  ncx=0
  ncy=0
  x=0
- y=62
- cx=873
- cy=532
+ y=70
+ cx=1356
+ cy=601
  rcx=0
  rcy=0
 [targetconsole]

@@ -20,19 +20,11 @@ uses
 
 function ResultatTables(const APos: TPosition): integer;
 var
-  LActives: TDamier;
   LIdx, LIdxRel: integer;
 begin
   result := 0;
-  
-  with APos do
-    if Trait then
-      LActives := Noires
-    else
-      LActives := Blanches;
-  
   for LIdx := A1 to H8 do
-    if EstAllumeeIdx(LActives, LIdx) then
+    if EstAllumeeIdx(APos.PiecesCouleur[APos.Trait], LIdx) then
     begin
       if not APos.Trait then
         LIdxRel := 63 - LIdx
@@ -54,9 +46,9 @@ begin
   result := 0;
   for LIdx := A1 to H8 do
   begin
-    if EstAllumeeIdx(APos.Blanches, LIdx) then
+    if EstAllumeeIdx(APos.PiecesCouleur[FALSE], LIdx) then
       LCoul := 1
-    else if EstAllumeeIdx(APos.Noires, LIdx) then
+    else if EstAllumeeIdx(APos.PiecesCouleur[TRUE], LIdx) then
       LCoul := -1
     else
       continue;
@@ -79,8 +71,12 @@ var
 begin
   LPos1 := APos;
   result := Low(integer);
+  
   if not FRejoue(LPos1, NomCoup(ACoup)) then
+  begin
+    TJournal.Ajoute(Format('Impossible de rejouer %s (ligne %s).', [NomCoup(ACoup), {$I %LINE%}]));
     exit;
+  end;
   FCoups(LPos1, LListe1, n);
   result := High(integer);
   
@@ -89,12 +85,15 @@ begin
     LPos2 := LPos1;
     if not FRejoue(LPos2, NomCoup(LListe1[i])) then
     begin
+      TJournal.Ajoute(Format('Impossible de rejouer %s (ligne %s).', [NomCoup(ACoup), {$I %LINE%}]));
       continue;
-      WriteLn('Impossible de rejouer le coup ', NomCoup(LListe1[i]), '.');
     end;
     
     if Materiel(LPos2) < 8 * 900 + 2 * 500 + 2 * 330 + 2 * 320 - 20000 then
+    begin
+      TJournal.Ajoute(Format('Le joueur n''a plus de roi (ligne %s).', [{$I %LINE%}]));
       exit(Low(integer));
+    end;
     
     FCoups(LPos2, LListe2, o);
     vmax := Low(integer);
@@ -103,8 +102,8 @@ begin
       LPos3 := LPos2;
       if not FRejoue(LPos3, NomCoup(LListe2[j])) then
       begin
+        TJournal.Ajoute(Format('Impossible de rejouer %s (ligne %s).', [NomCoup(ACoup), {$I %LINE%}]));
         continue;
-        WriteLn('Impossible de rejouer le coup ', NomCoup(LListe2[i]), '.');
       end;
       LPos3.Trait := not LPos3.Trait;
       v := Materiel(LPos3);
@@ -139,7 +138,7 @@ var
   end;
 
 var
-  LActives, LPassives, LMenaces: TDamier;
+  LMenaces: TDamier;
   LBonusRoque, LMalusCapturesPotentielles, LBonusNombreCoups, LBonusTables: integer;
   LBonusCapturesPotentielles: integer;
   LBonusProtection: integer;
@@ -150,22 +149,13 @@ begin
   result := Low(integer);
   if not FRejoue(LPos, NomCoup(ACoup)) then
     exit; 
-  
-  with LPos do
-    if Trait then begin
-      LActives := Noires;
-      LPassives := Blanches;
-    end else begin
-      LActives := Blanches;
-      LPassives := Noires;
-    end;
 
   LMenaces := FCoups(LPos);
-  LMalusCapturesPotentielles := Estime(LMenaces and LPassives);
+  LMalusCapturesPotentielles := Estime(LMenaces and LPos.PiecesCouleur[not LPos.Trait]);
   LPos.Trait := not LPos.Trait;
   LBonusNombreCoups := FNombreCoups(LPos);
   LBonusTables := ResultatTables(LPos) div 5;
-  LBonusCapturesPotentielles := Estime(FCoups(LPos) and LActives);
+  LBonusCapturesPotentielles := Estime(FCoups(LPos) and LPos.PiecesCouleur[LPos.Trait]);
   LBonusProtection := FProtections(LPos);
   LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
   LMalusAnnulation := Ord(NomCoup(ACoup) = Inverse(Dernier));
@@ -214,24 +204,21 @@ var
   n, i, coup: integer;
 begin
   result := '0000';
-  WriteLn({$I %LINE%});
+  TJournal.Ajoute(Format('<p>%s</p>', [DateTimeToStr(Now)]), TRUE);
   FCoups(APos, LListe, n);
   FRoque(APos, LListe, n);
-  WriteLn({$I %LINE%});
   for i := 0 to Pred(n) do
     LEval[i] := PremiereEvaluation(APos, LListe[i]);
   Trie(LListe, LEval, n);
-  WriteLn({$I %LINE%});
   TJournal.AjouteTable(LListe, LEval, n, 'Première évaluation');
   
   n := CompteMeilleurs(LEval);
-  TJournal.Ajoute(Format('<p>%s</p>', [DateTimeToStr(Now)]), TRUE);
+  
   TJournal.Ajoute('<table><caption>Détail deuxième évaluation</caption><tr><th>Coup</th><th>Total</th><th>Bonus tables</th><th>B roque</th><th>B seconds coups</th><th>B captures</th><th>B protection</th><th>Malus captures</th><th>M répétition</th><th>M annulation</th></tr>', TRUE);
   for i := 0 to Pred(n) do
     LEval[i] := DeuxiemeEvaluation(APos, LListe[i]);
   TJournal.Ajoute('</table>', TRUE);
   Trie(LListe, LEval, n);
-  
   TJournal.AjouteTable(LListe, LEval, n, 'Deuxième évaluation');
   
   coup := LListe[0];

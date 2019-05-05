@@ -45,19 +45,19 @@ end;
 function Evalue(const APos: TPosition; const ACoup: integer): integer;
 var
   LPos: TPosition;
-  LPassives: ^TDamier;
+  //LPassives: ^TDamier;
 begin
   LPos := APos;
   result := Low(integer);
   if not FRejoue(LPos, NomCoup(ACoup)) then
     exit;
-  
+  (*
   if LPos.Trait then
     LPassives := @LPos.Blanches
   else
     LPassives := @LPos.Noires;
-  
-  result := 0 - Ord((FCoups(LPos) and LPassives^ and LPos.Rois) <> 0);
+  *)
+  result := 0 - Ord((FCoups(LPos) and {LPassives^}LPos.PiecesCouleur[not LPos.Trait] and LPos.Rois) <> 0);
 end;
 
 function NombreCoups(const APos: TPosition; const AProf: integer): int64;

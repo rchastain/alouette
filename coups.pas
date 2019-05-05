@@ -40,22 +40,14 @@ begin
 end;
 var
   { Pièces. }
-  actives, passives, toutes: TDamier;
+  toutes: TDamier;
   i, j, k: integer;
 begin
-  if APos.Trait then begin
-    actives := APos.Noires;
-    passives := APos.Blanches;
-  end else begin
-    actives := APos.Blanches;
-    passives := APos.Noires;
-  end;
-  with APos do
-    toutes := Blanches or Noires;
+  toutes := APos.PiecesCouleur[FALSE] or APos.PiecesCouleur[TRUE];
   
   result := 0; { Damier vide. }
   
-  for i := A1 to H8 do if EstAllumee(actives, CCaseIdx[i]) then
+  for i := A1 to H8 do if EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[i]) then
   begin
     { Pion. }
     if EstAllumee(APos.Pions, CCaseIdx[i]) then
@@ -79,14 +71,14 @@ begin
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
-        if EstAllumee(passives, CCaseIdx[j]) xor (j = APos.EnPassant) then
+        if EstAllumee({passives}APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
           Accepte(i, j);
       end;
       { Prise côté roi. }
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
-        if EstAllumee(passives, CCaseIdx[j]) xor (j = APos.EnPassant) then
+        if EstAllumee({passives}APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
           Accepte(i, j);
       end;
     end else
@@ -95,7 +87,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Tour, i], CCaseIdx[j])
-        and not EstAllumee(actives, CCaseIdx[j])
+        and not EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and toutes) = 0) then
           Accepte(i, j);
     end else
@@ -104,7 +96,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Cavalier, i], CCaseIdx[j])
-        and not EstAllumee(actives, CCaseIdx[j]) then
+        and not EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
           Accepte(i, j);
     end else
     { Fou. }
@@ -112,7 +104,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Fou, i], CCaseIdx[j])
-        and not EstAllumee(actives, CCaseIdx[j])
+        and not EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and toutes) = 0) then
           Accepte(i, j);
     end else
@@ -121,7 +113,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Dame, i], CCaseIdx[j])
-        and not EstAllumee(actives, CCaseIdx[j])
+        and not EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and toutes) = 0) then
           Accepte(i, j);
     end else
@@ -130,7 +122,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Roi, i], CCaseIdx[j])
-        and not EstAllumee(actives, CCaseIdx[j]) then
+        and not EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
           Accepte(i, j);
     end;
   end;
@@ -164,22 +156,13 @@ begin
 end;
 var
   { Pièces. }
-  actives, passives, toutes: TDamier;
+  toutes: TDamier;
   i, j, k: integer;
 begin
-  if APos.Trait then begin
-    actives := APos.Noires;
-    passives := APos.Blanches;
-  end else begin
-    actives := APos.Blanches;
-    passives := APos.Noires;
-  end;
-  with APos do
-    toutes := Blanches or Noires;
-  
+  toutes := APos.PiecesCouleur[FALSE] or APos.PiecesCouleur[TRUE];
   result := 0;
   
-  for i := A1 to H8 do if EstAllumee(actives, CCaseIdx[i]) then
+  for i := A1 to H8 do if EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[i]) then
   begin
     { Pion. }
     if EstAllumee(APos.Pions, CCaseIdx[i]) then
@@ -190,14 +173,14 @@ begin
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
-        if EstAllumee(actives and APos.Pions, CCaseIdx[j]) then
+        if EstAllumee({actives}APos.PiecesCouleur[APos.Trait] and APos.Pions, CCaseIdx[j]) then
           Accepte(i, j, 5);
       end;
       { Prise côté roi. }
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
-        if EstAllumee(actives and APos.Pions, CCaseIdx[j]) then
+        if EstAllumee({actives}APos.PiecesCouleur[APos.Trait] and APos.Pions, CCaseIdx[j]) then
           Accepte(i, j, 5);
       end;
     end else
@@ -206,7 +189,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Tour, i], CCaseIdx[j])
-        and EstAllumee(actives, CCaseIdx[j])
+        and EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and toutes) = 0) then
           if EstAllumee(APos.Tours, CCaseIdx[j]) then
             Accepte(i, j, 1)
@@ -221,7 +204,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Cavalier, i], CCaseIdx[j])
-        and EstAllumee(actives, CCaseIdx[j]) then
+        and EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
           if EstAllumee(APos.Fous, CCaseIdx[j])
           or EstAllumee(APos.Cavaliers, CCaseIdx[j]) then
             Accepte(i, j, 1)
@@ -234,7 +217,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Fou, i], CCaseIdx[j])
-        and EstAllumee(actives, CCaseIdx[j])
+        and EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and toutes) = 0) then
           if EstAllumee(APos.Cavaliers, CCaseIdx[j])
           or EstAllumee(APos.Pions, CCaseIdx[j]) then
@@ -245,7 +228,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Dame, i], CCaseIdx[j])
-        and EstAllumee(actives, CCaseIdx[j])
+        and EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and toutes) = 0) then
           if EstAllumee(APos.Tours, CCaseIdx[j])
           or EstAllumee(APos.Fous, CCaseIdx[j])
@@ -258,7 +241,7 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Roi, i], CCaseIdx[j])
-        and EstAllumee(actives, CCaseIdx[j]) then
+        and EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
           if EstAllumee(APos.Pions, CCaseIdx[j]) then
             Accepte(i, j, 1);
     end;
@@ -281,10 +264,11 @@ begin
 end;
 var
   { Pièces. }
-  actives, passives, toutes: TDamier;
+  //actives, passives, toutes: TDamier;
   i, j: integer;
   LPion: TPiece;
 begin
+  (*
   if APos.Trait then begin
     actives := APos.Noires;
     passives := APos.Blanches;
@@ -296,17 +280,22 @@ begin
   end;
   with APos do
     toutes := Blanches or Noires;
+  *)
+  if APos.Trait then
+    LPion := PionNoir
+  else
+    LPion := PionBlanc;
   
   result := 0; { Damier vide. }
   
-  for i := A1 to H8 do if EstAllumee(actives, CCaseIdx[i]) then
+  for i := A1 to H8 do if EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[i]) then
   begin
     { Pion. }
     if EstAllumee(APos.Pions, CCaseIdx[i]) then
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[LPion, i], CCaseIdx[j])
-        and not EstAllumee(actives, CCaseIdx[j]) then
+        and not EstAllumee({actives}APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
           Accepte(i, j);
     end;
   end;

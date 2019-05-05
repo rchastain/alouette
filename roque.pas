@@ -30,7 +30,7 @@ procedure FRoque(const APos: TPosition; var AListe: array of integer; var ACompt
   end;
 var
   { Pièces. }
-  actives, toutes,
+  toutes,
   { Cases menacées par l'adversaire. }
   menacees: TDamier;
   LLigRoq,
@@ -48,16 +48,16 @@ begin
   i := FIndex(LColDepRoi, LLigRoq); k := FIndex(ACAR, LLigRoq);
   j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
   //TJournal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
-  if EstAllumee(actives and APos.Tours, CCaseIdx[j]) then
+  if EstAllumee({actives}APos.PiecesCouleur[APos.Trait] and APos.Tours, CCaseIdx[j]) then
     //TJournal.Ajoute('Position tour vérifiée (condition 1/3).')
   else exit;
   
   parcours := CChemin[i, k] or CCaseIdx[k];
-  autorisees := APos.Tours and actives;
+  autorisees := APos.Tours and {actives}APos.PiecesCouleur[APos.Trait];
   b := (parcours and toutes) = (parcours and autorisees);
   c := (CompteCasesAllumees(parcours and autorisees) <= 1);
   parcours := CChemin[j, l] or CCaseIdx[l];
-  autorisees := APos.Rois and actives;
+  autorisees := APos.Rois and {actives}APos.PiecesCouleur[APos.Trait];
   d := (parcours and toutes) = (parcours and autorisees);
   if b and c and d then
     //TJournal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
@@ -74,15 +74,10 @@ begin
   with APos do
   begin
     if Trait then
-    begin
-      actives := Noires;
-      LLigRoq := CLig8;
-    end else
-    begin
-      actives := Blanches;
+      LLigRoq := CLig8
+    else
       LLigRoq := CLig1;
-    end;
-    toutes := Blanches or Noires;
+    toutes := PiecesCouleur[FALSE] or PiecesCouleur[TRUE];
   end;
   LPos := APos;
   LPos.Trait := not LPos.Trait;

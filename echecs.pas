@@ -23,8 +23,7 @@ type
   end;
   TRoque = array[boolean] of TDonneesRoque;
   TPosition = record
-    Blanches,
-    Noires,
+    PiecesCouleur: array[boolean] of TDamier;
     Pions,
     Tours,
     Cavaliers,
@@ -39,8 +38,7 @@ type
   
 const
   CPositionVierge: TPosition = (
-    Blanches: 0;
-    Noires: 0;
+    PiecesCouleur: (0, 0);
     Pions: 0;
     Tours: 0;
     Cavaliers: 0;
@@ -58,22 +56,24 @@ const
 
 const
   CPositionDepart = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -';
-type
-  TCaseRoque = array[boolean] of integer;
-const
-  CATCR: TCaseRoque = (F1, F8); { Arrivée tour, côté roi. }
-  CATCD: TCaseRoque = (D1, D8); { Arrivée tour, côté dame. }
-  CDTCR: TCaseRoque = (H1, H8); { Départ  tour, côté roi. }
-  CDTCD: TCaseRoque = (A1, A8); { Départ  tour, côté dame. }
   CColC = 2;
   CColD = 3;
   CColE = 4;
   CColF = 5;
   CColG = 6;
-  CLig8 = 7;
   CLig1 = 0;
-  CLigRoq: array[boolean] of integer = (0, 7);
+  CLig8 = 7;
+  CLigRoq: array[boolean] of integer = (CLig1, CLig8);
   
+type
+  TCaseRoque = array[boolean] of integer;
+  
+const
+  CATCR: TCaseRoque = (F1, F8); { Arrivée tour, côté roi. }
+  CATCD: TCaseRoque = (D1, D8); { Arrivée tour, côté dame. }
+  CDTCR: TCaseRoque = (H1, H8); { Départ  tour, côté roi. }
+  CDTCD: TCaseRoque = (A1, A8); { Départ  tour, côté dame. }
+
 function EncodePosition(const APos: string = CPositionDepart; const AEchecs960: boolean = FALSE): TPosition;
 function DecodePosition(const APos: TPosition; const AEchecs960: boolean = FALSE): string;
 function Colonne(const ACase: TDamier): integer;
@@ -202,10 +202,7 @@ begin
         else
           begin
             LCase := CCaseCoord[x, y];
-            if c in ['a'..'z'] then
-              Allume(Noires, LCase)
-            else
-              Allume(Blanches, LCase);
+            Allume(PiecesCouleur[c in ['a'..'z']], LCase);
             case UpCase(c) of
               'P': Allume(Pions, LCase);
               'R': Allume(Tours, LCase);
@@ -250,23 +247,23 @@ begin
     y := 7;
     while y >= 0 do
     begin
-      if (Blanches or Noires) and CCaseCoord[x, y] = 0 then
+      if (PiecesCouleur[FALSE] or PiecesCouleur[TRUE]) and CCaseCoord[x, y] = 0 then
       begin
         n := 0;
-        while (x + n <= 7) and ((Blanches or Noires) and CCaseCoord[x + n, y] = 0) do
+        while (x + n <= 7) and ((PiecesCouleur[FALSE] or PiecesCouleur[TRUE]) and CCaseCoord[x + n, y] = 0) do
           Inc(n);
         result := Concat(result, IntToStr(n));
         Inc(x, n);
       end else
       begin
         c := '?';
-        if EstAllumee(Pions,     CCaseCoord[x, y]) then c := 'P' else
-        if EstAllumee(Tours,     CCaseCoord[x, y]) then c := 'R' else
-        if EstAllumee(Cavaliers, CCaseCoord[x, y]) then c := 'N' else
-        if EstAllumee(Fous,      CCaseCoord[x, y]) then c := 'B' else
-        if EstAllumee(Dames,     CCaseCoord[x, y]) then c := 'Q' else
-        if EstAllumee(Rois,      CCaseCoord[x, y]) then c := 'K';
-        if EstAllumee(Noires,    CCaseCoord[x, y]) then
+        if EstAllumee(Pions,               CCaseCoord[x, y]) then c := 'P' else
+        if EstAllumee(Tours,               CCaseCoord[x, y]) then c := 'R' else
+        if EstAllumee(Cavaliers,           CCaseCoord[x, y]) then c := 'N' else
+        if EstAllumee(Fous,                CCaseCoord[x, y]) then c := 'B' else
+        if EstAllumee(Dames,               CCaseCoord[x, y]) then c := 'Q' else
+        if EstAllumee(Rois,                CCaseCoord[x, y]) then c := 'K';
+        if EstAllumee(PiecesCouleur[TRUE], CCaseCoord[x, y]) then
           c := Chr(Ord(c) + 32);
         result := Concat(result, c);
         Inc(x);
@@ -335,7 +332,7 @@ begin
       if EstAllumeeIdx(APos.Dames,     i) then c[x, y] := 'q' else
       if EstAllumeeIdx(APos.Rois,      i) then c[x, y] := 'k' else
         c[x, y] := ' ';
-      if EstAllumeeIdx(APos.Blanches, i) then
+      if EstAllumeeIdx(APos.PiecesCouleur[FALSE], i) then
         c[x, y] := UpCase(c[x, y]);
     end;
   result := Format(GRILLE, [
