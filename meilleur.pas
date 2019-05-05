@@ -191,10 +191,10 @@ begin
   );
 end;
 
-function CompteMeilleurs(const ANotes: array of integer): integer;
+function CompteMeilleurs(const ANotes: array of integer; const ALim: integer): integer;
 begin
   result := 1;
-  while ANotes[result] = ANotes[0] do
+  while (result < ALim) and (ANotes[result] = ANotes[0]) do
     Inc(result);
 end;
 
@@ -212,7 +212,7 @@ begin
   Trie(LListe, LEval, n);
   TJournal.AjouteTable(LListe, LEval, n, 'Première évaluation');
   
-  n := CompteMeilleurs(LEval);
+  n := CompteMeilleurs(LEval, n);
   
   TJournal.Ajoute('<table><caption>Détail deuxième évaluation</caption><tr><th>Coup</th><th>Total</th><th>Bonus tables</th><th>B roque</th><th>B seconds coups</th><th>B captures</th><th>B protection</th><th>Malus captures</th><th>M répétition</th><th>M annulation</th></tr>', TRUE);
   for i := 0 to Pred(n) do
