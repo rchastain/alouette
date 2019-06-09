@@ -15,7 +15,7 @@ uses
   
 procedure EssaiEncodeDecode;
 const
-  CNomFich = 'chess960.fen';
+  CNomFich = 'fischerandom.fen';
 var
   i: integer;
   p: TPosition;
