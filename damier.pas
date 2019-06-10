@@ -22,7 +22,7 @@ function NomCase(const ACol, ALig: integer; const AMaj: boolean = FALSE): string
 function NomCase(const AIdx: integer; const AMaj: boolean = FALSE): string; overload;
 function NomCoup(const ADep, AArr: integer): string; overload;
 function NomCoup(const ACoup: integer): string; overload;
-function EncodeCoup(const i, j: integer): integer;
+function EncodeCoup(const ADep, AArr: integer): integer;
 procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer);
 {** Convertit une chaîne de la forme "a1" en un nombre de 0 à 63. }
 function DecodeNomCase(const ANom: string): integer;
@@ -33,7 +33,7 @@ procedure Allume(var ADam: TDamier; const ACase: TDamier);
 {** Éteint une case. }
 procedure Eteint(var ADam: TDamier; const ACase: TDamier);
 {** Éteint une case et en allume une autre. }
-procedure Deplace(var AType, ACoul: TDamier; const ACaseDep, ACaseArr: TDamier);
+procedure Deplace(var AType, ACoul: TDamier; const ADep, AArr: TDamier);
 {** Chaîne de chiffres binaires. }
 function FChaine(const ADam: TDamier): string;
 {** Chaîne de chiffres binaires en forme de damier. }
@@ -43,7 +43,7 @@ function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): bool
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
 function Cibles(const APiece: TPiece; const AIdx: integer): TDamier;
 {** Les cases à survoler pour aller d'un endroit à un autre. }
-function Chemin(const ACase1, ACase2: integer): TDamier;
+function Chemin(const ADep, AArr: integer): TDamier;
 
 const  
   {** Numérotation des cases de 0 à 63. }
@@ -108,9 +108,9 @@ begin
   result := Concat(NomCase(ADep), NomCase(AArr));
 end;
 
-function EncodeCoup(const i, j: integer): integer;
+function EncodeCoup(const ADep, AArr: integer): integer;
 begin
-  result := 100 * i + j;
+  result := 100 * ADep + AArr;
 end;
 
 procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer);
@@ -149,10 +149,10 @@ begin
   ADam := ADam and not ACase;
 end;
 
-procedure Deplace(var AType, ACoul: TDamier; const ACaseDep, ACaseArr: TDamier);
+procedure Deplace(var AType, ACoul: TDamier; const ADep, AArr: TDamier);
 begin
-  AType := AType and not ACaseDep or ACaseArr;
-  ACoul := ACoul and not ACaseDep or ACaseArr;
+  AType := AType and not ADep or AArr;
+  ACoul := ACoul and not ADep or AArr;
 end;
 
 function FChaine(const ADam: TDamier): string;
@@ -222,22 +222,19 @@ begin
         Allume(result, FCase(x2, y2));
 end;
 
-function Chemin(const ACase1, ACase2: integer): TDamier;
+function Chemin(const ADep, AArr: integer): TDamier;
 var
   x1, y1, x2, y2, dx, dy: integer;
 begin
   result := 0;
-  x1 := ACase1 mod 8;
-  y1 := ACase1 div 8;
-  x2 := ACase2 mod 8;
-  y2 := ACase2 div 8;
+  x1 := ADep mod 8;
+  y1 := ADep div 8;
+  x2 := AArr mod 8;
+  y2 := AArr div 8;
   dx := x2 - x1;
   dy := y2 - y1;
   if ((dx <> 0) or (dy <> 0))
-  and (
-    ((dx = 0) or (dy = 0))
-    or (Abs(dx) = Abs(dy))
-  ) then
+  and (((dx = 0) or (dy = 0)) or (Abs(dx) = Abs(dy))) then
   begin
     if dx <> 0 then dx := dx div Abs(dx);
     if dy <> 0 then dy := dy div Abs(dy);

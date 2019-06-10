@@ -6,6 +6,10 @@
 
 unit Journal;
 
+{$IFDEF DEBUG}
+{$ASSERTIONS ON}
+{$ENDIF}
+
 interface
 
 uses
@@ -46,7 +50,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF DEBUG}
-  s := '<table><caption>' + ATitre + '</caption>'#13#10;
+  s := '<table><caption>' + ATitre + '</caption>' + LineEnding;
   s := s + '<tr>';
   for i := 0 to Pred(n) do
     s := s + Format('<th>%s</th>', [NomCoup(ACoups[i])]);
@@ -61,6 +65,9 @@ begin
 {$ENDIF}
 end;
 
+const
+  CLogFolderName = 'journal';
+  
 var
   LName: array[boolean] of string;
 {$IFDEF DEBUG}
@@ -71,18 +78,20 @@ initialization
   LName[FALSE] := FormatDateTime('yyyymmddhhnnss".log"', Now);
   LName[TRUE] := ChangeFileExt(LName[FALSE], '.html');
 {$IFDEF DEBUG}
+  Assert(DirectoryExists(CLogFolderName) or CreateDir (CLogFolderName));
+
   for LIdx := FALSE to TRUE do
   begin
-    Assign(GFichier[LIdx], LName[LIdx]);
+    Assign(GFichier[LIdx], CLogFolderName + DirectorySeparator + LName[LIdx]);
     Rewrite(GFichier[LIdx]);
   end;
   WriteLn(
     GFichier[TRUE],
-    '<!DOCTYPE html>'#13#10 +
-    '<html>'#13#10 +
-    '<head>'#13#10 +
-    '<link rel="stylesheet" href="style.css">'#13#10 +
-    '</head>'#13#10 +
+    '<!DOCTYPE html>' + LineEnding +
+    '<html>' + LineEnding +
+    '<head>' + LineEnding +
+    '<link rel="stylesheet" href="style.css">' + LineEnding +
+    '</head>' + LineEnding +
     '<body>'
   );
 {$ENDIF}
@@ -91,7 +100,7 @@ finalization
 {$IFDEF DEBUG}
   WriteLn(
     GFichier[TRUE],
-    '</body>'#13#10 +
+    '</body>' + LineEnding +
     '</html>'
   );
   Close(GFichier[FALSE]);

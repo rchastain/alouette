@@ -74,9 +74,9 @@ begin
   with APos do
   begin
     if Trait then
-      LLigRoq := CLig8
+      LLigRoq := CLigne8
     else
-      LLigRoq := CLig1;
+      LLigRoq := CLigne1;
     toutes := PiecesCouleur[FALSE] or PiecesCouleur[TRUE];
   end;
   LPos := APos;
@@ -86,10 +86,10 @@ begin
   LColDepRoi := Colonne(caseRoi);
   LColDepTour := APos.Roque[APos.Trait].XTourRoi;
   if (LColDepTour >= 0) and (LColDepTour <= 7) then
-    Recherche(CColG, CColF);
+    Recherche(CColonneG, CColonneF);
   LColDepTour := APos.Roque[APos.Trait].XTourDame;
   if (LColDepTour >= 0) and (LColDepTour <= 7) then
-    Recherche(CColC, CColD);
+    Recherche(CColonneC, CColonneD);
 end;
 
 end.

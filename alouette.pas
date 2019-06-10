@@ -13,10 +13,12 @@ uses
 {$ENDIF}
   Classes,
   SysUtils,
+  Math,
   Journal,
   Joueur,
   Echecs,
   Outils,
+  Utils,
 {$IFDEF DEBUG}
   Essais,
 {$ENDIF}
@@ -24,10 +26,10 @@ uses
 
 {$I version.inc}
   
-procedure Ecrire(const AChaine: string; const AEnvoi: boolean = TRUE);
+procedure Ecrire(const AChaine: string; const ATerminer: boolean = TRUE);
 begin
   WriteLn(output, AChaine);
-  if AEnvoi then
+  if ATerminer then
     Flush(output);
 end;
 
@@ -38,73 +40,90 @@ type
       procedure Execute; override;
   end;
 
+var
+  GTempsDisponible: cardinal;
+  
 {** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TProcessus.Execute;
 begin
-  Ecrire(Format('bestmove %s', [Joueur.Coup]));
+  Ecrire(Format('bestmove %s', [Joueur.Coup(GTempsDisponible)]));
 end;
-
-const
-  COptionName = 'nosearch';
   
 var
-  LCommande: ansistring;
-  LIndex: integer;
+  LCmd: ansistring;
+  LIdx: integer;
   LCoup: string;
+  LMTime, LWTime, LBTime, LMTG, LWInc, LBInc: integer;
+  LPos: TPosition;
   
 begin
-  Ecrire(Format('%s %s', [CApplication, CVersion]));
-  
-  while TRUE do
+  Ecrire(Format('%s %s', [CApp, CVer]));
+  while not EOF do
   begin
-    ReadLn(input, LCommande);
-    TJournal.Ajoute(Concat('>>> ', LCommande));
-    if LCommande = 'quit' then
+    ReadLn(input, LCmd);
+    TJournal.Ajoute(Concat('>>> ', LCmd));
+    if LCmd = 'quit' then
       Break
     else
-      if LCommande = 'uci' then
+      if LCmd = 'uci' then
       begin
-        Ecrire(Format('id name %s %s', [CApplication, CVersion]), FALSE);
-        Ecrire(Format('id author %s', [CAuteur]), FALSE);
+        Ecrire(Format('id name %s %s', [CApp, CVer]), FALSE);
+        Ecrire(Format('id author %s', [CAut]), FALSE);
         Ecrire('option name UCI_Chess960 type check default false', FALSE);
         Ecrire('uciok');
       end else
-        if LCommande = 'isready' then
+        if LCmd = 'isready' then
         begin
           Ecrire('readyok');
         end else
-          if LCommande = 'ucinewgame' then
+          if LCmd = 'ucinewgame' then
             Joueur.Oublie
           else
-            if CommencePar('position ', LCommande) then
+            if CommencePar('position ', LCmd) then
             begin
-              if Contient('startpos', LCommande) then
+              if Contient('startpos', LCmd) then
                 Joueur.PositionDepart
-              else if Contient('fen', LCommande) then
-                Joueur.NouvellePosition(ExtraitEpd(LCommande));
-              
-              if Contient('moves', LCommande) then
-                for LIndex := 4 to NombreMots(LCommande) do
+              else if Contient('fen', LCmd) then
+                Joueur.NouvellePosition(ExtraitEpd(LCmd));
+              if Contient('moves', LCmd) then
+                for LIdx := 4 to NombreMots(LCmd) do
                 begin
-                  LCoup := Extrait(LIndex, LCommande);
+                  LCoup := Extrait(LIdx, LCmd);
                   if DecodeChaineCoup(LCoup) then
                     Joueur.Rejoue(LCoup);
                 end;
             end else
-              if CommencePar('go', LCommande) then
+              if BeginsWith('go', LCmd) then
+              begin
+                LPos := Joueur.PositionCourante;
+                if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
+                  GTempsDisponible := IfThen(LPos.Trait, LBinc, LWInc)
+                else
+                if IsGoCmd(LCmd, LWTime, LBTime, LMTG) then         // go wtime 59559 btime 56064 movestogo 38
+                  GTempsDisponible := IfThen(LPos.Trait, LBTime div LMTG, LWTime div LMTG)
+                else
+                if IsGoCmd(LCmd, LWTime, LBTime) then               // go wtime 600000 btime 600000
+                  GTempsDisponible := IfThen(LPos.Trait, LBTime, LWTime)
+                else
+                if IsGoCmd(LCmd, LMTime) then                       // go movetime 500
+                  GTempsDisponible := LMTime
+                else
+                  Assert(FALSE);
+                
                 with TProcessus.Create(TRUE) do
                 begin
                   FreeOnTerminate := TRUE;
                   Priority := tpHigher;
                   Start;
-                end else
-                  if CommencePar('setoption name UCI_Chess960 value ', LCommande) then
-                    ActiveEchecs960(Contient('true', LCommande))
+                end;
+              end else
+                  if CommencePar('setoption name UCI_Chess960 value ', LCmd) then
+                    ActiveEchecs960(Contient('true', LCmd))
                   else
-                    if LCommande = 'show' then
+                    if LCmd = 'show' then
                       Ecrire(VoirPosition(PositionCourante))
                     else
-                    if LCommande = 'perft' then
+                    if LCmd = 'perft' then
                       EssaiPerf();
   end;
 end.

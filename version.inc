@@ -1,5 +1,5 @@
 
 const
-  CApplication = 'Alouette';
-  CVersion = '0.0.5';
-  CAuteur = 'Roland Chastain';
+  CApp = 'Alouette';
+  CVer = '0.0.6';
+  CAut = 'Roland Chastain';

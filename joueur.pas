@@ -14,7 +14,7 @@ uses
 procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
-function Coup: string;
+function Coup(const ATempsDisponible: cardinal = 5000): string;
 procedure ActiveEchecs960(const AValeur: boolean);
 procedure NouvellePosition(const APos: string);
 function PositionCourante: TPosition;
@@ -48,9 +48,9 @@ begin
     TJournal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
 end;
 
-function Coup: string;
+function Coup(const ATempsDisponible: cardinal): string;
 begin
-  result := MeilleurCoup(GPos, GMode960);
+  result := MeilleurCoup(GPos, GMode960, ATempsDisponible);
 end;
 
 procedure ActiveEchecs960(const AValeur: boolean);

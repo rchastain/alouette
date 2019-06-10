@@ -56,22 +56,22 @@ const
 
 const
   CPositionDepart = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -';
-  CColC = 2;
-  CColD = 3;
-  CColE = 4;
-  CColF = 5;
-  CColG = 6;
-  CLig1 = 0;
-  CLig8 = 7;
-  CLigRoq: array[boolean] of integer = (CLig1, CLig8);
+  CColonneC = 2;
+  CColonneD = 3;
+  CColonneE = 4;
+  CColonneF = 5;
+  CColonneG = 6;
+  CLigne1   = 0;
+  CLigne8   = 7;
+  CLigneRoque: array[boolean] of integer = (CLigne1, CLigne8);
   
 type
   TCaseRoque = array[boolean] of integer;
   
 const
-  CATCR: TCaseRoque = (F1, F8); { Arrivée tour, côté roi. }
+  CATCR: TCaseRoque = (F1, F8); { Arrivée tour, côté roi.  }
   CATCD: TCaseRoque = (D1, D8); { Arrivée tour, côté dame. }
-  CDTCR: TCaseRoque = (H1, H8); { Départ  tour, côté roi. }
+  CDTCR: TCaseRoque = (H1, H8); { Départ  tour, côté roi.  }
   CDTCD: TCaseRoque = (A1, A8); { Départ  tour, côté dame. }
 
 function EncodePosition(const APos: string = CPositionDepart; const AEchecs960: boolean = FALSE): TPosition;
@@ -84,6 +84,9 @@ implementation
 uses
   SysUtils, Classes, Journal;
 
+const
+  CSymboleTrait: array[boolean] of char = ('w', 'b');
+  
 procedure Reinitialise(var ARoque: TRoque);
 var
   LCouleur: boolean;
@@ -107,10 +110,7 @@ end;
 
 function DecodeChaineRoque(const AChaine: string; const AXRoiBlanc: integer; const AXRoiNoir: integer): TRoque;
 const
-  CLettre: array[boolean, 0..7] of char = (
-    ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'),
-    ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')
-  );
+  CLettre: array[boolean, 0..7] of char = (('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'), ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'));
 var
   c1, c2: char;
   b: boolean;
@@ -132,19 +132,19 @@ begin
   if AEchecs960 then
   begin
     with ARoque[CBlanc] do begin
-    if (XTourRoi >= 0) and (XTourRoi <= 7) then result := Chr(XTourRoi + Ord('A'));
+    if (XTourRoi  >= 0) and (XTourRoi  <= 7) then result := Chr(XTourRoi + Ord('A'));
     if (XTourDame >= 0) and (XTourDame <= 7) then result := Concat(result, Chr(XTourDame + Ord('A')));
     end;
     with ARoque[CNoir] do begin
-    if (XTourRoi >= 0) and (XTourRoi <= 7) then result := Concat(result, Chr(XTourRoi + Ord('a')));
+    if (XTourRoi  >= 0) and (XTourRoi  <= 7) then result := Concat(result, Chr(XTourRoi + Ord('a')));
     if (XTourDame >= 0) and (XTourDame <= 7) then result := Concat(result, Chr(XTourDame + Ord('a')));
     end;
   end else
   begin
-    if ARoque[CBlanc].XTourRoi = 7 then result := 'K';
+    if ARoque[CBlanc].XTourRoi  = 7 then result := 'K';
     if ARoque[CBlanc].XTourDame = 0 then result := Concat(result, 'Q');
-    if ARoque[CNoir].XTourRoi = 7 then result := Concat(result, 'k');
-    if ARoque[CNoir].XTourDame = 0 then result := Concat(result, 'q');
+    if ARoque[CNoir].XTourRoi   = 7 then result := Concat(result, 'k');
+    if ARoque[CNoir].XTourDame  = 0 then result := Concat(result, 'q');
   end;
   if result = '' then
     result := '-';
@@ -162,9 +162,6 @@ begin
     else
       Inc(x);
 end;
-
-const
-  CSymboleTrait: array[boolean] of char = ('w', 'b');
   
 function EncodePosition(const APos: string; const AEchecs960: boolean): TPosition;
 const
@@ -318,7 +315,6 @@ var
   x, y: integer;
   c: array[0..7, 0..7] of char;
   i: integer;
-  
 begin
   for y := 7 downto 0 do
     for x := 0 to 7 do

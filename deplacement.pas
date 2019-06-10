@@ -72,14 +72,14 @@ begin
       begin
         TJournal.Ajoute(Format('[FRejoue] Roque 960 roi %s.', [ACoup]));
         DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], LArr, CATCR[APos.Trait]);
-        LArr := FIndex(CColG, LLigArr);
+        LArr := FIndex(CColonneG, LLigArr);
         LPreserveCouleur := LColDep = CATCR[APos.Trait] mod 8;
       end else
         if LColArr = APos.Roque[APos.Trait].XTourDame then
         begin
           TJournal.Ajoute(Format('[FRejoue] Roque 960 dame %s.', [ACoup]));
           DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], LArr, CATCD[APos.Trait]);
-          LArr := FIndex(CColC, LLigArr);
+          LArr := FIndex(CColonneC, LLigArr);
           LPreserveCouleur := LColDep = CATCD[APos.Trait] mod 8;
         end else
           exit(FALSE);
@@ -87,12 +87,12 @@ begin
     end else
       if Abs(LColArr - LColDep) = 2 then
       begin
-        if LColArr = CColG then
+        if LColArr = CColonneG then
         begin
           TJournal.Ajoute(Format('[FRejoue] Roque roi %s.', [ACoup]));
           DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], CDTCR[APos.Trait], CATCR[APos.Trait]);
         end else
-          if LColArr = CColC then
+          if LColArr = CColonneC then
           begin
             TJournal.Ajoute(Format('[FRejoue] Roque dame %s.', [ACoup]));
             DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], CDTCD[APos.Trait], CATCD[APos.Trait]);
@@ -118,7 +118,7 @@ begin
   if EstAllumeeIdx({LPassives}APos.PiecesCouleur[not APos.Trait], LArr) then
   begin
     if EstAllumeeIdx(APos.Tours, LArr)
-    and (LLigArr = CLigRoq[not APos.Trait]) then
+    and (LLigArr = CLigneRoque[not APos.Trait]) then
       with APos.Roque[not APos.Trait] do
         if (LColArr = XTourRoi) then
           XTourRoi := CNeant
@@ -213,8 +213,8 @@ begin
   LDep := DecodeNomCase(Copy(ACoup, 1, 2));
   LArr := DecodeNomCase(Copy(ACoup, 3, 2)) div 8;
   result := EstAllumeeIdx(APos.Pions, LDep) and (
-    not APos.Trait and (LArr = CLig8)
-    or  APos.Trait and (LArr = CLig1)
+    not APos.Trait and (LArr = CLigne8)
+    or  APos.Trait and (LArr = CLigne1)
   );
 end;
 
@@ -242,11 +242,11 @@ begin
   LAncienNom := Concat(CNomCase[LDep], CNomCase[LArr]);
   LLigDep := LDep div 8;
   LLigArr := LArr div 8;
-  Assert((LLigArr = LLigDep) and ((LLigDep = CLig1) or (LLigDep = CLig8)));
+  Assert((LLigArr = LLigDep) and ((LLigDep = CLigne1) or (LLigDep = CLigne8)));
   if LArr mod 8 > LDep mod 8 then
-    LColArr := CColG
+    LColArr := CColonneG
   else
-    LColArr := CColC;
+    LColArr := CColonneC;
   LArr := 8 * LLigArr + LColArr;
   ARoque := EncodeCoup(LDep, LArr);
   TJournal.Ajoute(Format('[Reformule] Reformulé %s en %s.', [LAncienNom, Concat(CNomCase[LDep], CNomCase[LArr])]));

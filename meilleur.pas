@@ -11,38 +11,31 @@ interface
 uses
   Echecs;
 
-function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
+function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean; const ATimeAvailable: cardinal = 1000): string;
 
 implementation
 
 uses
-  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, PieceCase, Tri;
+  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, Tri;
 
-function ResultatTables(const APos: TPosition): integer;
+const
+  CMaximumMateriel =  99999;
+  CMinimumMateriel = -99999;
+  
 var
-  LIdx, LIdxRel: integer;
-begin
-  result := 0;
-  for LIdx := A1 to H8 do
-    if EstAllumeeIdx(APos.PiecesCouleur[APos.Trait], LIdx) then
-    begin
-      if not APos.Trait then
-        LIdxRel := 63 - LIdx
-      else
-        LIdxRel := LIdx;
-      if EstAllumeeIdx(APos.Pions,     LIdx) then Inc(result, CTablePionBlanc[LIdxRel]) else
-      if EstAllumeeIdx(APos.Cavaliers, LIdx) then Inc(result, CTableCavalierBlanc[LIdxRel]) else
-      if EstAllumeeIdx(APos.Fous,      LIdx) then Inc(result, CTableFouBlanc[LIdxRel]) else
-      if EstAllumeeIdx(APos.Tours,     LIdx) then Inc(result, CTableTourBlanc[LIdxRel]) else
-      if EstAllumeeIdx(APos.Dames,     LIdx) then Inc(result, CTableDameBlanc[LIdxRel]) else
-      if EstAllumeeIdx(APos.Rois,      LIdx) then Inc(result, CTableRoiBlanc[LIdxRel]);
-    end;
-end;
-
+  LStartTime, LTimeAvailable: cardinal;
+  
 function Materiel(const APos: TPosition): integer;
 var
   LIdx, LCoul: integer;
+  LPieces: TDamier;
 begin
+  LPieces := APos.PiecesCouleur[APos.Trait] and APos.Rois;
+  if LPieces = 0 then Exit(CMinimumMateriel);
+  
+  LPieces := APos.PiecesCouleur[not APos.Trait] and APos.Rois;
+  if LPieces = 0 then Exit(CMaximumMateriel);
+  
   result := 0;
   for LIdx := A1 to H8 do
   begin
@@ -57,13 +50,16 @@ begin
     if EstAllumeeIdx(APos.Fous,      LIdx) then Inc(result,   330 * LCoul) else
     if EstAllumeeIdx(APos.Tours,     LIdx) then Inc(result,   500 * LCoul) else
     if EstAllumeeIdx(APos.Dames,     LIdx) then Inc(result,   900 * LCoul) else
-    if EstAllumeeIdx(APos.Rois,      LIdx) then Inc(result, 20000 * LCoul);
+    //if EstAllumeeIdx(APos.Rois,      LIdx) then Inc(result, 20000 * LCoul);
   end;
   if APos.Trait then
     result := -1 * result;
 end;
 
-function PremiereEvaluation(const APos: TPosition; const ACoup: integer): integer;
+const
+  CNombreRecursion = 1;
+  
+function PremiereEvaluation(const APos: TPosition; const ACoup: integer; const AEtape: integer = CNombreRecursion): integer;
 var
   LPos1, LPos2, LPos3: TPosition;
   LListe1, LListe2: array[0..99] of integer;
@@ -89,10 +85,10 @@ begin
       continue;
     end;
     
-    if Materiel(LPos2) < 8 * 900 + 2 * 500 + 2 * 330 + 2 * 320 - 20000 then
+    if Materiel(LPos2) = CMinimumMateriel then
     begin
       TJournal.Ajoute(Format('Le joueur n''a plus de roi (ligne %s).', [{$I %LINE%}]));
-      exit(Low(integer));
+      exit(CMinimumMateriel - AEtape)
     end;
     
     FCoups(LPos2, LListe2, o);
@@ -100,13 +96,19 @@ begin
     for j := 0 to Pred(o) do
     begin
       LPos3 := LPos2;
-      if not FRejoue(LPos3, NomCoup(LListe2[j])) then
+      if (AEtape = 0) or (GetTickCount64 - LStartTime > 9 * LTimeAvailable div 10) then
       begin
-        TJournal.Ajoute(Format('Impossible de rejouer %s (ligne %s).', [NomCoup(ACoup), {$I %LINE%}]));
-        continue;
+        if not FRejoue(LPos3, NomCoup(LListe2[j])) then
+        begin
+          TJournal.Ajoute(Format('Impossible de rejouer %s (ligne %s).', [NomCoup(ACoup), {$I %LINE%}]));
+          continue;
+        end;
+        LPos3.Trait := not LPos3.Trait;
+        v := Materiel(LPos3);
+      end else
+      begin
+        v := PremiereEvaluation(LPos3, LListe2[j], Pred(AEtape));
       end;
-      LPos3.Trait := not LPos3.Trait;
-      v := Materiel(LPos3);
       if v > vmax then
         vmax := v;
     end;
@@ -123,7 +125,7 @@ end;
 function DeuxiemeEvaluation(const APos: TPosition; const ACoup: integer): integer;
 var
   LPos: TPosition;
-
+(*
   function Estime(const APieces: TDamier): integer;
   var
     LPieces: TDamier;
@@ -136,12 +138,12 @@ var
     LPieces := APieces and LPos.Cavaliers; if LPieces <> 0 then Inc(result,   320 * CompteCasesAllumees(LPieces));
     LPieces := APieces and LPos.Pions;     if LPieces <> 0 then Inc(result,   100 * CompteCasesAllumees(LPieces));
   end;
-
+*)
 var
-  LMenaces: TDamier;
-  LBonusRoque, LMalusCapturesPotentielles, LBonusNombreCoups, LBonusTables: integer;
-  LBonusCapturesPotentielles: integer;
-  LBonusProtection: integer;
+  //LMenaces: TDamier;
+  LBonusRoque{, LMalusCapturesPotentielles, LBonusNombreCoups, LBonusTables}: integer;
+  //LBonusCapturesPotentielles: integer;
+  //LBonusProtection: integer;
   LMalusRepetition, LMalusAnnulation: integer;
 begin
   LPos := APos;
@@ -150,39 +152,39 @@ begin
   if not FRejoue(LPos, NomCoup(ACoup)) then
     exit; 
 
-  LMenaces := FCoups(LPos);
-  LMalusCapturesPotentielles := Estime(LMenaces and LPos.PiecesCouleur[not LPos.Trait]);
+  //LMenaces := FCoups(LPos);
+  //LMalusCapturesPotentielles := Estime(LMenaces and LPos.PiecesCouleur[not LPos.Trait]);
   LPos.Trait := not LPos.Trait;
-  LBonusNombreCoups := FNombreCoups(LPos);
-  LBonusTables := ResultatTables(LPos) div 5;
-  LBonusCapturesPotentielles := Estime(FCoups(LPos) and LPos.PiecesCouleur[LPos.Trait]);
-  LBonusProtection := FProtections(LPos);
+  //LBonusNombreCoups := FNombreCoups(LPos) div 2;
+  //LBonusTables := ResultatTables(LPos) div 5;
+  //LBonusCapturesPotentielles := Estime(FCoups(LPos) and LPos.PiecesCouleur[LPos.Trait]);
+  //LBonusProtection := FProtections(LPos);
   LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
   LMalusAnnulation := Ord(NomCoup(ACoup) = Inverse(Dernier));
   
   result :=
     0
-    + LBonusTables
+    //+ LBonusTables
     + LBonusRoque
-    + LBonusNombreCoups
-    + LBonusCapturesPotentielles
-    + LBonusProtection
-    - LMalusCapturesPotentielles
+    //+ LBonusNombreCoups
+    //+ LBonusCapturesPotentielles
+    //+ LBonusProtection
+    //- LMalusCapturesPotentielles
     - LMalusRepetition
     - LMalusAnnulation;
   
   TJournal.Ajoute(
     Format(
-      '<tr><td style="text-align: left;">%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>',
+      '<tr><td style="text-align: left;">%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>',
       [
         NomCoup(ACoup),
         result,
-        LBonusTables,
+        //LBonusTables,
         LBonusRoque,
-        LBonusNombreCoups,
-        LBonusCapturesPotentielles,
-        LBonusProtection,
-        LMalusCapturesPotentielles,
+        //LBonusNombreCoups,
+        //LBonusCapturesPotentielles,
+        //LBonusProtection,
+        //LMalusCapturesPotentielles,
         LMalusRepetition,
         LMalusAnnulation
       ]
@@ -198,23 +200,28 @@ begin
     Inc(result);
 end;
 
-function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean): string;
+function MeilleurCoup(const APos: TPosition; const AEchecs960: boolean; const ATimeAvailable: cardinal): string;
 var
   LListe, LEval: array[0..99] of integer;
   n, i, coup: integer;
 begin
   result := '0000';
+  LStartTime := GetTickCount64;
+  LTimeAvailable := ATimeAvailable;
   TJournal.Ajoute(Format('<p>%s</p>', [DateTimeToStr(Now)]), TRUE);
   FCoups(APos, LListe, n);
   FRoque(APos, LListe, n);
   for i := 0 to Pred(n) do
-    LEval[i] := PremiereEvaluation(APos, LListe[i]);
+    LEval[i] := PremiereEvaluation(
+      APos,
+      LListe[i]
+    );
   Trie(LListe, LEval, n);
   TJournal.AjouteTable(LListe, LEval, n, 'Première évaluation');
   
   n := CompteMeilleurs(LEval, n);
   
-  TJournal.Ajoute('<table><caption>Détail deuxième évaluation</caption><tr><th>Coup</th><th>Total</th><th>Bonus tables</th><th>B roque</th><th>B seconds coups</th><th>B captures</th><th>B protection</th><th>Malus captures</th><th>M répétition</th><th>M annulation</th></tr>', TRUE);
+  TJournal.Ajoute('<table><caption>Détail deuxième évaluation</caption><tr><th>Coup</th><th>Total</th><th>B roq</th><th>M rép</th><th>M ann</th></tr>', TRUE);
   for i := 0 to Pred(n) do
     LEval[i] := DeuxiemeEvaluation(APos, LListe[i]);
   TJournal.Ajoute('</table>', TRUE);
@@ -224,7 +231,7 @@ begin
   coup := LListe[0];
   if EstUnRoque(APos, coup) and not AEchecs960 then
   begin
-    Assert((coup div 100) mod 8 = CColE);
+    Assert((coup div 100) mod 8 = CColonneE);
     Reformule(coup);
   end;
   
