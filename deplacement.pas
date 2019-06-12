@@ -9,8 +9,9 @@ unit Deplacement;
 interface
 
 uses
-  Echecs;
+  Damier, Echecs;
 
+function TypePiece(const APos: TPosition; const AIdx: integer): TPieceEtendu;
 {** Met à jour la position en fonction d'un coup présumé légal. Renvoie FALSE si une impossibilité de jouer le coup est détectée. }
 function FRejoue(var APos: TPosition; const ACoup: string): boolean;
 function EstUnePromotion(const APos: TPosition; const ACoup: string): boolean;
@@ -20,8 +21,28 @@ procedure Reformule(var ARoque: integer);
 implementation
 
 uses
-  SysUtils, Damier, Tables, Journal;
-  
+  SysUtils, Tables, Journal;
+
+function TypePiece(const APos: TPosition; const AIdx: integer): TPieceEtendu;
+begin
+  if      EstAllumeeIdx(APos.Pions,     AIdx) then
+    if APos.Trait then
+    result := PionNoir else
+    result := PionBlanc
+  else if EstAllumeeIdx(APos.Tours,     AIdx) then
+    result := Tour
+  else if EstAllumeeIdx(APos.Cavaliers, AIdx) then
+    result := Cavalier
+  else if EstAllumeeIdx(APos.Fous,      AIdx) then
+    result := Fou
+  else if EstAllumeeIdx(APos.Dames,     AIdx) then
+    result := Dame
+  else if EstAllumeeIdx(APos.Rois,      AIdx) then
+    result := Roi
+  else
+    result := Neant;
+end;
+
 function FRejoue(var APos: TPosition; const ACoup: string): boolean;
 var
   LDep, LArr, LColDep, LColArr, LLigDep, LLigArr, LPris: integer;

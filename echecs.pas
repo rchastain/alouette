@@ -74,8 +74,8 @@ const
   CDTCR: TCaseRoque = (H1, H8); { Départ  tour, côté roi.  }
   CDTCD: TCaseRoque = (A1, A8); { Départ  tour, côté dame. }
 
-function EncodePosition(const APos: string = CPositionDepart; const AEchecs960: boolean = FALSE): TPosition;
-function DecodePosition(const APos: TPosition; const AEchecs960: boolean = FALSE): string;
+function EncodePosition(const APos: string = CPositionDepart; const AFRC: boolean = FALSE): TPosition;
+function DecodePosition(const APos: TPosition; const AFRC: boolean = FALSE): string;
 function Colonne(const ACase: TDamier): integer;
 function VoirPosition(const APos: TPosition): string;
 
@@ -126,10 +126,10 @@ begin
   end;
 end;
 
-function EncodeChaineRoque(const ARoque: TRoque; const AEchecs960: boolean = FALSE): string;
+function EncodeChaineRoque(const ARoque: TRoque; const AFRC: boolean = FALSE): string;
 begin
   result := '';
-  if AEchecs960 then
+  if AFRC then
   begin
     with ARoque[CBlanc] do begin
     if (XTourRoi  >= 0) and (XTourRoi  <= 7) then result := Chr(XTourRoi + Ord('A'));
@@ -163,7 +163,7 @@ begin
       Inc(x);
 end;
   
-function EncodePosition(const APos: string; const AEchecs960: boolean): TPosition;
+function EncodePosition(const APos: string; const AFRC: boolean): TPosition;
 const
   CEpdCount = 4;
   CFenCount = 6;
@@ -218,7 +218,7 @@ begin
         Inc(i);
       end;
       Trait := Strings[1] = CSymboleTrait[CNoir];
-      if AEchecs960 then
+      if AFRC then
         Roque := DecodeChaineRoque(Strings[2], Colonne(PositionRoi[CBlanc]), Colonne(PositionRoi[CNoir]))
       else
         Roque := DecodeChaineRoqueTradition(Strings[2]);
@@ -231,7 +231,7 @@ begin
   end;
 end;
 
-function DecodePosition(const APos: TPosition; const AEchecs960: boolean): string;
+function DecodePosition(const APos: TPosition; const AFRC: boolean): string;
 var
   x, y, n: integer;
   c: char;
@@ -282,7 +282,7 @@ begin
       [
         result,
         CSymboleTrait[Trait],
-        EncodeChaineRoque(Roque, AEchecs960),
+        EncodeChaineRoque(Roque, AFRC),
         s
       ]
     );

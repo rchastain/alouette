@@ -11,7 +11,8 @@ interface
 type
   {** Le damier est représenté par un nombre entier de 64 chiffres binaires. }
   TDamier = Int64;
-  TPiece = (PionBlanc, PionNoir, Tour, Cavalier, Fou, Dame, Roi);
+  TPieceEtendu = (Neant, PionBlanc, PionNoir, Tour, Cavalier, Fou, Dame, Roi);
+  TPiece = PionBlanc..Roi;
 
 {** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec un seul chiffre allumé. }
 function FCase(const AIdx: integer): TDamier; overload;

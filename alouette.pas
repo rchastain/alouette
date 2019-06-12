@@ -45,8 +45,13 @@ var
   
 {** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TProcessus.Execute;
+var
+  t: cardinal;
 begin
+  t := GetTickCount64;
   Ecrire(Format('bestmove %s', [Joueur.Coup(GTempsDisponible)]));
+  t := GetTickCount64 - t;
+  TJournal.Ajoute(FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
 end;
   
 var
