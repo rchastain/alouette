@@ -1,6 +1,9 @@
 
-unit Fonts;
-
+unit Polices;
+(*
+  Chess Alfonso-X and other chess fonts by Armando H. Marroquin:
+  http://www.enpassant.dk/chess/fonteng.htm
+*)
 interface
 
 const
@@ -14,9 +17,7 @@ const
   '<title>Chess position</title>'#10 +
   '</head>'#10 +
   '<body>'#10 +
-  '<p style="font-family:chess alfonso-x;color:midnightblue;font-size:32px;">'#10 +
-  '<!-- Chess Alfonso-X and other chess fonts by Armando H. Marroquin :'#10 +
-  'http://www.enpassant.dk/chess/fonteng.htm -->'#10;
+  '<p style="font-family:chess alfonso-x;color:midnightblue;font-size:32px;">';
   HTMLFoot =
   '</p>'#10 +
   '</body>'#10 +

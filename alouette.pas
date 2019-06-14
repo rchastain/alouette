@@ -17,7 +17,6 @@ uses
   Journal,
   Joueur,
   Echecs,
-  Outils,
   Utils,
 {$IFDEF DEBUG}
   Essais,
@@ -41,7 +40,7 @@ type
   end;
 
 var
-  GTempsDisponible: cardinal;
+  GTempsDispo: cardinal;
   
 {** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TProcessus.Execute;
@@ -49,7 +48,7 @@ var
   t: cardinal;
 begin
   t := GetTickCount64;
-  Ecrire(Format('bestmove %s', [Joueur.Coup(GTempsDisponible)]));
+  Ecrire(Format('bestmove %s', [Joueur.Coup(GTempsDispo)]));
   t := GetTickCount64 - t;
   TJournal.Ajoute(FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
 end;
@@ -84,17 +83,17 @@ begin
           if LCmd = 'ucinewgame' then
             Joueur.Oublie
           else
-            if CommencePar('position ', LCmd) then
+            if BeginsWith('position ', LCmd) then
             begin
-              if Contient('startpos', LCmd) then
+              if WordPresent('startpos', LCmd) then
                 Joueur.PositionDepart
-              else if Contient('fen', LCmd) then
-                Joueur.NouvellePosition(ExtraitEpd(LCmd));
-              if Contient('moves', LCmd) then
-                for LIdx := 4 to NombreMots(LCmd) do
+              else if WordPresent('fen', LCmd) then
+                Joueur.NouvellePosition(GetFen(LCmd));
+              if WordPresent('moves', LCmd) then
+                for LIdx := 4 to WordsNumber(LCmd) do
                 begin
-                  LCoup := Extrait(LIdx, LCmd);
-                  if DecodeChaineCoup(LCoup) then
+                  LCoup := GetWord(LIdx, LCmd);
+                  if IsChessMove(LCoup) then
                     Joueur.Rejoue(LCoup);
                 end;
             end else
@@ -102,28 +101,29 @@ begin
               begin
                 LPos := Joueur.PositionCourante;
                 if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
-                  GTempsDisponible := IfThen(LPos.Trait, LBinc, LWInc)
+                  GTempsDispo := IfThen(LPos.Trait, LBinc, LWInc)
                 else
                 if IsGoCmd(LCmd, LWTime, LBTime, LMTG) then         // go wtime 59559 btime 56064 movestogo 38
-                  GTempsDisponible := IfThen(LPos.Trait, LBTime div LMTG, LWTime div LMTG)
+                  GTempsDispo := IfThen(LPos.Trait, LBTime div LMTG, LWTime div LMTG)
                 else
                 if IsGoCmd(LCmd, LWTime, LBTime) then               // go wtime 600000 btime 600000
-                  GTempsDisponible := IfThen(LPos.Trait, LBTime, LWTime)
+                  GTempsDispo := IfThen(LPos.Trait, LBTime, LWTime)
                 else
                 if IsGoCmd(LCmd, LMTime) then                       // go movetime 500
-                  GTempsDisponible := LMTime
+                  GTempsDispo := LMTime
                 else
                   Assert(FALSE);
                 
                 with TProcessus.Create(TRUE) do
                 begin
                   FreeOnTerminate := TRUE;
-                  Priority := tpHigher;
+                  //Priority := tpHigher;
+                  Priority := tpNormal;
                   Start;
                 end;
               end else
-                  if CommencePar('setoption name UCI_Chess960 value ', LCmd) then
-                    ActiveEchecs960(Contient('true', LCmd))
+                  if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
+                    ActiveEchecs960(WordPresent('true', LCmd))
                   else
                     if LCmd = 'show' then
                       Ecrire(VoirPosition(PositionCourante))

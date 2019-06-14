@@ -22,41 +22,36 @@ uses
 {$ENDIF}
   SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Tri;
   
-{$IF defined(Linux)}
-{$IF defined(Linux) and not defined(GetTickCountTimeOfDay)}
+{$IFDEF UNIX}
 function GetTickCount64: QWord;
 var
-  tp: timespec;
-begin
-  clock_gettime(CLOCK_MONOTONIC, @tp); // exists since Linux Kernel 2.6
-  Result := (Int64(tp.tv_sec) * 1000) + (tp.tv_nsec div 1000000);
-end;
-{$ELSE}
-function GetTickCount64: QWord;
-var
+{$IF defined(GetTickCountTimeOfDay)}
   tp: TTimeVal;
 begin
   fpgettimeofday(@tp, nil);
-  Result := (Int64(tp.tv_sec) * 1000) + (tp.tv_usec div 1000);
-end;
+  result := (Int64(tp.tv_sec) * 1000) + (tp.tv_usec div 1000);
+{$ELSE}
+  tp: timespec;
+begin
+  clock_gettime(CLOCK_MONOTONIC, @tp);
+  result := (Int64(tp.tv_sec) * 1000) + (tp.tv_nsec div 1000000);
 {$ENDIF}
+end;
 {$ENDIF}
 
 function Evalue(const APos: TPosition; const ACoup: integer): integer;
 var
   LPos: TPosition;
-  //LPassives: ^TDamier;
+ {LPassives: ^TDamier;}
 begin
   LPos := APos;
   result := Low(integer);
   if not FRejoue(LPos, NomCoup(ACoup)) then
     exit;
-  (*
-  if LPos.Trait then
+ {if LPos.Trait then
     LPassives := @LPos.Blanches
   else
-    LPassives := @LPos.Noires;
-  *)
+    LPassives := @LPos.Noires;}
   result := 0 - Ord((FCoups(LPos) and {LPassives^}LPos.PiecesCouleur[not LPos.Trait] and LPos.Rois) <> 0);
 end;
 

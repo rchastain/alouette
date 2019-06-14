@@ -16,13 +16,13 @@ function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDi
 implementation
 
 uses
-  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, Tri, Fonts;
+  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, Tri, Polices;
 
 const
   CInfini = 99999;
   
 var
-  LStartTime, LTimeAvail: cardinal;
+  LLimiteTemps: cardinal;
   
 function Materiel(const APos: TPosition): integer;
 var
@@ -42,11 +42,11 @@ begin
       LClr := -1
     else
       continue;
-    if EstAllumeeIdx(APos.Pions,     LIdx) then Inc(result,   100 * LClr) else
-    if EstAllumeeIdx(APos.Cavaliers, LIdx) then Inc(result,   320 * LClr) else
-    if EstAllumeeIdx(APos.Fous,      LIdx) then Inc(result,   330 * LClr) else
-    if EstAllumeeIdx(APos.Tours,     LIdx) then Inc(result,   500 * LClr) else
-    if EstAllumeeIdx(APos.Dames,     LIdx) then Inc(result,   900 * LClr) else
+    if EstAllumeeIdx(APos.Pions,     LIdx) then Inc(result, 100 * LClr) else
+    if EstAllumeeIdx(APos.Cavaliers, LIdx) then Inc(result, 320 * LClr) else
+    if EstAllumeeIdx(APos.Fous,      LIdx) then Inc(result, 330 * LClr) else
+    if EstAllumeeIdx(APos.Tours,     LIdx) then Inc(result, 500 * LClr) else
+    if EstAllumeeIdx(APos.Dames,     LIdx) then Inc(result, 900 * LClr) else
   end;
   if APos.Trait then
     result := -1 * result;
@@ -79,7 +79,8 @@ begin
       TJournal.Ajoute(Format('Impossible de rejouer %s (ligne %s).', [NomCoup(ACoup), {$I %LINE%}]));
       continue;
     end;
-    if Materiel(LPos2) = -1 * CInfini then // Le joueur n'a plus de roi.
+    if Materiel(LPos2) = -1 * CInfini then
+      (* Le joueur n'a plus de roi. *)
       exit(-1 * CInfini - AEtape);
     FCoups(LPos2, LLst2, o);
     w := Low(integer);
@@ -87,9 +88,10 @@ begin
     for j := 0 to Pred(o) do
     begin
       LPos3 := LPos2;
-      if (AEtape = 0) or (GetTickCount64 - LStartTime > LTimeAvail - 200) then
+      if (AEtape = 0)
+      or (LLimiteTemps - GetTickCount64 < 200) then
       begin
-        if (AEtape = 0) and not EstAllumeeIdx(LPos3.PiecesCouleur[not LPos3.Trait], LLst2[j] mod 100) then // Ignore la prise en passant !
+        if not EstAllumeeIdx(LPos3.PiecesCouleur[not LPos3.Trait], LLst2[j] mod 100) then
           if LSkip then
             continue
           else
@@ -126,6 +128,20 @@ begin
   result := Concat(Copy(ACoup, 3, 2), Copy(ACoup, 1, 2));
 end;
 
+function BonusPositionPion(const APos: TPosition; const AIdx: integer; const ACouleurPion: TPiece): integer;
+var
+  amis: TDamier;
+begin
+  result := 0;
+  amis := APos.PiecesCouleur[APos.Trait] and APos.Pions;
+  case ACouleurPion of
+    PionBlanc: if (amis and CCibles[PionNoir, AIdx]) <> 0 then result := 1;
+    PionNoir: if (amis and CCibles[PionBlanc, AIdx]) <> 0 then result := 1;
+  end;
+  if result = 1 then
+    Inc(result, 4 - Abs(AIdx mod 8 - 4));
+end;
+
 function DeuxiemeEvaluation(const APos: TPosition; const ACoup: integer): integer;
 var
   LPos: TPosition;
@@ -134,18 +150,21 @@ var
   LMalusRepetition, LMalusAnnulation: integer;
   LBonusPion: integer = -2;
   LTypePiece: TPieceEtendu;
+  
 begin
   LPos := APos;
   LBonusRoque := 100 * Ord(EstUnRoque(LPos, ACoup));
+  LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
+  LMalusAnnulation := Ord(NomCoup(ACoup) = Inverse(Dernier));
   LTypePiece := TypePiece(LPos, ACoup div 100);
+
   result := Low(integer);
   if not FRejoue(LPos, NomCoup(ACoup)) then
     exit; 
+  
   LPos.Trait := not LPos.Trait;
-  LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
-  LMalusAnnulation := Ord(NomCoup(ACoup) = Inverse(Dernier));
   case LTypePiece of
-    PionBlanc, PionNoir: LBonusPion := 2;
+    PionBlanc, PionNoir: LBonusPion := BonusPositionPion(LPos, ACoup mod 100, LTypePiece) + 2;
     Cavalier, Fou: LBonusPion := 1;
     Tour, Dame: LBonusPion := 0;
     Roi: LBonusPion := -1;
@@ -184,22 +203,21 @@ end;
 function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: cardinal): string;
 const
   //CFmtStr = '<p style="font-family:chess alfonso-x;color:midnightblue;font-size:32px;">%s</p>';
-  CFmtStr = '<p style="font-family:chess alfonso-x;font-size:24px;">%s</p>';
+  CFmtStr = '<p style="font-family:chess mark;font-size:24px;">' + LineEnding + '%s</p>';
 var
   LListe, LEval: array[0..99] of integer;
   n, i, coup: integer;
 begin
   result := '0000';
-  LStartTime := GetTickCount64;
-  LTimeAvail := ATempsDispo;
-  TJournal.Ajoute(Format('<p>%s</p>', [DateTimeToStr(Now)]), FALSE);
+  LLimiteTemps := GetTickCount64 + ATempsDispo;
+  TJournal.Ajoute(Format('<p>%s</p>', [DateTimeToStr(Now)]), TRUE);
   TJournal.Ajoute(Format(CFmtStr, [PositionToHtml({gPosition}EPDToPosition(DecodePosition(APos)), AMChars)]), TRUE);
   FCoups(APos, LListe, n);
   FRoque(APos, LListe, n);
   for i := 0 to Pred(n) do
     LEval[i] := MiniMax(
       APos,
-      LListe[i]
+      LListe[i]{$IFDEF NORECURSION}, 0{$ENDIF}
     );
   Trie(LListe, LEval, n);
   TJournal.AjouteTable(LListe, LEval, n, 'Première évaluation');
