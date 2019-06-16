@@ -11,8 +11,8 @@ interface
 uses
   Echecs;
 
-function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: cardinal = 60 * 1000): string;
-
+function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer; const ARecursion: integer): string;
+  
 implementation
 
 uses
@@ -51,11 +51,8 @@ begin
   if APos.Trait then
     result := -1 * result;
 end;
-
-const
-  CNombreRecursion = 1;
   
-function MiniMax(const APos: TPosition; const ACoup: integer; const AEtape: integer = CNombreRecursion): integer;
+function MiniMax(const APos: TPosition; const ACoup: integer; const AEtape: integer): integer;
 var
   LLst1, LLst2: array[0..99] of integer;
   LPos1, LPos2, LPos3: TPosition;
@@ -200,7 +197,7 @@ begin
     Inc(result);
 end;
 
-function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: cardinal): string;
+function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer; const ARecursion: integer): string;
 const
   //CFmtStr = '<p style="font-family:chess alfonso-x;color:midnightblue;font-size:32px;">%s</p>';
   CFmtStr = '<p style="font-family:chess mark;font-size:24px;">' + LineEnding + '%s</p>';
@@ -217,7 +214,8 @@ begin
   for i := 0 to Pred(n) do
     LEval[i] := MiniMax(
       APos,
-      LListe[i]{$IFDEF NORECURSION}, 0{$ENDIF}
+      LListe[i],
+      ARecursion
     );
   Trie(LListe, LEval, n);
   TJournal.AjouteTable(LListe, LEval, n, 'Première évaluation');

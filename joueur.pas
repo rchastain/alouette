@@ -14,8 +14,9 @@ uses
 procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
-function Coup(const ATempsDisponible: cardinal = 5000): string;
-procedure ActiveEchecs960(const AValeur: boolean);
+function Coup(const ATempsDisponible: integer; const ARecursion: integer): string;
+procedure RegleVariante(const AValeur: boolean);
+function VarianteCourante: boolean;
 procedure NouvellePosition(const APos: string);
 function PositionCourante: TPosition;
 
@@ -25,56 +26,60 @@ uses
   SysUtils, Journal, Deplacement, Meilleur, Histoire;
 
 var
-  GPos: TPosition;
-  GMode960: boolean;
+  LPos: TPosition;
+  LVarianteFRC: boolean;
   
 procedure Oublie;
 begin
-  GPos := CPositionVierge;
+  LPos := CPositionVierge;
 end;
 
 procedure PositionDepart;
 begin
-  Assert(not GMode960);
-  GPos := EncodePosition();
+  LPos := EncodePosition();
   NouvelleHistoire;
 end;
 
 procedure Rejoue(const ACoup: string);
 begin
-  if FRejoue(GPos, ACoup) then
+  if FRejoue(LPos, ACoup) then
     Histoire.Ajoute(ACoup)
   else
     TJournal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
 end;
 
-function Coup(const ATempsDisponible: cardinal): string;
+function Coup(const ATempsDisponible: integer; const ARecursion: integer): string;
 begin
-  result := MeilleurCoup(GPos, GMode960, ATempsDisponible);
+  result := MeilleurCoup(LPos, LVarianteFRC, ATempsDisponible, ARecursion);
 end;
 
-procedure ActiveEchecs960(const AValeur: boolean);
+procedure RegleVariante(const AValeur: boolean);
 const
   CPrefixe: array[boolean] of string = ('dés', '');
 begin
   TJournal.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
-  GMode960 := AValeur;
+  LVarianteFRC := AValeur;
+end;
+
+function VarianteCourante: boolean;
+begin
+  result := LVarianteFRC;
 end;
 
 procedure NouvellePosition(const APos: string);
 begin
-  GPos := EncodePosition(APos, GMode960);
+  LPos := EncodePosition(APos, LVarianteFRC);
   NouvelleHistoire;
 end;
 
 function PositionCourante: TPosition;
 begin
-  result := GPos;
+  result := LPos;
 end;
 
 initialization
   Oublie;
-  GMode960 := FALSE;
+  LVarianteFRC := FALSE;
   
 finalization
 

@@ -9,7 +9,7 @@ program Alouette;
 uses
 {$IFDEF UNIX}
   cthreads,
-  cwstring,
+  horloge,
 {$ENDIF}
   Classes,
   SysUtils,
@@ -21,7 +21,8 @@ uses
 {$IFDEF DEBUG}
   Essais,
 {$ENDIF}
-  Performance;
+  Performance,
+  Reglages;
 
 {$I version.inc}
   
@@ -41,6 +42,7 @@ type
 
 var
   GTempsDispo: cardinal;
+  LRecursion: integer = 0;
   
 {** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TProcessus.Execute;
@@ -48,10 +50,13 @@ var
   t: cardinal;
 begin
   t := GetTickCount64;
-  Ecrire(Format('bestmove %s', [Joueur.Coup(GTempsDispo)]));
+  Ecrire(Format('bestmove %s', [Joueur.Coup(GTempsDispo, LRecursion)]));
   t := GetTickCount64 - t;
   TJournal.Ajoute(FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
 end;
+
+const
+  CBoolStr: array[boolean] of string = ('false', 'true');
   
 var
   LCmd: ansistring;
@@ -59,8 +64,12 @@ var
   LCoup: string;
   LMTime, LWTime, LBTime, LMTG, LWInc, LBInc: integer;
   LPos: TPosition;
+  LChess960DefaultValue: boolean;
   
 begin
+  LitIni(LChess960DefaultValue, LRecursion);
+  if not FichierExiste then EcritIni(LChess960DefaultValue, LRecursion);
+  RegleVariante(LChess960DefaultValue);
   Ecrire(Format('%s %s', [CApp, CVer]));
   while not EOF do
   begin
@@ -73,7 +82,7 @@ begin
       begin
         Ecrire(Format('id name %s %s', [CApp, CVer]), FALSE);
         Ecrire(Format('id author %s', [CAut]), FALSE);
-        Ecrire('option name UCI_Chess960 type check default false', FALSE);
+        Ecrire(Format('option name UCI_Chess960 type check default %s', [CBoolStr[VarianteCourante]]), FALSE);
         Ecrire('uciok');
       end else
         if LCmd = 'isready' then
@@ -122,13 +131,17 @@ begin
                   Start;
                 end;
               end else
-                  if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
-                    ActiveEchecs960(WordPresent('true', LCmd))
-                  else
-                    if LCmd = 'show' then
-                      Ecrire(VoirPosition(PositionCourante))
+                  if LCmd = 'stop' then
+                  begin
+                    Ecrire('bestmove 1234');
+                  end else
+                    if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
+                      RegleVariante(WordPresent('true', LCmd))
                     else
-                    if LCmd = 'perft' then
-                      EssaiPerf();
+                      if LCmd = 'show' then
+                        Ecrire(VoirPosition(PositionCourante))
+                      else
+                      if LCmd = 'perft' then
+                        EssaiPerf(PositionCourante, 5);
   end;
 end.

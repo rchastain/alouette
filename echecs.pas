@@ -141,10 +141,10 @@ begin
     end;
   end else
   begin
-    if ARoque[CBlanc].XTourRoi  = 7 then result := 'K';
-    if ARoque[CBlanc].XTourDame = 0 then result := Concat(result, 'Q');
-    if ARoque[CNoir].XTourRoi   = 7 then result := Concat(result, 'k');
-    if ARoque[CNoir].XTourDame  = 0 then result := Concat(result, 'q');
+    if ARoque[CBlanc].XTourRoi  {= 7}<> CNeant then result := 'K';
+    if ARoque[CBlanc].XTourDame {= 0}<> CNeant then result := Concat(result, 'Q');
+    if ARoque[CNoir].XTourRoi   {= 7}<> CNeant then result := Concat(result, 'k');
+    if ARoque[CNoir].XTourDame  {= 0}<> CNeant then result := Concat(result, 'q');
   end;
   if result = '' then
     result := '-';

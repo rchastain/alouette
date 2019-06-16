@@ -19,6 +19,7 @@ uses
   SysUtils, Damier, Tables, Coups;
   
 procedure FRoque(const APos: TPosition; var AListe: array of integer; var ACompte: integer);
+  
   procedure Accepte(const i, j: integer; const ACondition: boolean = TRUE);
   begin
     if ACondition then
@@ -28,6 +29,7 @@ procedure FRoque(const APos: TPosition; var AListe: array of integer; var ACompt
       AListe[Pred(ACompte)] := EncodeCoup(i, j);
     end;
   end;
+  
 var
   { Pièces. }
   toutes,
@@ -38,37 +40,38 @@ var
   LColDepTour: integer; { Colonne départ tour. }
   LPos: TPosition;
   caseRoi: TDamier;
-procedure Recherche(const ACAR, ACAT: integer); { Colonne arrivée roi, colonne arrivée tour. }
-var
-  i, j, k, l: integer;
-  b, c, d: boolean;
-  parcours: TDamier; { Le chemin, y compris la case d'arrivée. }
-  autorisees: TDamier; { Les pièces autorisées sur le parcours. }
-begin
-  i := FIndex(LColDepRoi, LLigRoq); k := FIndex(ACAR, LLigRoq);
-  j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
-  //TJournal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
-  if EstAllumee({actives}APos.PiecesCouleur[APos.Trait] and APos.Tours, CCaseIdx[j]) then
-    //TJournal.Ajoute('Position tour vérifiée (condition 1/3).')
-  else exit;
-  
-  parcours := CChemin[i, k] or CCaseIdx[k];
-  autorisees := APos.Tours and {actives}APos.PiecesCouleur[APos.Trait];
-  b := (parcours and toutes) = (parcours and autorisees);
-  c := (CompteCasesAllumees(parcours and autorisees) <= 1);
-  parcours := CChemin[j, l] or CCaseIdx[l];
-  autorisees := APos.Rois and {actives}APos.PiecesCouleur[APos.Trait];
-  d := (parcours and toutes) = (parcours and autorisees);
-  if b and c and d then
-    //TJournal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
-  else exit;
-  
-  if (menacees and ((CCaseIdx[i] or CChemin[i, k] or CCaseIdx[k])) = 0) then
-    //TJournal.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
-  else exit;
-  
-  Accepte(i, j);
-end;
+
+  procedure Recherche(const ACAR, ACAT: integer); { Colonne arrivée roi, colonne arrivée tour. }
+  var
+    i, j, k, l: integer;
+    b, c, d: boolean;
+    parcours: TDamier; { Le chemin, y compris la case d'arrivée. }
+    autorisees: TDamier; { Les pièces autorisées sur le parcours. }
+  begin
+    i := FIndex(LColDepRoi, LLigRoq); k := FIndex(ACAR, LLigRoq);
+    j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
+    //TJournal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
+    if EstAllumee({actives}APos.PiecesCouleur[APos.Trait] and APos.Tours, CCaseIdx[j]) then
+      //TJournal.Ajoute('Position tour vérifiée (condition 1/3).')
+    else exit;
+    
+    parcours := CChemin[i, k] or CCaseIdx[k];
+    autorisees := APos.Tours and {actives}APos.PiecesCouleur[APos.Trait];
+    b := (parcours and toutes) = (parcours and autorisees);
+    c := (CompteCasesAllumees(parcours and autorisees) <= 1);
+    parcours := CChemin[j, l] or CCaseIdx[l];
+    autorisees := APos.Rois and {actives}APos.PiecesCouleur[APos.Trait];
+    d := (parcours and toutes) = (parcours and autorisees);
+    if b and c and d then
+      //TJournal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
+    else exit;
+    
+    if (menacees and ((CCaseIdx[i] or CChemin[i, k] or CCaseIdx[k])) = 0) then
+      //TJournal.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
+    else exit;
+    
+    Accepte(i, j);
+  end;
 
 begin
   with APos do
