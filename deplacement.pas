@@ -11,7 +11,7 @@ interface
 uses
   Damier, Echecs;
 
-function TypePiece(const APos: TPosition; const AIdx: integer): TPieceEtendu;
+function TypePieceIdx(const APos: TPosition; const AIdx: integer): TTypePieceLarge;
 {** Met à jour la position en fonction d'un coup présumé légal. Renvoie FALSE si une impossibilité de jouer le coup est détectée. }
 function FRejoue(var APos: TPosition; const ACoup: string): boolean;
 function EstUnePromotion(const APos: TPosition; const ACoup: string): boolean;
@@ -23,7 +23,7 @@ implementation
 uses
   SysUtils, Tables, Journal;
 
-function TypePiece(const APos: TPosition; const AIdx: integer): TPieceEtendu;
+function TypePieceIdx(const APos: TPosition; const AIdx: integer): TTypePieceLarge;
 begin
   if      EstAllumeeIdx(APos.Pions,     AIdx) then
     if APos.Trait then
@@ -46,7 +46,7 @@ end;
 function FRejoue(var APos: TPosition; const ACoup: string): boolean;
 var
   LDep, LArr, LColDep, LColArr, LLigDep, LLigArr, LPris: integer;
-  LType: TPiece;
+  LType: TTypePiece;
   LPreserveCouleur: boolean;
 begin
   result := TRUE;
@@ -86,19 +86,19 @@ begin
   { Si la pièce déplacée est un roi... }
   if LType = Roi then
   begin
-    if EstAllumeeIdx(APos.Tours and {LActives}APos.PiecesCouleur[APos.Trait], LArr) then
+    if EstAllumeeIdx(APos.Tours and APos.PiecesCouleur[APos.Trait], LArr) then
     begin
       
       if LColArr = APos.Roque[APos.Trait].XTourRoi then
       begin
-        TJournal.Ajoute(Format('[FRejoue] Roque 960 roi %s.', [ACoup]));
+        TJournal.Ajoute(Format('[FRejoue] Roque côté H %s.', [ACoup]));
         DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], LArr, CATCR[APos.Trait]);
         LArr := FIndex(CColonneG, LLigArr);
         LPreserveCouleur := LColDep = CATCR[APos.Trait] mod 8;
       end else
         if LColArr = APos.Roque[APos.Trait].XTourDame then
         begin
-          TJournal.Ajoute(Format('[FRejoue] Roque 960 dame %s.', [ACoup]));
+          TJournal.Ajoute(Format('[FRejoue] Roque côté A %s.', [ACoup]));
           DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], LArr, CATCD[APos.Trait]);
           LArr := FIndex(CColonneC, LLigArr);
           LPreserveCouleur := LColDep = CATCD[APos.Trait] mod 8;
@@ -110,12 +110,12 @@ begin
       begin
         if LColArr = CColonneG then
         begin
-          TJournal.Ajoute(Format('[FRejoue] Roque roi %s.', [ACoup]));
+          TJournal.Ajoute(Format('[FRejoue] Roque côté roi %s.', [ACoup]));
           DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], CDTCR[APos.Trait], CATCR[APos.Trait]);
         end else
           if LColArr = CColonneC then
           begin
-            TJournal.Ajoute(Format('[FRejoue] Roque dame %s.', [ACoup]));
+            TJournal.Ajoute(Format('[FRejoue] Roque côté dame %s.', [ACoup]));
             DeplaceIdx(APos.Tours, APos.PiecesCouleur[APos.Trait], CDTCD[APos.Trait], CATCD[APos.Trait]);
           end else
             exit(FALSE);
@@ -123,7 +123,7 @@ begin
     
     APos.Roque[APos.Trait].XTourRoi := CNeant;
     APos.Roque[APos.Trait].XTourDame := CNeant;
-    APos.PositionRoi[APos.Trait] := CCaseIdx[LArr];
+    APos.CaseRoi[APos.Trait] := CCaseIdx[LArr];
   end;
   
   { Si la pièce déplacée est une tour... }
@@ -242,12 +242,14 @@ end;
 function EstUnRoque(const APos: TPosition; const ACoup: integer): boolean;
 var
   LDep, LArr: integer;
+  LBlanc, LNoir: TDamier;
 begin
-  LDep := ACoup div 100;
-  LArr := ACoup mod 100;
+  LBlanc := APos.PiecesCouleur[FALSE];
+  LNoir := APos.PiecesCouleur[TRUE];
+  DecodeCoup(ACoup, LDep, LArr);
   result :=
-    (EstAllumeeIdx(APos.PiecesCouleur[FALSE], LDep) and EstAllumeeIdx(APos.PiecesCouleur[FALSE], LArr)) or
-    (EstAllumeeIdx(APos.PiecesCouleur[TRUE], LDep) and EstAllumeeIdx(APos.PiecesCouleur[TRUE], LArr));
+    (EstAllumeeIdx(LBlanc, LDep) and EstAllumeeIdx(LBlanc, LArr)) or
+    (EstAllumeeIdx(LNoir,  LDep) and EstAllumeeIdx(LNoir,  LArr));
   if result then
     TJournal.Ajoute(Format('[EstUnRoque] Roque détecté %s.', [NomCoup(ACoup)]));
 end;
@@ -257,8 +259,7 @@ var
   LDep, LArr, LLigDep, LLigArr, LColArr: integer;
   LAncienNom: string;
 begin
-  LDep := ARoque div 100;
-  LArr := ARoque mod 100;
+  DecodeCoup(ARoque, LDep, LArr);
   Assert((LDep >= 0) and (LDep <= 63) and (LArr >= 0) and (LArr <= 63));
   LAncienNom := Concat(CNomCase[LDep], CNomCase[LArr]);
   LLigDep := LDep div 8;
@@ -269,7 +270,7 @@ begin
   else
     LColArr := CColonneC;
   LArr := 8 * LLigArr + LColArr;
-  ARoque := EncodeCoup(LDep, LArr);
+  ARoque := EncodeCoup(LDep, LArr, Roi);
   TJournal.Ajoute(Format('[Reformule] Reformulé %s en %s.', [LAncienNom, Concat(CNomCase[LDep], CNomCase[LArr])]));
 end;
 

@@ -11,10 +11,11 @@ interface
 type
   {** Le damier est représenté par un nombre entier de 64 chiffres binaires. }
   TDamier = Int64;
-  TPieceEtendu = (Neant, PionBlanc, PionNoir, Tour, Cavalier, Fou, Dame, Roi);
-  TPiece = PionBlanc..Roi;
-
-{** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec un seul chiffre allumé. }
+  TTypePieceLarge = (Neant, PionBlanc, PionNoir, Tour, Cavalier, Fou, Dame, Roi);
+  TTypePiece = PionBlanc..Roi;
+  TTypeCoup = (tcOrdinaire, tcCapture, tcRoque, tcEnPassant, tcPromotion);
+  
+{** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec une seule case allumée. }
 function FCase(const AIdx: integer): TDamier; overload;
 {** Case pour deux nombres donnés de 0 à 7. }
 function FCase(const ACol, ALig: integer): TDamier; overload;
@@ -23,8 +24,13 @@ function NomCase(const ACol, ALig: integer; const AMaj: boolean = FALSE): string
 function NomCase(const AIdx: integer; const AMaj: boolean = FALSE): string; overload;
 function NomCoup(const ADep, AArr: integer): string; overload;
 function NomCoup(const ACoup: integer): string; overload;
-function EncodeCoup(const ADep, AArr: integer): integer;
-procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer);
+function EncodeCoup(const ADep, AArr: integer; const ATP: TTypePiece; const ATC: TTypeCoup = tcOrdinaire): integer;
+procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer); overload;
+procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer; out ATP: TTypePiece; out ATC: TTypeCoup); overload;
+function Arrivee(const ACoup: integer): integer;
+function TypePiece(const ACoup: integer): TTypePiece;
+function TypeCoup(const ACoup: integer): TTypeCoup;
+function Depart(const ACoup: integer): integer;
 {** Convertit une chaîne de la forme "a1" en un nombre de 0 à 63. }
 function DecodeNomCase(const ANom: string): integer;
 {** Pour savoir si une case est allumée dans un damier. }
@@ -40,13 +46,13 @@ function FChaine(const ADam: TDamier): string;
 {** Chaîne de chiffres binaires en forme de damier. }
 function FChaineDamier(const ADam: TDamier): string;
 {** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
-function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
+function Possible(const APiece: TTypePiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
-function Cibles(const APiece: TPiece; const AIdx: integer): TDamier;
+function Cibles(const APiece: TTypePiece; const AIdx: integer): TDamier;
 {** Les cases à survoler pour aller d'un endroit à un autre. }
 function Chemin(const ADep, AArr: integer): TDamier;
 
-const  
+const
   {** Numérotation des cases de 0 à 63. }
   A1 = 00; B1 = 01; C1 = 02; D1 = 03; E1 = 04; F1 = 05; G1 = 06; H1 = 07;
   A2 = 08; B2 = 09; C2 = 10; D2 = 11; E2 = 12; F2 = 13; G2 = 14; H2 = 15;
@@ -109,15 +115,46 @@ begin
   result := Concat(NomCase(ADep), NomCase(AArr));
 end;
 
-function EncodeCoup(const ADep, AArr: integer): integer;
+function EncodeCoup(const ADep, AArr: integer; const ATP: TTypePiece; const ATC: TTypeCoup): integer;
 begin
-  result := 100 * ADep + AArr;
+  result :=
+    Ord(ATP) shl 24
+  + Ord(ATC) shl 16
+  + ADep     shl  8
+  + AArr;
 end;
 
 procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer);
 begin
-  ADep := ACoup div 100;
-  AArr := ACoup mod 100;
+  ADep := (ACoup and $0000FF00) shr 8;
+  AArr := (ACoup and $000000FF);
+end;
+
+procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer; out ATP: TTypePiece; out ATC: TTypeCoup); overload;
+begin
+  DecodeCoup(ACoup, ADep, AArr);
+  ATP  := TTypePiece((ACoup and $FF000000) shr 24);
+  ATC  := TTypeCoup ((ACoup and $00FF0000) shr 16);
+end;
+
+function Arrivee(const ACoup: integer): integer;
+begin
+  result := (ACoup and $000000FF) shr 0;
+end;
+
+function Depart(const ACoup: integer): integer;
+begin
+  result := (ACoup and $0000FF00) shr 8;
+end;
+
+function TypePiece(const ACoup: integer): TTypePiece;
+begin
+  result := TTypePiece((ACoup and $FF000000) shr 24);
+end;
+
+function TypeCoup(const ACoup: integer): TTypeCoup;
+begin
+  result := TTypeCoup ((ACoup and $00FF0000) shr 16);
 end;
 
 function NomCoup(const ACoup: integer): string;
@@ -184,7 +221,7 @@ begin
   result := Concat(result, #13#10'+   abcdefgh   +');
 end;
 
-function Possible(const APiece: TPiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
+function Possible(const APiece: TTypePiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
 var
   dx, dy, adx, ady: integer;
 begin
@@ -210,7 +247,7 @@ begin
   end;
 end;
 
-function Cibles(const APiece: TPiece; const AIdx: integer): TDamier;
+function Cibles(const APiece: TTypePiece; const AIdx: integer): TDamier;
 var
   x1, y1, x2, y2: integer;
 begin

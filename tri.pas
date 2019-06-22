@@ -9,6 +9,7 @@ unit Tri;
 interface
 
 procedure Trie(var ACoup, ANote: array of integer; const n: integer);
+function Tronque(const AEval: array of integer; const n: integer; const ARepetition: integer = 0): integer;
 
 implementation
 
@@ -36,6 +37,28 @@ begin
         LFin := FALSE;
       end;
   until LFin;
+end;
+
+function Tronque(const AEval: array of integer; const n: integer; const ARepetition: integer): integer;
+var
+  i, j, k: integer;
+begin
+  Assert(n > 1);
+  i := Pred(n);
+  j := AEval[i];
+  i := Pred(i);
+  k := ARepetition;
+  while k >= 0 do
+  begin
+    while AEval[i] = j do
+      if i > 0 then
+        Dec(i)
+      else
+        Break;
+    j := AEval[i];
+    Dec(k);
+  end;
+  result := Succ(i);
 end;
 
 end.

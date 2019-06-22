@@ -14,7 +14,7 @@ uses
 procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
-function Coup(const ATempsDisponible: integer; const ARecursion: integer): string;
+function Coup(const ATempsDisponible: integer): string;
 procedure RegleVariante(const AValeur: boolean);
 function VarianteCourante: boolean;
 procedure NouvellePosition(const APos: string);
@@ -23,7 +23,11 @@ function PositionCourante: TPosition;
 implementation
 
 uses
-  SysUtils, Journal, Deplacement, Meilleur, Histoire;
+  SysUtils, Journal, Deplacement, Histoire,
+{$IFDEF A}MeilleurA{$ENDIF}
+{$IFDEF B}MeilleurB{$ENDIF}
+{$IFDEF C}MeilleurC{$ENDIF}
+  ;
 
 var
   LPos: TPosition;
@@ -48,9 +52,9 @@ begin
     TJournal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
 end;
 
-function Coup(const ATempsDisponible: integer; const ARecursion: integer): string;
+function Coup(const ATempsDisponible: integer): string;
 begin
-  result := MeilleurCoup(LPos, LVarianteFRC, ATempsDisponible, ARecursion);
+  result := MeilleurCoup(LPos, LVarianteFRC, ATempsDisponible);
 end;
 
 procedure RegleVariante(const AValeur: boolean);

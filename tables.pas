@@ -12,7 +12,7 @@ uses
   Damier;
 
 const  
-  CCibles:    array[TPiece, A1..H8] of TDamier = ({$I cibles.inc});
+  CCibles:    array[TTypePiece, A1..H8] of TDamier = ({$I cibles.inc});
   CChemin:    array[A1..H8, A1..H8] of TDamier = ({$I chemin.inc});
   CCaseIdx:   array[A1..H8]         of TDamier = ({$I index.inc});
   CCaseCoord: array[0..7, 0..7]     of TDamier = ({$I coordonnees.inc});

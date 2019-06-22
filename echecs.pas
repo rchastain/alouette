@@ -33,7 +33,7 @@ type
     Trait: boolean;
     Roque: TRoque;
     EnPassant: integer;
-    PositionRoi: array[boolean] of TDamier;
+    CaseRoi: array[boolean] of TDamier;
   end;
   
 const
@@ -51,7 +51,7 @@ const
       (XTourRoi: CNeant; XTourDame: CNeant)
     );
     EnPassant: CNeant;
-    PositionRoi: (0, 0)
+    CaseRoi: (0, 0)
   );
 
 const
@@ -209,7 +209,7 @@ begin
               'K':
                 begin
                   Allume(Rois, LCase);
-                  PositionRoi[c = 'k'] := LCase;
+                  CaseRoi[c = 'k'] := LCase;
                 end;
             end;
             Inc(x);
@@ -219,7 +219,7 @@ begin
       end;
       Trait := Strings[1] = CSymboleTrait[CNoir];
       if AFRC then
-        Roque := DecodeChaineRoque(Strings[2], Colonne(PositionRoi[CBlanc]), Colonne(PositionRoi[CNoir]))
+        Roque := DecodeChaineRoque(Strings[2], Colonne(CaseRoi[CBlanc]), Colonne(CaseRoi[CNoir]))
       else
         Roque := DecodeChaineRoqueTradition(Strings[2]);
       if Strings[3] = '-' then
@@ -291,30 +291,26 @@ end;
 
 function VoirPosition(const APos: TPosition): string;
 const
+  FLECHE: array[boolean] of string = ('', ' <--');
+const
   GRILLE =
-    '    A   B   C   D   E   F   G   H'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '8 | %s | %s | %s | %s | %s | %s | %s | %s | 8'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '7 | %s | %s | %s | %s | %s | %s | %s | %s | 7'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '6 | %s | %s | %s | %s | %s | %s | %s | %s | 6'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '5 | %s | %s | %s | %s | %s | %s | %s | %s | 5'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '4 | %s | %s | %s | %s | %s | %s | %s | %s | 4'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '3 | %s | %s | %s | %s | %s | %s | %s | %s | 3'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '2 | %s | %s | %s | %s | %s | %s | %s | %s | 2'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '1 | %s | %s | %s | %s | %s | %s | %s | %s | 1'#13#10 +
-    '  +---+---+---+---+---+---+---+---+'#13#10 +
-    '    A   B   C   D   E   F   G   H';
+    '+  A B C D E F G H  +%s'#13#10 +
+    '8 |%s|%s|%s|%s|%s|%s|%s|%s| 8'#13#10 +
+    '7 |%s|%s|%s|%s|%s|%s|%s|%s| 7'#13#10 +
+    '6 |%s|%s|%s|%s|%s|%s|%s|%s| 6'#13#10 +
+    '5 |%s|%s|%s|%s|%s|%s|%s|%s| 5'#13#10 +
+    '4 |%s|%s|%s|%s|%s|%s|%s|%s| 4'#13#10 +
+    '3 |%s|%s|%s|%s|%s|%s|%s|%s| 3'#13#10 +
+    '2 |%s|%s|%s|%s|%s|%s|%s|%s| 2'#13#10 +
+    '1 |%s|%s|%s|%s|%s|%s|%s|%s| 1'#13#10 +
+    '+  A B C D E F G H  +%s'#13#10 +
+    'Castling: %s'#13#10 +
+    'En passant: %s';
 var
   x, y: integer;
   c: array[0..7, 0..7] of char;
   i: integer;
+  s: string;
 begin
   for y := 7 downto 0 do
     for x := 0 to 7 do
@@ -327,11 +323,19 @@ begin
       if EstAllumeeIdx(APos.Fous,      i) then c[x, y] := 'b' else
       if EstAllumeeIdx(APos.Dames,     i) then c[x, y] := 'q' else
       if EstAllumeeIdx(APos.Rois,      i) then c[x, y] := 'k' else
-        c[x, y] := ' ';
+        if (x + y) mod 2 = 1 then
+          c[x, y] := '.'
+        else
+        c[x, y] := ':';
       if EstAllumeeIdx(APos.PiecesCouleur[FALSE], i) then
         c[x, y] := UpCase(c[x, y]);
     end;
+    if APos.EnPassant = CNeant then
+      s := '-'
+    else
+      s := CNomCase[APos.EnPassant];
   result := Format(GRILLE, [
+    FLECHE[APos.Trait],
     c[0, 7], c[1, 7], c[2, 7], c[3, 7], c[4, 7], c[5, 7], c[6, 7], c[7, 7],
     c[0, 6], c[1, 6], c[2, 6], c[3, 6], c[4, 6], c[5, 6], c[6, 6], c[7, 6],
     c[0, 5], c[1, 5], c[2, 5], c[3, 5], c[4, 5], c[5, 5], c[6, 5], c[7, 5],
@@ -339,7 +343,10 @@ begin
     c[0, 3], c[1, 3], c[2, 3], c[3, 3], c[4, 3], c[5, 3], c[6, 3], c[7, 3],
     c[0, 2], c[1, 2], c[2, 2], c[3, 2], c[4, 2], c[5, 2], c[6, 2], c[7, 2],
     c[0, 1], c[1, 1], c[2, 1], c[3, 1], c[4, 1], c[5, 1], c[6, 1], c[7, 1],
-    c[0, 0], c[1, 0], c[2, 0], c[3, 0], c[4, 0], c[5, 0], c[6, 0], c[7, 0]
+    c[0, 0], c[1, 0], c[2, 0], c[3, 0], c[4, 0], c[5, 0], c[6, 0], c[7, 0],
+    FLECHE[not APos.Trait],
+    EncodeChaineRoque(APos.Roque, TRUE),
+    s
   ]);
 end;
 

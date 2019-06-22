@@ -22,7 +22,8 @@ uses
   Essais,
 {$ENDIF}
   Performance,
-  Reglages;
+  Reglages,
+  Global;
 
 {$I version.inc}
   
@@ -48,11 +49,16 @@ var
 procedure TProcessus.Execute;
 var
   t: cardinal;
+  m: string;
 begin
   t := GetTickCount64;
-  Ecrire(Format('bestmove %s', [Joueur.Coup(GTempsDispo, LRecursion)]));
+  m := Joueur.Coup(GTempsDispo);
   t := GetTickCount64 - t;
-  TJournal.Ajoute(FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
+  if not Terminated then
+  begin
+    Ecrire(FormatDateTime('"info "hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
+    Ecrire(Format('bestmove %s', [m]));
+  end;
 end;
 
 const
@@ -65,6 +71,7 @@ var
   LMTime, LWTime, LBTime, LMTG, LWInc, LBInc: integer;
   LPos: TPosition;
   LChess960DefaultValue: boolean;
+  LProcessus: TProcessus;
   
 begin
   LitIni(LChess960DefaultValue, LRecursion);
@@ -123,7 +130,8 @@ begin
                 else
                   Assert(FALSE);
                 
-                with TProcessus.Create(TRUE) do
+                LProcessus := TProcessus.Create(TRUE);
+                with LProcessus do
                 begin
                   FreeOnTerminate := TRUE;
                   //Priority := tpHigher;
@@ -131,17 +139,19 @@ begin
                   Start;
                 end;
               end else
-                  if LCmd = 'stop' then
-                  begin
-                    Ecrire('bestmove 1234');
-                  end else
-                    if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
-                      RegleVariante(WordPresent('true', LCmd))
+                if LCmd = 'stop' then
+                begin
+                  Ecrire(Format('bestmove %s', [GCoupProv]));
+                  if Assigned(LProcessus) then
+                    LProcessus.Terminate;
+                end else
+                  if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
+                    RegleVariante(WordPresent('true', LCmd))
+                  else
+                    if LCmd = 'show' then
+                      Ecrire(VoirPosition(PositionCourante))
                     else
-                      if LCmd = 'show' then
-                        Ecrire(VoirPosition(PositionCourante))
-                      else
-                      if LCmd = 'perft' then
-                        EssaiPerf(PositionCourante, 5);
+                    if LCmd = 'perft' then
+                      EssaiPerf(PositionCourante, 5);
   end;
 end.
