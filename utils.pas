@@ -74,7 +74,7 @@ begin
     and (AStr[1] in ['a'..'h'])
     and (AStr[2] in ['1'..'8'])
     and (AStr[3] in ['a'..'h'])
-    and (AStr[4] in ['1'..'8']) or (AStr = 'O-O-O') or (AStr = 'O-O');
+    and (AStr[4] in ['1'..'8']);
 end;
 
 function IsGoCmd(const AStr: string; out MTime: integer): boolean;
@@ -91,8 +91,8 @@ begin
   WTime := 0;
   BTime := 0;
   result :=
-    WordPresent('wtime',     AStr) and TryStrToInt(GetWord(3, AStr), WTime) and
-    WordPresent('btime',     AStr) and TryStrToInt(GetWord(5, AStr), BTime);
+    {WordPresent('wtime',     AStr)}(GetWord(2, AStr) = 'wtime') and TryStrToInt(GetWord(3, AStr), WTime) and
+    {WordPresent('btime',     AStr)}(GetWord(4, AStr) = 'btime') and TryStrToInt(GetWord(5, AStr), BTime);
 end;
 
 function IsGoCmd(const AStr: string; out WTime, BTime, MTG: integer): boolean;
@@ -102,9 +102,9 @@ begin
   BTime := 0;
   MTG := 0;
   result :=
-    WordPresent('wtime',     AStr) and TryStrToInt(GetWord(3, AStr), WTime) and
-    WordPresent('btime',     AStr) and TryStrToInt(GetWord(5, AStr), BTime) and
-    WordPresent('movestogo', AStr) and TryStrToInt(GetWord(7, AStr), MTG)
+    {WordPresent('wtime',     AStr)}(GetWord(2, AStr) = 'wtime')     and TryStrToInt(GetWord(3, AStr), WTime) and
+    {WordPresent('btime',     AStr)}(GetWord(4, AStr) = 'btime')     and TryStrToInt(GetWord(5, AStr), BTime) and
+    {WordPresent('movestogo', AStr)}(GetWord(6, AStr) = 'movestogo') and TryStrToInt(GetWord(7, AStr), MTG)
 end;
 
 function IsGoCmd(const AStr: string; out WTime, BTime, WInc, BInc: integer): boolean;
@@ -115,10 +115,10 @@ begin
   WInc := 0;
   BInc := 0;
   result :=
-    WordPresent('wtime',     AStr) and TryStrToInt(GetWord(3, AStr), WTime) and
-    WordPresent('btime',     AStr) and TryStrToInt(GetWord(5, AStr), BTime) and
-    WordPresent('winc',      AStr) and TryStrToInt(GetWord(7, AStr), WInc) and
-    WordPresent('binc',      AStr) and TryStrToInt(GetWord(9, AStr), BInc);
+    {WordPresent('wtime',     AStr)}(GetWord(2, AStr) = 'wtime') and TryStrToInt(GetWord(3, AStr), WTime) and
+    {WordPresent('btime',     AStr)}(GetWord(4, AStr) = 'btime') and TryStrToInt(GetWord(5, AStr), BTime) and
+    {WordPresent('winc',      AStr)}(GetWord(6, AStr) = 'winc')  and TryStrToInt(GetWord(7, AStr), WInc) and
+    {WordPresent('binc',      AStr)}(GetWord(8, AStr) = 'binc')  and TryStrToInt(GetWord(9, AStr), BInc);
 end;
 
 function IsPerftCmd(const AStr: string; out ADepth: integer): boolean;

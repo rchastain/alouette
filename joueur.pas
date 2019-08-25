@@ -14,7 +14,8 @@ uses
 procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
-function Coup(const ATempsDisponible: integer): string;
+function Coup(const ATempsDisponible: integer; const ARecherche: boolean): string;
+function CoupImmediat: string;
 procedure RegleVariante(const AValeur: boolean);
 function VarianteCourante: boolean;
 procedure NouvellePosition(const APos: string);
@@ -23,15 +24,11 @@ function PositionCourante: TPosition;
 implementation
 
 uses
-  SysUtils, Journal, Deplacement, Histoire,
-{$IFDEF A}MeilleurA{$ENDIF}
-{$IFDEF B}MeilleurB{$ENDIF}
-{$IFDEF C}MeilleurC{$ENDIF}
-  ;
+  SysUtils, Journal, Deplacement, Histoire, Meilleur;
 
 var
   LPos: TPosition;
-  LVarianteFRC: boolean;
+  LEchecs960: boolean;
   
 procedure Oublie;
 begin
@@ -49,30 +46,35 @@ begin
   if FRejoue(LPos, ACoup) then
     Histoire.Ajoute(ACoup)
   else
-    TJournal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
+    Journal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
 end;
 
-function Coup(const ATempsDisponible: integer): string;
+function Coup(const ATempsDisponible: integer; const ARecherche: boolean): string;
 begin
-  result := MeilleurCoup(LPos, LVarianteFRC, ATempsDisponible);
+  result := MeilleurCoup(LPos, LEchecs960, ATempsDisponible, ARecherche);
+end;
+
+function CoupImmediat: string;
+begin
+  result := LCoupProv;
 end;
 
 procedure RegleVariante(const AValeur: boolean);
 const
   CPrefixe: array[boolean] of string = ('dés', '');
 begin
-  TJournal.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
-  LVarianteFRC := AValeur;
+  Journal.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
+  LEchecs960 := AValeur;
 end;
 
 function VarianteCourante: boolean;
 begin
-  result := LVarianteFRC;
+  result := LEchecs960;
 end;
 
 procedure NouvellePosition(const APos: string);
 begin
-  LPos := EncodePosition(APos, LVarianteFRC);
+  LPos := EncodePosition(APos, LEchecs960);
   NouvelleHistoire;
 end;
 
@@ -83,7 +85,7 @@ end;
 
 initialization
   Oublie;
-  LVarianteFRC := FALSE;
+  LEchecs960 := FALSE;
   
 finalization
 

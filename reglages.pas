@@ -3,9 +3,9 @@ unit Reglages;
 
 interface
 
-procedure LitIni(out AVariante: boolean; out ARecursion: integer);
-procedure EcritIni(const AVariante: boolean; const ARecursion: integer);
-function FichierExiste: boolean;
+procedure LitFichierIni(out AVariante: boolean; out ARecherche: boolean);
+procedure EcritFichierIni(const AVariante: boolean; const ARecherche: boolean);
+function FichierIniExiste: boolean;
 
 implementation
 
@@ -15,49 +15,40 @@ uses
 const
   SECTION = '.';
   DEFAUT_VARIANTE = 'FALSE';
-  DEFAUT_RECURSION = 1;
+  DEFAUT_RECHERCHE = 'TRUE';
   CBoolStr: array[boolean] of string = ('false', 'true');
   
 var
   LChemin: string;
   
-procedure LitIni(out AVariante: boolean; out ARecursion: integer);
+procedure LitFichierIni(out AVariante: boolean; out ARecherche: boolean);
 begin
   with TIniFile.Create(LChemin) do
   try
-    AVariante := UpperCase(ReadString(SECTION, 'variante', DEFAUT_VARIANTE)) = 'TRUE';
-    ARecursion := ReadInteger(SECTION, 'recursion', DEFAUT_RECURSION)
+    AVariante := UpperCase(ReadString(SECTION, 'frc', DEFAUT_VARIANTE)) = 'TRUE';
+    ARecherche := UpperCase(ReadString(SECTION, 'search', DEFAUT_RECHERCHE)) = 'TRUE';
   finally
     Free;
   end;
 end;
 
-procedure EcritIni(const AVariante: boolean; const ARecursion: integer);
+procedure EcritFichierIni(const AVariante: boolean; const ARecherche: boolean);
 begin
   with TIniFile.Create(LChemin) do
   try
-    WriteString(SECTION, 'variante', CBoolStr[AVariante]);
-    WriteInteger(SECTION, 'recursion', ARecursion);
+    WriteString(SECTION, 'frc', CBoolStr[AVariante]);
+    WriteString(SECTION, 'search', CBoolStr[ARecherche]);
     UpdateFile;
   finally
     Free;
   end;
 end;
 
-function FichierExiste: boolean;
+function FichierIniExiste: boolean;
 begin
   result := FileExists(LChemin);
 end;
 
 begin
   LChemin := ChangeFileExt(ParamStr(0), '.ini');
-  (*
-  LChemin := GetEnvironmentVariable('APPDATA');
-  Assert(DirectoryExists(LChemin));
-  LChemin := Concat(IncludeTrailingPathDelimiter(LChemin), ChangeFileExt(ExtractFileName(ParamStr(0)), ''));
-  if not DirectoryExists(LChemin) then
-    CreateDir(LChemin);
-  Assert(DirectoryExists(LChemin));
-  LChemin := Concat(IncludeTrailingPathDelimiter(LChemin), ChangeFileExt(ExtractFileName(ParamStr(0)), '.ini'));
-  *)
 end.

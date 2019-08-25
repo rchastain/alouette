@@ -23,7 +23,7 @@ type
   end;
   TRoque = array[boolean] of TDonneesRoque;
   TPosition = record
-    PiecesCouleur: array[boolean] of TDamier;
+    Pieces: array[boolean] of TDamier;
     Pions,
     Tours,
     Cavaliers,
@@ -38,7 +38,7 @@ type
   
 const
   CPositionVierge: TPosition = (
-    PiecesCouleur: (0, 0);
+    Pieces: (0, 0);
     Pions: 0;
     Tours: 0;
     Cavaliers: 0;
@@ -82,7 +82,7 @@ function VoirPosition(const APos: TPosition): string;
 implementation
 
 uses
-  SysUtils, Classes, Journal;
+  SysUtils, Classes{, Journal};
 
 const
   CSymboleTrait: array[boolean] of char = ('w', 'b');
@@ -199,7 +199,7 @@ begin
         else
           begin
             LCase := CCaseCoord[x, y];
-            Allume(PiecesCouleur[c in ['a'..'z']], LCase);
+            Allume(Pieces[c in ['a'..'z']], LCase);
             case UpCase(c) of
               'P': Allume(Pions, LCase);
               'R': Allume(Tours, LCase);
@@ -244,23 +244,23 @@ begin
     y := 7;
     while y >= 0 do
     begin
-      if (PiecesCouleur[FALSE] or PiecesCouleur[TRUE]) and CCaseCoord[x, y] = 0 then
+      if (Pieces[FALSE] or Pieces[TRUE]) and CCaseCoord[x, y] = 0 then
       begin
         n := 0;
-        while (x + n <= 7) and ((PiecesCouleur[FALSE] or PiecesCouleur[TRUE]) and CCaseCoord[x + n, y] = 0) do
+        while (x + n <= 7) and ((Pieces[FALSE] or Pieces[TRUE]) and CCaseCoord[x + n, y] = 0) do
           Inc(n);
         result := Concat(result, IntToStr(n));
         Inc(x, n);
       end else
       begin
         c := '?';
-        if EstAllumee(Pions,               CCaseCoord[x, y]) then c := 'P' else
-        if EstAllumee(Tours,               CCaseCoord[x, y]) then c := 'R' else
-        if EstAllumee(Cavaliers,           CCaseCoord[x, y]) then c := 'N' else
-        if EstAllumee(Fous,                CCaseCoord[x, y]) then c := 'B' else
-        if EstAllumee(Dames,               CCaseCoord[x, y]) then c := 'Q' else
-        if EstAllumee(Rois,                CCaseCoord[x, y]) then c := 'K';
-        if EstAllumee(PiecesCouleur[TRUE], CCaseCoord[x, y]) then
+        if EstAllumee(Pions,        CCaseCoord[x, y]) then c := 'P' else
+        if EstAllumee(Tours,        CCaseCoord[x, y]) then c := 'R' else
+        if EstAllumee(Cavaliers,    CCaseCoord[x, y]) then c := 'N' else
+        if EstAllumee(Fous,         CCaseCoord[x, y]) then c := 'B' else
+        if EstAllumee(Dames,        CCaseCoord[x, y]) then c := 'Q' else
+        if EstAllumee(Rois,         CCaseCoord[x, y]) then c := 'K';
+        if EstAllumee(Pieces[TRUE], CCaseCoord[x, y]) then
           c := Chr(Ord(c) + 32);
         result := Concat(result, c);
         Inc(x);
@@ -327,7 +327,7 @@ begin
           c[x, y] := '.'
         else
         c[x, y] := ':';
-      if EstAllumeeIdx(APos.PiecesCouleur[FALSE], i) then
+      if EstAllumeeIdx(APos.Pieces[FALSE], i) then
         c[x, y] := UpCase(c[x, y]);
     end;
     if APos.EnPassant = CNeant then

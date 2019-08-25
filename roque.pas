@@ -47,22 +47,22 @@ var
   begin
     i := FIndex(LColDepRoi,  LLigRoq); k := FIndex(ACAR, LLigRoq);
     j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
-    TJournal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
-    if EstAllumee(APos.PiecesCouleur[APos.Trait] and APos.Tours, CCaseIdx[j]) then
-      TJournal.Ajoute('Position tour vérifiée (condition 1/3).')
+    Journal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
+    if EstAllumee(APos.Pieces[APos.Trait] and APos.Tours, CCaseIdx[j]) then
+      Journal.Ajoute('Position tour vérifiée (condition 1/3).')
     else exit;
     LPar := CChemin[i, k] or CCaseIdx[k];
-    LAut := APos.Tours and APos.PiecesCouleur[APos.Trait];
+    LAut := APos.Tours and APos.Pieces[APos.Trait];
     b := (LPar and LTout) = (LPar and LAut);
     c := (CompteCasesAllumees(LPar and LAut) <= 1);
     LPar := CChemin[j, l] or CCaseIdx[l];
-    LAut := APos.Rois and APos.PiecesCouleur[APos.Trait];
+    LAut := APos.Rois and APos.Pieces[APos.Trait];
     d := (LPar and LTout) = (LPar and LAut);
     if b and c and d then
-      TJournal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
+      Journal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
     else exit;
     if (LMen and ((CCaseIdx[i] or CChemin[i, k] or CCaseIdx[k])) = 0) then
-      TJournal.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
+      Journal.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
     else exit;
     Accepte(i, j);
   end;
@@ -74,7 +74,7 @@ begin
       LLigRoq := CLigne8
     else
       LLigRoq := CLigne1;
-    LTout := PiecesCouleur[FALSE] or PiecesCouleur[TRUE];
+    LTout := Pieces[FALSE] or Pieces[TRUE];
   end;
   LPos := APos;
   LPos.Trait := not LPos.Trait;

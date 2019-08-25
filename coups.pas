@@ -16,6 +16,7 @@ function FCoups(const APos: TPosition; var ALst: array of integer; out ACompte: 
 function FCoups(const APos: TPosition): TDamier; overload;
 function FNombreCoups(const APos: TPosition): integer;
 function FCoupsPotentielsPion(const APos: TPosition): TDamier;
+function FEchec(const APos: TPosition): boolean;
 
 implementation
 
@@ -42,11 +43,11 @@ var
   LToutes: TDamier;
   i, j, k: integer;
 begin
-  LToutes := APos.PiecesCouleur[FALSE] or APos.PiecesCouleur[TRUE];
+  LToutes := APos.Pieces[FALSE] or APos.Pieces[TRUE];
   
   result := 0; { Damier vide. }
   
-  for i := A1 to H8 do if EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[i]) then
+  for i := A1 to H8 do if EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[i]) then
   begin
     { Pion. }
     if EstAllumee(APos.Pions, CCaseIdx[i]) then
@@ -56,7 +57,7 @@ begin
       j := i + k;
       if not EstAllumee(LToutes, CCaseIdx[j]) then
       begin
-        Accepte(i, j, CPion[APos.Trait]); (* Pion *)
+        Accepte(i, j, CPion[APos.Trait]);
         { Second pas en avant. }
         if ((j div 8 = 2) and not APos.Trait)
         or ((j div 8 = 5) and APos.Trait) then
@@ -70,7 +71,7 @@ begin
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
-        if EstAllumee(APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
+        if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
           Accepte(i, j, CPion[APos.Trait], tcEnPassant) else
           Accepte(i, j, CPion[APos.Trait], tcCapture);
@@ -79,7 +80,7 @@ begin
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
-        if EstAllumee(APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
+        if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
           Accepte(i, j, CPion[APos.Trait], tcEnPassant) else
           Accepte(i, j, CPion[APos.Trait], tcCapture);
@@ -90,9 +91,9 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Tour, i], CCaseIdx[j])
-        and not EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
+        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and LToutes) = 0) then
-          if EstAllumee(APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) then
+          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
           Accepte(i, j, Tour, tcCapture) else
           Accepte(i, j, Tour);
     end else
@@ -101,8 +102,8 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Cavalier, i], CCaseIdx[j])
-        and not EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
-          if EstAllumee(APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) then
+        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j]) then
+          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
           Accepte(i, j, Cavalier, tcCapture) else
           Accepte(i, j, Cavalier);
     end else
@@ -111,9 +112,9 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Fou, i], CCaseIdx[j])
-        and not EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
+        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and LToutes) = 0) then
-          if EstAllumee(APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) then
+          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
           Accepte(i, j, Fou, tcCapture) else
           Accepte(i, j, Fou);
     end else
@@ -122,9 +123,9 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Dame, i], CCaseIdx[j])
-        and not EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[j])
+        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j])
         and ((CChemin[i, j] and LToutes) = 0) then
-          if EstAllumee(APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) then
+          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
           Accepte(i, j, Dame, tcCapture) else
           Accepte(i, j, Dame);
     end else
@@ -133,8 +134,8 @@ begin
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[Roi, i], CCaseIdx[j])
-        and not EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
-          if EstAllumee(APos.PiecesCouleur[not APos.Trait], CCaseIdx[j]) then
+        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j]) then
+          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
           Accepte(i, j, Roi, tcCapture) else
           Accepte(i, j, Roi);
     end;
@@ -172,17 +173,26 @@ begin
   else
     LPion := PionBlanc;
   result := 0; { Damier vide. }
-  for i := A1 to H8 do if EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[i]) then
+  for i := A1 to H8 do if EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[i]) then
   begin
     { Pion. }
     if EstAllumee(APos.Pions, CCaseIdx[i]) then
     begin
       for j := A1 to H8 do
         if EstAllumee(CCibles[LPion, i], CCaseIdx[j])
-        and not EstAllumee(APos.PiecesCouleur[APos.Trait], CCaseIdx[j]) then
+        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j]) then
           Accepte(i, j);
     end;
   end;
+end;
+
+function FEchec(const APos: TPosition): boolean;
+var
+  LPos: TPosition;
+begin
+  LPos := APos;
+  LPos.Trait := not LPos.Trait;
+  result := (FCoups(LPos) and LPos.Rois) <> 0;
 end;
 
 end.

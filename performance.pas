@@ -16,25 +16,17 @@ procedure EssaiPerf(const APosition: TPosition; const AProfondeur: integer = 5);
 implementation
 
 uses
-{$IFDEF UNIX}
-  horloge,
-{$ENDIF}
-  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Tri;
+  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Tri;
 
 function Evalue(const APos: TPosition; const ACoup: integer): integer;
 var
   LPos: TPosition;
- {LPassives: ^TDamier;}
 begin
   LPos := APos;
   result := Low(integer);
   if not FRejoue(LPos, NomCoup(ACoup)) then
-    exit;
- {if LPos.Trait then
-    LPassives := @LPos.Blanches
-  else
-    LPassives := @LPos.Noires;}
-  result := 0 - Ord((FCoups(LPos) and {LPassives^}LPos.PiecesCouleur[not LPos.Trait] and LPos.Rois) <> 0);
+    Exit;
+  result := 0 - Ord((FCoups(LPos) and LPos.Pieces[not LPos.Trait] and LPos.Rois) <> 0);
 end;
 
 function NombreCoups(const APos: TPosition; const AProf: integer): int64;
@@ -61,7 +53,7 @@ begin
       if not FRejoue(LPos, NomCoup(LListe[i])) then
       begin
         WriteLn('Il y a quelque chose de pourri dans ce programme.');
-        continue;
+        Continue;
       end;
       Inc(result, NombreCoups(LPos, Pred(AProf)));
     end;
