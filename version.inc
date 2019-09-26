@@ -1,5 +1,5 @@
 
 const
   CApp = 'Alouette';
-  CVer = '0.0.8';
+  CVer = '0.0.9';
   CAut = 'Roland Chastain';
