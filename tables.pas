@@ -22,7 +22,7 @@ function EstAllumeeIdx(const ADam: TDamier; const AIdx: integer): boolean;
 procedure AllumeIdx(var ADam: TDamier; const AIdx: integer);
 procedure EteintIdx(var ADam: TDamier; const AIdx: integer);
 procedure DeplaceIdx(var AType, ACoul: TDamier; const ADep, AArr: integer; const ASuper: boolean = FALSE);
-function CompteCasesAllumees(const ADam: TDamier): integer;
+function CompteCasesAllumees(X: TDamier): integer;
 
 implementation
 
@@ -55,14 +55,15 @@ begin
     ACoul := ACoul and not CCaseIdx[ADep] or CCaseIdx[AArr];
 end;
 
-function CompteCasesAllumees(const ADam: TDamier): integer;
-var
-  LIdx: integer;
+function CompteCasesAllumees(X: TDamier): integer;
 begin
-  result := 0;
-  for LIdx := A1 to H8 do
-    if EstAllumeeIdx(ADam, LIdx) then
-      Inc(result);
+  X := (X and $5555555555555555) + ((X shr  1) and $5555555555555555);
+  X := (X and $3333333333333333) + ((X shr  2) and $3333333333333333);
+  X := (X and $0F0F0F0F0F0F0F0F) + ((X shr  4) and $0F0F0F0F0F0F0F0F);
+  X := (X and $00FF00FF00FF00FF) + ((X shr  8) and $00FF00FF00FF00FF);
+  X := (X and $0000FFFF0000FFFF) + ((X shr 16) and $0000FFFF0000FFFF);
+  X := (X and $00000000FFFFFFFF) + ((X shr 32) and $00000000FFFFFFFF);
+  result := integer(X);
 end;
 
 end.

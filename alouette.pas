@@ -41,7 +41,6 @@ type
 
 var
   LTempsDispo: cardinal;
-  LRecherche: boolean;
 
 {** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TProcessus.Execute;
@@ -50,7 +49,7 @@ var
   LCoup: string;
 begin
   LTemps := GetTickCount64;
-  LCoup := Joueur.Coup(LTempsDispo, LRecherche);
+  LCoup := Joueur.Coup(LTempsDispo);
   LTemps := GetTickCount64 - LTemps;
   if not Terminated then
   begin
@@ -73,12 +72,13 @@ var
   LProfondeur: integer;
   
 begin
-  LitFichierIni(LEchecs960, LRecherche);
+{$IFDEF RANDOM_MOVER}
+  Randomize;
+{$ENDIF}
+  LitFichierIni(LEchecs960);
   if not FichierIniExiste then
-    EcritFichierIni(LEchecs960, LRecherche);
+    EcritFichierIni(LEchecs960);
   RegleVariante(LEchecs960);
-  if Pos('NOSEARCH', UpperCase(ParamStr(1))) > 0 then
-    LRecherche := FALSE;
   Ecrire(Format('%s %s', [CApp, CVer]));
   while not EOF do
   begin

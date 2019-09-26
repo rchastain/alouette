@@ -14,7 +14,7 @@ uses
 procedure Oublie;
 procedure PositionDepart;
 procedure Rejoue(const ACoup: string);
-function Coup(const ATempsDisponible: integer; const ARecherche: boolean): string;
+function Coup(const ATempsDisponible: integer): string;
 function CoupImmediat: string;
 procedure RegleVariante(const AValeur: boolean);
 function VarianteCourante: boolean;
@@ -49,9 +49,9 @@ begin
     Journal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
 end;
 
-function Coup(const ATempsDisponible: integer; const ARecherche: boolean): string;
+function Coup(const ATempsDisponible: integer): string;
 begin
-  result := MeilleurCoup(LPos, LEchecs960, ATempsDisponible, ARecherche);
+  result := MeilleurCoup(LPos, LEchecs960, ATempsDisponible);
 end;
 
 function CoupImmediat: string;

@@ -11,7 +11,7 @@ interface
 uses
   Echecs;
 
-function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer; const ARecherche: boolean): string;
+function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer): string;
 
 var
   LCoupProv: string = 'a1a1';
@@ -140,6 +140,8 @@ var
   LBonusEnPassant, LBonusCapture: integer;
   LBonusMenaceRoi: integer;
   LBonusEchec: integer;
+  LProtections: integer;
+  LMalusPiece: integer;
 begin
   DecodeCoup(ACoup, LDep, LArr, LTP, LTC);
   
@@ -157,6 +159,13 @@ begin
   LBonusEnPassant := Ord(LTC = tcEnPassant);
   LBonusCapture := Ord(LTC = tcCapture);
   LBonusMenaceRoi := Ord((CCibles[LTP, LArr] and LPos.CaseRoi[not LPos.Trait]) <> 0);
+  LProtections := FProtections(LPos);
+  case LTypePiece of
+    PionBlanc, PionNoir: LMalusPiece := 0;
+    Cavalier, Fou: LMalusPiece := 1; 
+    Tour, Dame: LMalusPiece := 2;
+    Roi: LMalusPiece := 3;
+  end;
   
   result :=
     0
@@ -167,11 +176,26 @@ begin
     + LBonusPiece
     - LMalusRepetition
     - LMalusAnnulation
-    + LBonusEchec;
+    + LBonusEchec
+    + LProtections
+    - LMalusPiece;
    
   Journal.Ajoute(
     Format(
-      '<tr><td style="text-align: left;">%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>',
+      '<tr>' +
+      '<td style="text-align: left;">%s</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '<td>%d</td>' +
+      '</tr>',
       [
         NomCoup(ACoup),
         LBonusCapture,
@@ -182,6 +206,8 @@ begin
         LMalusRepetition,
         LMalusAnnulation,
         LBonusEchec,
+        LProtections,
+        LMalusPiece,
         result
       ]
     ),
@@ -196,7 +222,7 @@ begin
     Inc(result);
 end;
 
-function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer; const ARecherche: boolean): string;
+function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer): string;
 const
   CFmtStr = '<p style="font-family:chess mark;font-size:24px;">' + LineEnding + '%s</p>';
 var
@@ -222,25 +248,41 @@ begin
   LCoupProv := NomCoup(LListe[0]);
   Journal.AjouteTable(LListe, LEval, n, 'I.');
   
-  if ARecherche then
+  n := CompteMeilleurs(LEval, n);
+{$IFDEF RANDOM_MOVER}
+  Exit(NomCoup(LListe[Random(n)]));
+{$ENDIF}
+  for i := 0 to Pred(n) do
   begin
-    n := CompteMeilleurs(LEval, n);
-    for i := 0 to Pred(n) do
-    begin
-      LEval[i] := MiniMax(
-        APos,
-        LListe[i],
-        LEchecProchain
-      );
-      Dec(LEval[i], Ord(LEchecProchain));
-    end;
-    Trie(LListe, LEval, n);
-    LCoupProv := NomCoup(LListe[0]);
-    Journal.AjouteTable(LListe, LEval, n, 'II.');
+    LEval[i] := MiniMax(
+      APos,
+      LListe[i],
+      LEchecProchain
+    );
+    Dec(LEval[i], Ord(LEchecProchain));
   end;
+  Trie(LListe, LEval, n);
+  LCoupProv := NomCoup(LListe[0]);
+  Journal.AjouteTable(LListe, LEval, n, 'II.');
   
   n := CompteMeilleurs(LEval, n);
-  Journal.Ajoute('<table><caption>III.</caption><tr><th>Coup</th><th>B cap</th><th>B men</th><th>B roq</th><th>B enp</th><th>B typ</th><th>M rép</th><th>M ann</th><th>B ech</th><th>Total</th></tr>', TRUE);
+  Journal.Ajoute(
+    '<table><caption>III.</caption><tr>' +
+    '<th>Coup</th>' +
+    '<th>B cap</th>' +
+    '<th>B men</th>' +
+    '<th>B roq</th>' +
+    '<th>B enp</th>' +
+    '<th>B typ</th>' +
+    '<th>M rép</th>' +
+    '<th>M ann</th>' +
+    '<th>B éch</th>' +
+    '<th>B pro</th>' +
+    '<th>M pie</th>' +
+    '<th>Total</th>' +
+    '</tr>',
+    TRUE
+  );
   for i := 0 to Pred(n) do
     LEval[i] := EvaluationStatique(APos, LListe[i]);
   Journal.Ajoute('</table>', TRUE);

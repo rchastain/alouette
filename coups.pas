@@ -9,7 +9,7 @@ unit Coups;
 interface
 
 uses
-  Echecs, Damier;
+  Echecs, Damier, Deplacement;
 
 function FCoups(const APos: TPosition; var ALst: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): TDamier; overload;
 {** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
@@ -17,6 +17,7 @@ function FCoups(const APos: TPosition): TDamier; overload;
 function FNombreCoups(const APos: TPosition): integer;
 function FCoupsPotentielsPion(const APos: TPosition): TDamier;
 function FEchec(const APos: TPosition): boolean;
+function FProtections(const APos: TPosition): integer;
 
 implementation
 
@@ -193,6 +194,85 @@ begin
   LPos := APos;
   LPos.Trait := not LPos.Trait;
   result := (FCoups(LPos) and LPos.Rois) <> 0;
+end;
+
+function FProtections(const APos: TPosition): integer;
+const
+  CPion: array[boolean] of TTypePiece = (PionBlanc, PionNoir);
+var
+  { Pièces. }
+  LToutes: TDamier;
+  i, j, k: integer;
+begin
+  LToutes := APos.Pieces[FALSE] or APos.Pieces[TRUE];
+  result := 0;
+  
+  for i := A1 to H8 do if EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[i]) then
+  begin
+    { Pion. }
+    if EstAllumee(APos.Pions, CCaseIdx[i]) then
+    begin
+      k := 8 - 16 * Ord(APos.Trait);
+      j := i + k;
+      { Prise côté A. }
+      if i mod 8 > 0 then
+      begin
+        j := Pred(i + k);
+        if EstAllumee(APos.Pieces[APos.Trait] and APos.Pions, CCaseIdx[j]) then
+          Inc(result);
+      end;
+      { Prise côté H. }
+      if i mod 8 < 7 then
+      begin
+        j := Succ(i + k);
+        if EstAllumee(APos.Pieces[APos.Trait] and APos.Pions, CCaseIdx[j]) then
+          Inc(result);
+      end;
+    end else
+    { Tour. }
+    if EstAllumee(APos.Tours, CCaseIdx[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Tour, i], CCaseIdx[j])
+        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous or APos.Tours), CCaseIdx[j])
+        and ((CChemin[i, j] and LToutes) = 0) then
+          Inc(result);
+    end else
+    { Cavalier. }
+    if EstAllumee(APos.Cavaliers, CCaseIdx[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Cavalier, i], CCaseIdx[j])
+        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous), CCaseIdx[j]) then
+          Inc(result);
+    end else
+    { Fou. }
+    if EstAllumee(APos.Fous, CCaseIdx[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Fou, i], CCaseIdx[j])
+        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous), CCaseIdx[j])
+        and ((CChemin[i, j] and LToutes) = 0) then
+          Inc(result);
+    end else
+    { Dame. }
+    if EstAllumee(APos.Dames, CCaseIdx[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Dame, i], CCaseIdx[j])
+        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous or APos.Tours or APos.Dames), CCaseIdx[j])
+        and ((CChemin[i, j] and LToutes) = 0) then
+          Inc(result);
+    end else
+    { Roi. }
+    if EstAllumee(APos.Rois, CCaseIdx[i]) then
+    begin
+      for j := A1 to H8 do
+        if EstAllumee(CCibles[Roi, i], CCaseIdx[j])
+        and EstAllumee(APos.Pieces[APos.Trait] and APos.Pions, CCaseIdx[j]) then
+          Inc(result);
+    end;
+  end;
 end;
 
 end.
