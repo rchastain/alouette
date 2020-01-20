@@ -11,3 +11,5 @@ Since the version 0.1.0, the engine uses an opening book. The book is in the [fo
 This format has been previously used by Marc-Philippe Huget in his engine [La Dame Blanche](http://www.quarkchess.de/ladameblanche/).
 
 *Alouette* is written for the Free Pascal Compiler by Roland Chastain.
+
+![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo.bmp)
