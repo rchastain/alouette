@@ -18,7 +18,7 @@ Merci à Philippe Guesset pour la [version optimisée](https://www.developpez.ne
 
 *Alouette* est un programme écrit en Pascal par Roland Chastain.
 
-https://raw.githubusercontent.com/rchastain/alouette/master/logo.bmp
+![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo.bmp)
 
 > ALOUETTE [a-lou-è-t'] s. f. 
 >   Oiseau de l'ordre des passereaux ; il fait son nid dans les plaines. S'éveiller, se lever au chant de l'alouette, se lever de très grand matin. 
