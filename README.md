@@ -1,6 +1,6 @@
 # Alouette
 
-## Overview.
+## Overview
 
 UCI chess engine able to play Fischer Random Chess.
 
@@ -8,7 +8,7 @@ The program was started as a programming exercise around *bitboards*.
 
 It plays chess at beginner level.
 
-## Opening book.
+## Opening book
 
 Since the version 0.1.0, the engine uses an opening book. The book is in the [format described by Kathe Spracklen](https://content.iospress.com/articles/icga-journal/icg6-1-04).
 
@@ -16,11 +16,11 @@ Since the version 0.1.0, the engine uses an opening book. The book is in the [fo
 
 This format has been previously used by Marc-Philippe Huget in his engine [La Dame Blanche](http://www.quarkchess.de/ladameblanche/).
 
-## Random mover.
+## Random mover
 
 The executable named *random32* (or *random64*) is a random mover. It's *Alouette* compiled with -dRANDOM_MOVER option.
 
-## Author.
+## Author
 
 Alouette is an open source program written for the Free Pascal Compiler by Roland Chastain.
 
