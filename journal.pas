@@ -9,6 +9,9 @@ unit Journal;
 interface
 
 uses
+{$IFDEF UNIX}
+  CWString,
+{$ENDIF}
   SysUtils;
 
 procedure CommenceJournal;
@@ -67,18 +70,17 @@ end;
 procedure Ajoute(const ALigne: string; const AHtml: boolean);
 begin
 {$IFDEF DEBUG}
-  if AHtml then
-    WriteLn(LFichier[AHtml], ALigne)
-  else
-    WriteLn(LFichier[AHtml], Concat(DateTimeToStr(Now()), ' ', ALigne));
+  WriteLn(LFichier[AHtml], {$IFDEF UNIX}Utf8ToAnsi({$ENDIF}ALigne{$IFDEF UNIX}){$ENDIF});
   Flush(LFichier[AHtml]);
 {$ENDIF}
 end;
 
 procedure AjouteTable(const ACoups, ANotes: array of integer; const n: integer; const ATitre: string);
+{$IFDEF DEBUG}
 var
   s: string;
   i: integer;
+{$ENDIF}
 begin
 {$IFDEF DEBUG}
   s := '<table><caption>' + ATitre + '</caption>' + LineEnding;

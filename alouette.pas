@@ -8,6 +8,7 @@ program Alouette;
 
 uses
 {$IFDEF UNIX}
+  CWString,
   CThreads,
 {$ENDIF}
   Classes,
@@ -21,7 +22,8 @@ uses
   Essais,
 {$ENDIF}
   Performance,
-  Reglages;
+  Reglages,
+  Arbre;
 
 {$I version.inc}
   
@@ -30,6 +32,7 @@ begin
   WriteLn(output, ATexte);
   if AEnvoi then
     Flush(output);
+  Journal.Ajoute(Concat('< ', ATexte));
 end;
 
 type
@@ -54,7 +57,7 @@ begin
   if not Terminated then
   begin
     Ecrire(Format('bestmove %s', [LCoup]));
-    Journal.Ajoute(FormatDateTime('"Temps écoulé "hh:nn:ss:zzz"."', LTemps / (1000 * SECSPERDAY)));
+    Journal.Ajoute(Format('Meilleur coup trouvé en %0.3f s.', [LTemps / 1000]));
   end;
 end;
 
@@ -70,20 +73,30 @@ var
   LEchecs960: boolean;
   LProcessus: TProcessus;
   LProfondeur: integer;
+  LLigneLivre, LCoupLivre: string;
+  LLivre: array[boolean] of TTree;
   
 begin
-{$IFDEF RANDOM_MOVER}
   Randomize;
-{$ENDIF}
+
   LitFichierIni(LEchecs960);
   if not FichierIniExiste then
     EcritFichierIni(LEchecs960);
   RegleVariante(LEchecs960);
+  
+  LLigneLivre := '';
+  LLivre[FALSE] := TTree.Create;
+  if FileExists('white.txt') then
+    LLivre[FALSE].LoadFromFileCompact('white.txt');
+  LLivre[TRUE] := TTree.Create;
+  if FileExists('black.txt') then
+    LLivre[TRUE].LoadFromFileCompact('black.txt');
+  
   Ecrire(Format('%s %s', [CApp, CVer]));
   while not EOF do
   begin
     ReadLn(input, LCmd);
-    Journal.Ajoute(Concat('>> ', LCmd));
+    Journal.Ajoute(Concat('> ', LCmd));
     if LCmd = 'quit' then
       Break
     else
@@ -104,8 +117,10 @@ begin
             if BeginsWith('position ', LCmd) then
             begin
               if WordPresent('startpos', LCmd) then
-                Joueur.PositionDepart
-              else
+              begin
+                Joueur.PositionDepart;
+                LLigneLivre := '';
+              end else
                 if WordPresent('fen', LCmd) then
                   Joueur.NouvellePosition(GetFen(LCmd));
               if WordPresent('moves', LCmd) then
@@ -113,7 +128,10 @@ begin
                 begin
                   LCoup := GetWord(LIdx, LCmd);
                   if IsChessMove(LCoup) then
+                  begin
                     Joueur.Rejoue(LCoup);
+                    LLigneLivre := Concat(LLigneLivre, ' ', LCoup);
+                  end;
                 end;
             end else
               if BeginsWith('go', LCmd) then
@@ -131,14 +149,21 @@ begin
                       if IsGoCmd(LCmd, LMTime) then                 // go movetime 500
                         LTempsDispo := LMTime
                       else
-                        Journal.Ajoute(Format('Commande non reconnue : %s', [LCmd]));
+                        Journal.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
+                
+                LCoupLivre := LLivre[LPos.Trait].FindMoveToPlay(Trim(LLigneLivre), TRUE);
+                if LCoupLivre <> '' then
+                begin
+                  Journal.Ajoute(Format('Coup trouvé dans le livre : %s', [LCoupLivre]));
+                  Ecrire(Format('bestmove %s', [LCoupLivre]));
+                  Continue;
+                end;
                 
                 LProcessus := TProcessus.Create(TRUE);
                 with LProcessus do
                 begin
                   FreeOnTerminate := TRUE;
-                  //Priority := tpHigher;
-                  Priority := tpNormal;
+                  Priority := tpHigher;
                   Start;
                 end;
               end else
@@ -176,6 +201,11 @@ begin
                             'ucinewgame'
                           )
                         else
-                          Journal.Ajoute(Format('Commande non reconnue : %s', [LCmd]));
+                          Journal.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
   end;
+  
+  LLivre[FALSE].Clear;
+  LLivre[FALSE].Free;
+  LLivre[TRUE].Clear;
+  LLivre[TRUE].Free;
 end.

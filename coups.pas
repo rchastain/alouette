@@ -197,8 +197,10 @@ begin
 end;
 
 function FProtections(const APos: TPosition): integer;
+(*
 const
   CPion: array[boolean] of TTypePiece = (PionBlanc, PionNoir);
+*)
 var
   { Pièces. }
   LToutes: TDamier;

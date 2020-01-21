@@ -245,12 +245,14 @@ begin
     ));
   end;
   Trie(LListe, LEval, n);
-  LCoupProv := NomCoup(LListe[0]);
   Journal.AjouteTable(LListe, LEval, n, 'I.');
   
   n := CompteMeilleurs(LEval, n);
+  LCoupProv := NomCoup(LListe[Random(n)]);
+  if EstUnePromotion(APos, LCoupProv) then
+    LCoupProv := Concat(LCoupProv, 'q');
 {$IFDEF RANDOM_MOVER}
-  Exit(NomCoup(LListe[Random(n)]));
+  Exit(LCoupProv);
 {$ENDIF}
   for i := 0 to Pred(n) do
   begin
@@ -263,6 +265,8 @@ begin
   end;
   Trie(LListe, LEval, n);
   LCoupProv := NomCoup(LListe[0]);
+  if EstUnePromotion(APos, LCoupProv) then
+    LCoupProv := Concat(LCoupProv, 'q');
   Journal.AjouteTable(LListe, LEval, n, 'II.');
   
   n := CompteMeilleurs(LEval, n);
