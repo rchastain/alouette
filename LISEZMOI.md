@@ -28,8 +28,6 @@ Merci à Philippe Guesset pour la [version optimisée](https://www.developpez.ne
 
 *Alouette* est un programme à code source ouvert, écrit en Pascal par Roland Chastain.
 
-![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo.bmp)
-
 ## Nom du programme
 
 > ALOUETTE [a-lou-è-t'] s. f. 
@@ -37,3 +35,7 @@ Merci à Philippe Guesset pour la [version optimisée](https://www.developpez.ne
 > 
 > ÉTYMOLOGIE
 >   Wallon, alauie ; bourguig. auluôtte ; Berry, alouvette ; provenç. alauza, alauzeta ; ital. allodola, lodola ; anc. espagn. aloeta ; espagn. mod. alondra. Alouette est le diminutif d'aloue ; aloue vient du latin alauda ; mais alauda était un mot gaulois. Pline, Hist. nat. II, 37, et Suétone, Vie de César, nous apprennent que ce général avait donné à une de ses légions, composée d'hommes des Gaules, le nom gaulois d'alauda. L'oiseau huppé qu'en gaulois on nomme alauda, dit Marcellus Empiricus, ch. 29.
+
+## Logo
+
+![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo.bmp)
