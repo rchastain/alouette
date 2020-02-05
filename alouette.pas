@@ -18,9 +18,6 @@ uses
   Joueur,
   Echecs,
   Utils,
-{$IFDEF DEBUG}
-  Essais,
-{$ENDIF}
   Performance,
   Reglages,
   Arbre;
@@ -117,12 +114,12 @@ begin
             if BeginsWith('position ', LCmd) then
             begin
               if WordPresent('startpos', LCmd) then
-              begin
-                Joueur.PositionDepart;
-                LLigneLivre := '';
-              end else
-                if WordPresent('fen', LCmd) then
-                  Joueur.NouvellePosition(GetFen(LCmd));
+                Joueur.PositionDepart
+              else if WordPresent('fen', LCmd) then
+                Joueur.NouvellePosition(GetFen(LCmd))
+              else
+                Journal.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
+              LLigneLivre := '';
               if WordPresent('moves', LCmd) then
                 for LIdx := 4 to WordsNumber(LCmd) do
                 begin
@@ -151,12 +148,15 @@ begin
                       else
                         Journal.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
                 
-                LCoupLivre := LLivre[LPos.Trait].FindMoveToPlay(Trim(LLigneLivre), TRUE);
-                if LCoupLivre <> '' then
+                if (not LEchecs960) and (LLigneLivre <> '') then
                 begin
-                  Journal.Ajoute(Format('Coup trouvé dans le livre : %s', [LCoupLivre]));
-                  Ecrire(Format('bestmove %s', [LCoupLivre]));
-                  Continue;
+                  LCoupLivre := LLivre[LPos.Trait].FindMoveToPlay(Trim(LLigneLivre), TRUE);
+                  if LCoupLivre <> '' then
+                  begin
+                    Journal.Ajoute(Format('Coup trouvé dans le livre : %s', [LCoupLivre]));
+                    Ecrire(Format('bestmove %s', [LCoupLivre]));
+                    Continue;
+                  end;
                 end;
                 
                 LProcessus := TProcessus.Create(TRUE);
