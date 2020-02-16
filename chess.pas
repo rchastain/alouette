@@ -4,12 +4,12 @@
   Les quatre groupes de caractères d'une chaîne EPD correspondent aux quatre premiers groupes de caractères d'une chaîne @html(<a href="http://kirill-kryukov.com/chess/doc/fen.html">FEN</a>).
 }
 
-unit Echecs;
+unit Chess;
 
 interface
 
 uses
-  Damier, Tables;
+  Board, Tables;
 
 const
   CBlanc = FALSE;
@@ -82,7 +82,7 @@ function VoirPosition(const APos: TPosition): string;
 implementation
 
 uses
-  SysUtils, Classes{, Journal};
+  SysUtils, Classes;
 
 const
   CSymboleTrait: array[boolean] of char = ('w', 'b');

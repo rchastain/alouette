@@ -17,8 +17,48 @@ order14=0
 order15=0
 order16=0
 [projectoptions]
-projectdir=/C:/Roland/pascal/echecs/alouette/source
-projectfilename=/C:/Roland/pascal/echecs/alouette/source/alouette.prj
+projectdir=/home/roland/Documents/pascal/echecs/alouette/source
+projectfilename=/home/roland/Documents/pascal/echecs/alouette/source/alouette.prj
+findinfiledialog=39
+ [findinfileadialogfo.subdirs]
+ value=0
+ [findinfileadialogfo.incurrentfile]
+ value=0
+ [findinfileadialogfo.inopenfiles]
+ value=0
+ [findinfileadialogfo.wholeword]
+ value=0
+ [findinfileadialogfo.inprojectdir]
+ value=1
+ [findinfileadialogfo.casesensitive]
+ value=0
+ [findinfileadialogfo.indirectories]
+ value=0
+ [findinfileadialogfo.mask]
+ value="*.pas" "*.pp" "*.inc"
+ history=1
+  "*.pas" "*.pp" "*.inc"
+ [findinfileadialogfo.dir]
+ filenames=1
+  /home/roland/Documents/pascal/echecs/alouette/source/
+ filecolwidth=0
+ x=0
+ y=0
+ cx=0
+ cy=0
+ filehistory=0
+ filefilterindex=0
+ filefilter=
+ [findinfileadialogfo.findtext]
+ value=
+ history=1
+  
+ [findinfileadialogfo]
+ stackedunder=
+ x=268
+ y=415
+ cx=339
+ cy=275
 replacedialog=15
  [replacedialogfo.promptonreplace]
  value=1
@@ -624,7 +664,7 @@ condition=0
 panels=1
  panel1
 [componentstore]
-storedir=/C:/Roland/outils/mseide/msegui/apps/ide/compstore/
+storedir=/home/roland/Applications/mseide/apps/ide/compstore/
 filename=
 [components]
 [selecteditpage]
@@ -705,7 +745,7 @@ windowlayout=527
  cy=436
  rcx=0
  rcy=0
- wsize=6
+ wsize=0
  active=1
  visible=1
  [targetconsolefo]
@@ -723,9 +763,9 @@ windowlayout=527
  cy=314
  rcx=0
  rcy=0
- wsize=0
+ wsize=5
  active=0
- visible=1
+ visible=0
  [threadsfo]
  splitdir=0
  useroptions=268451945
@@ -747,7 +787,7 @@ windowlayout=527
  [memoryfo]
  splitdir=0
  useroptions=268451963
- stackedunder=cpui386fo
+ stackedunder=cpuc86_64fo
  parent=
  mdistate=0
  nx=0
@@ -793,7 +833,7 @@ windowlayout=527
  [findinfilefo]
  splitdir=0
  useroptions=268451947
- stackedunder=objectinspectorfo
+ stackedunder=symbolfo
  parent=
  mdistate=0
  nx=0
@@ -819,7 +859,7 @@ windowlayout=527
  x=0
  y=0
  cx=205
- cy=601
+ cy=355
  rcx=0
  rcy=0
  [projecttreefo.grid]
@@ -831,7 +871,7 @@ windowlayout=527
  sorted=0
  col=1
  row=-1073741823
- rowheight=16
+ rowheight=17
  [stackfo]
  splitdir=0
  useroptions=268460137
@@ -911,7 +951,7 @@ windowlayout=527
  [objectinspectorfo]
  splitdir=0
  useroptions=268451947
- stackedunder=symbolfo
+ stackedunder=breakpointsfo
  parent=
  mdistate=0
  nx=0
@@ -1024,15 +1064,15 @@ windowlayout=527
  ncx=0
  ncy=0
  x=0
- y=571
+ y=566
  cx=1356
- cy=100
+ cy=99
  rcx=1356
- rcy=671
+ rcy=665
  [componentstorefo]
  splitdir=0
  useroptions=268460155
- stackedunder=componentpalettefo
+ stackedunder=mainfo
  parent=
  mdistate=0
  nx=0
@@ -1095,7 +1135,7 @@ windowlayout=527
  [componentpalettefo]
  splitdir=0
  useroptions=268460139
- stackedunder=targetconsolefo
+ stackedunder=disassfo
  parent=
  mdistate=3
  nx=0
@@ -1125,8 +1165,8 @@ windowlayout=527
  ncy=0
  x=0
  y=0
- cx=1356
- cy=67
+ cx=873
+ cy=40
  rcx=0
  rcy=0
  [sourcefo]
@@ -1141,29 +1181,29 @@ windowlayout=527
  ncy=0
  x=208
  y=0
- cx=1148
- cy=601
+ cx=665
+ cy=355
  rcx=0
  rcy=0
  [actionsmo.watchesonact]
  checked=1
  [actionsmo.bluedotsonact]
  checked=1
- [cpui386fo]
+ [cpuc86_64fo]
  irqoff=0
  splitdir=0
  useroptions=268451947
- stackedunder=disassfo
+ stackedunder=componentpalettefo
  parent=
  mdistate=3
  nx=0
  ny=0
  ncx=0
  ncy=0
- x=337
- y=295
- cx=273
- cy=207
+ x=183
+ y=113
+ cx=352
+ cy=277
  rcx=0
  rcy=0
  wsize=0
@@ -1180,9 +1220,9 @@ windowlayout=527
  ncx=0
  ncy=0
  x=0
- y=70
- cx=1356
- cy=601
+ y=43
+ cx=873
+ cy=355
  rcx=0
  rcy=0
 [targetconsole]

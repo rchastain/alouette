@@ -4,7 +4,7 @@
   Représentation d'un damier par un nombre entier de 64 chiffres binaires.
 }
 
-unit Damier;
+unit Board;
 
 interface
 

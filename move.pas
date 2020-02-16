@@ -4,12 +4,12 @@
   Complément de l'unité échecs.
 }
 
-unit Deplacement;
+unit Move;
 
 interface
 
 uses
-  Damier, Echecs;
+  Board, Chess;
 
 function TypePieceIdx(const APos: TPosition; const AIdx: integer): TTypePieceLarge;
 {** Met à jour la position en fonction d'un coup présumé légal. Renvoie FALSE si une impossibilité de jouer le coup est détectée. }
@@ -21,7 +21,7 @@ procedure Reformule(var ARoque: integer);
 implementation
 
 uses
-  SysUtils, Tables, Journal;
+  SysUtils, Tables, Log;
 
 function TypePieceIdx(const APos: TPosition; const AIdx: integer): TTypePieceLarge;
 begin
@@ -91,20 +91,20 @@ begin
       
       if LColArr = APos.Roque[APos.Trait].XTourRoi then
       begin
-        Journal.Ajoute(Format('[FRejoue] Roque côté H %s.', [ACoup]));
+        Log.Ajoute(Format('[FRejoue] Roque côté H %s.', [ACoup]));
         DeplaceIdx(APos.Tours, APos.Pieces[APos.Trait], LArr, CATCR[APos.Trait]);
         LArr := FIndex(CColonneG, LLigArr);
         LSuper := LColDep = CATCR[APos.Trait] mod 8;
       end else
         if LColArr = APos.Roque[APos.Trait].XTourDame then
         begin
-          Journal.Ajoute(Format('[FRejoue] Roque côté A %s.', [ACoup]));
+          Log.Ajoute(Format('[FRejoue] Roque côté A %s.', [ACoup]));
           DeplaceIdx(APos.Tours, APos.Pieces[APos.Trait], LArr, CATCD[APos.Trait]);
           LArr := FIndex(CColonneC, LLigArr);
           LSuper := LColDep = CATCD[APos.Trait] mod 8;
         end else
         begin
-          Journal.Ajoute(Format('Impossible de rejouer %s.', [ACoup]));
+          Log.Ajoute(Format('Impossible de rejouer %s.', [ACoup]));
           Exit(FALSE);
         end;
     end else
@@ -112,16 +112,16 @@ begin
       begin
         if LColArr = CColonneG then
         begin
-          Journal.Ajoute(Format('[FRejoue] Roque côté roi %s.', [ACoup]));
+          Log.Ajoute(Format('[FRejoue] Roque côté roi %s.', [ACoup]));
           DeplaceIdx(APos.Tours, APos.Pieces[APos.Trait], CDTCR[APos.Trait], CATCR[APos.Trait]);
         end else
           if LColArr = CColonneC then
           begin
-            Journal.Ajoute(Format('[FRejoue] Roque côté dame %s.', [ACoup]));
+            Log.Ajoute(Format('[FRejoue] Roque côté dame %s.', [ACoup]));
             DeplaceIdx(APos.Tours, APos.Pieces[APos.Trait], CDTCD[APos.Trait], CATCD[APos.Trait]);
           end else
           begin
-            Journal.Ajoute(Format('Impossible de rejouer %s.', [ACoup]));
+            Log.Ajoute(Format('Impossible de rejouer %s.', [ACoup]));
             Exit(FALSE);
           end;
       end;
@@ -201,7 +201,7 @@ begin
               LType := Dame;
             end;
           else
-            Journal.Ajoute(Format('Valeur inattendue %s.', [ACoup[5]]));    
+            Log.Ajoute(Format('Valeur inattendue %s.', [ACoup[5]]));    
         end;
     
     { Prise en passant. }
@@ -256,7 +256,7 @@ begin
     (EstAllumeeIdx(LBlanc, LDep) and EstAllumeeIdx(LBlanc, LArr)) or
     (EstAllumeeIdx(LNoir,  LDep) and EstAllumeeIdx(LNoir,  LArr));
   if result then
-    Journal.Ajoute(Format('[EstUnRoque] Roque détecté %s.', [NomCoup(ACoup)]));
+    Log.Ajoute(Format('[EstUnRoque] Roque détecté %s.', [NomCoup(ACoup)]));
 end;
 
 procedure Reformule(var ARoque: integer);
@@ -276,7 +276,7 @@ begin
     LColArr := CColonneC;
   LArr := 8 * LLigArr + LColArr;
   ARoque := EncodeCoup(LDep, LArr, Roi);
-  Journal.Ajoute(Format('[Reformule] Reformulé %s en %s.', [LAncienNom, Concat(CNomCase[LDep], CNomCase[LArr])]));
+  Log.Ajoute(Format('[Reformule] Reformulé %s en %s.', [LAncienNom, Concat(CNomCase[LDep], CNomCase[LArr])]));
 end;
 
 end.

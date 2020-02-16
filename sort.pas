@@ -4,7 +4,7 @@
   Procédure pour trier les coups en fonction de leur note.
 }
 
-unit Tri;
+unit Sort;
 
 interface
 

@@ -1,5 +1,5 @@
 
 const
-  CApp = 'Alouette';
-  CVer = '0.1.0a';
-  CAut = 'Roland Chastain';
+  CAppName = 'Alouette';
+  CAppVersion = '0.1.1';
+  CAppAuthor = 'Roland Chastain';

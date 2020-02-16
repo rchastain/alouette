@@ -4,12 +4,12 @@
   Joueur d'échecs artificiel.
 }
 
-unit Joueur;
+unit Player;
 
 interface
 
 uses
-  Echecs;
+  Chess;
 
 procedure Oublie;
 procedure PositionDepart;
@@ -24,7 +24,7 @@ function PositionCourante: TPosition;
 implementation
 
 uses
-  SysUtils, Journal, Deplacement, Histoire, Meilleur;
+  SysUtils, Log, Move, History, BestMove;
 
 var
   LPos: TPosition;
@@ -44,9 +44,9 @@ end;
 procedure Rejoue(const ACoup: string);
 begin
   if FRejoue(LPos, ACoup) then
-    Histoire.Ajoute(ACoup)
+    History.Ajoute(ACoup)
   else
-    Journal.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
+    Log.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
 end;
 
 function Coup(const ATempsDisponible: integer): string;
@@ -63,7 +63,7 @@ procedure RegleVariante(const AValeur: boolean);
 const
   CPrefixe: array[boolean] of string = ('dés', '');
 begin
-  Journal.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
+  Log.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
   LEchecs960 := AValeur;
 end;
 

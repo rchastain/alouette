@@ -4,7 +4,7 @@
   Histoire des coups joués.
 }
 
-unit Histoire;
+unit History;
 
 interface
 

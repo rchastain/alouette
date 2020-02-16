@@ -4,19 +4,19 @@
   Génération du roque.
 }
 
-unit Roque;
+unit Castling;
 
 interface
 
 uses
-  Echecs, Journal;
+  Chess, Log;
 
 procedure FRoque(const APos: TPosition; var ALst: array of integer; var ACpt: integer);
 
 implementation
 
 uses
-  SysUtils, Damier, Tables, Coups;
+  SysUtils, Board, Tables, Moves;
 
 procedure FRoque(const APos: TPosition; var ALst: array of integer; var ACpt: integer);
 
@@ -47,9 +47,9 @@ var
   begin
     i := FIndex(LColDepRoi,  LLigRoq); k := FIndex(ACAR, LLigRoq);
     j := FIndex(LColDepTour, LLigRoq); l := FIndex(ACAT, LLigRoq);
-    Journal.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
+    Log.Ajoute(Format('Vérifications pour roi %s tour %s...', [NomCoup(i, k), NomCoup(j, l)]));
     if EstAllumee(APos.Pieces[APos.Trait] and APos.Tours, CCaseIdx[j]) then
-      Journal.Ajoute('Position tour vérifiée (condition 1/3).')
+      Log.Ajoute('Position tour vérifiée (condition 1/3).')
     else exit;
     LPar := CChemin[i, k] or CCaseIdx[k];
     LAut := APos.Tours and APos.Pieces[APos.Trait];
@@ -59,10 +59,10 @@ var
     LAut := APos.Rois and APos.Pieces[APos.Trait];
     d := (LPar and LTout) = (LPar and LAut);
     if b and c and d then
-      Journal.Ajoute('Liberté de passage vérifiée (condition 2/3).')
+      Log.Ajoute('Liberté de passage vérifiée (condition 2/3).')
     else exit;
     if (LMen and ((CCaseIdx[i] or CChemin[i, k] or CCaseIdx[k])) = 0) then
-      Journal.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
+      Log.Ajoute('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
     else exit;
     Accepte(i, j);
   end;

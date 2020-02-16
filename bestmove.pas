@@ -1,15 +1,15 @@
 
 {**
-  @abstract(Fonction de recherche du meilleur coup.)
-  Fonction de recherche du meilleur coup.
+  @abstract(Recherche du meilleur coup.)
+  Recherche du meilleur coup.
 }
 
-unit Meilleur;
+unit BestMove;
 
 interface
 
 uses
-  Echecs;
+  Chess;
 
 function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer): string;
 
@@ -19,7 +19,7 @@ var
 implementation
 
 uses
-  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Journal, Histoire, Tri, Polices;
+  SysUtils, Move, Moves, Castling, Board, Tables, Log, History, Sort;
 
 const
   CInfini = 99999;
@@ -180,22 +180,9 @@ begin
     + LProtections
     - LMalusPiece;
    
-  Journal.Ajoute(
+  Log.Ajoute(
     Format(
-      '<tr>' +
-      '<td style="text-align: left;">%s</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '<td>%d</td>' +
-      '</tr>',
+      '%s %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d',
       [
         NomCoup(ACoup),
         LBonusCapture,
@@ -223,8 +210,6 @@ begin
 end;
 
 function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer): string;
-const
-  CFmtStr = '<p style="font-family:chess mark;font-size:24px;">' + LineEnding + '%s</p>';
 var
   LListe, LEval: array[0..99] of integer;
   n, i, LCoup: integer;
@@ -232,20 +217,16 @@ var
 begin
   result := '0000';
   LLimiteTemps := GetTickCount64 + ATempsDispo;
-  Journal.Ajoute(Format('<p>%s</p>', [DateTimeToStr(Now)]), TRUE);
-  Journal.Ajoute(Format(CFmtStr, [Polices.PositionToHtml(Polices.EPDToPosition(DecodePosition(APos)), AMChars)]), TRUE);
+  Log.Ajoute('', TRUE);
+  Log.Ajoute(DecodePosition(APos), TRUE);
   FCoups(APos, LListe, n);
   FRoque(APos, LListe, n);
   
   for i := 0 to Pred(n) do
-  begin
-    LEval[i] := Ord(EstLegal(
-      APos,
-      LListe[i]
-    ));
-  end;
+    LEval[i] := Ord(EstLegal(APos, LListe[i]));
   Trie(LListe, LEval, n);
-  Journal.AjouteTable(LListe, LEval, n, 'I.');
+  Log.Ajoute('', TRUE);
+  Log.AjouteTable(LListe, n);
   
   n := CompteMeilleurs(LEval, n);
   LCoupProv := NomCoup(LListe[Random(n)]);
@@ -256,40 +237,20 @@ begin
 {$ENDIF}
   for i := 0 to Pred(n) do
   begin
-    LEval[i] := MiniMax(
-      APos,
-      LListe[i],
-      LEchecProchain
-    );
+    LEval[i] := MiniMax(APos, LListe[i], LEchecProchain);
     Dec(LEval[i], Ord(LEchecProchain));
   end;
   Trie(LListe, LEval, n);
   LCoupProv := NomCoup(LListe[0]);
   if EstUnePromotion(APos, LCoupProv) then
     LCoupProv := Concat(LCoupProv, 'q');
-  Journal.AjouteTable(LListe, LEval, n, 'II.');
+  Log.Ajoute('', TRUE);
+  Log.AjouteTable(LListe, LEval, n);
   
   n := CompteMeilleurs(LEval, n);
-  Journal.Ajoute(
-    '<table><caption>III.</caption><tr>' +
-    '<th>Coup</th>' +
-    '<th>B cap</th>' +
-    '<th>B men</th>' +
-    '<th>B roq</th>' +
-    '<th>B enp</th>' +
-    '<th>B typ</th>' +
-    '<th>M rép</th>' +
-    '<th>M ann</th>' +
-    '<th>B éch</th>' +
-    '<th>B pro</th>' +
-    '<th>M pie</th>' +
-    '<th>Total</th>' +
-    '</tr>',
-    TRUE
-  );
+  Log.Ajoute('', TRUE);
   for i := 0 to Pred(n) do
     LEval[i] := EvaluationStatique(APos, LListe[i]);
-  Journal.Ajoute('</table>', TRUE);
   
   Trie(LListe, LEval, n);
   LCoup := LListe[0];

@@ -4,19 +4,19 @@
   Génération chronométrée de tous les coups jusqu'à une profondeur donnée.
 }
 
-unit Performance;
+unit PerfTest;
 
 interface
 
 uses
-  Echecs;
+  Chess;
   
 procedure EssaiPerf(const APosition: TPosition; const AProfondeur: integer = 5);
 
 implementation
 
 uses
-  SysUtils, Deplacement, Coups, Roque, Damier, Tables, Tri;
+  SysUtils, Move, Moves, Castling, Board, Tables, Sort;
 
 function Evalue(const APos: TPosition; const ACoup: integer): integer;
 var

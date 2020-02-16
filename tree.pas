@@ -1,14 +1,12 @@
 
 {**
 @abstract(
-Arbre de chaînes de caractères, pour la création et l'édition d'un livre d'ouvertures destiné à un programme de jeu d'échecs.
+Arbre de chaînes de caractères, pour le livre d'ouvertures d'un programme d'échecs.
 Adaptation d'un @html(<a href="https://www.developpez.net/forums/d2034310/autres-langages/pascal/langage/representation-l-arbre-d-livre-d-ouvertures-aux-echecs/#post11310888">code source</a>) de Mathieu Dalbin.
 )
 }
 
-unit Arbre;
-
-{$DEFINE AUTO_CREATE_ROOT}
+unit Tree;
 
 interface
 
@@ -24,93 +22,104 @@ type
     Child,
     {** Nœud frère. }
     Sibling: PTreeNode;
-    {** Valeur du nœud (le coup à jouer). }
+    {** Valeur du nœud. }
     Data: string;
   end;
 
   TTree = class(TObject)
   private
-    Root: PTreeNode;
+    FRoot: PTreeNode;
     FText: string;
-    procedure ClearNode(ANode: PTreeNode);
+    procedure ClearNode(const ANode: PTreeNode);
     {** Procédure utilisée pour composer la chaîne de caractères contenant l'arbre entier. }
-    procedure WriteNode(ANode: PTreeNode);
+    procedure WriteNode(const ANode: PTreeNode);
     {** Procédure utilisée pour composer la chaîne de caractères contenant l'arbre entier. }
-    procedure WriteSiblings(ANode: PTreeNode);
-    {** Procédure utilisée pour composer la chaîne de caractères contenant l'arbre entier. }
-    procedure WriteSiblingsRecursive(ANode: PTreeNode; const ALevel: integer = 0);
+    procedure WriteSiblings(const ANode: PTreeNode);
   public
-    {** Le nombre de nœuds dans l'arbre, en comptant la racine créée automatiquement. }
-    Count: integer;
-    {** Contructeur modifié, de sorte qu'une racine est automatiquement créée, avec une chaîne vide comme valeur. }
+    {** Le nombre de nœuds dans l'arbre. }
+    FCount: integer;
     constructor Create;
-    procedure Free;
-    function Add(AParent: PTreeNode; AData: string): PTreeNode;
-    function GetNodeByName(AName: string): PTreeNode;
-    function GetChildByName(AParent: PTreeNode; AName: string): PTreeNode;
-    function GetNextChildByName(AParent: PTreeNode; AName: string): PTreeNode;
-    function InsertBefore(ASibling: PTreeNode; AData: string): PTreeNode;
+    destructor Destroy; override;
+    function Add(const AParent: PTreeNode; const AData: string): PTreeNode;
+    (*
+    function GetNodeByName(const AName: string): PTreeNode;
+    function GetChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
+    function GetNextChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
+    function InsertBefore(const ASibling: PTreeNode; const AData: string): PTreeNode;
+    *)
     procedure Clear;
-    function GetNodeLevel(ANode: PTreeNode): integer;
-    function GetChildCount(ANode: PTreeNode): integer;
+    function GetNodeLevel(const ANode: PTreeNode): integer;
+    function GetChildCount(const ANode: PTreeNode): integer;
     function GetRoot: PTreeNode;
-    function GetNext(ANode: PTreeNode): PTreeNode;
+    function GetNext(const ANode: PTreeNode): PTreeNode;
     {** Fonction renvoyant une chaîne de caractères contenant l'arbre entier, sous la forme @code((e2e4(e7e5(d2d4))(c7c5))). }
     function GetTextCompact: string;
-    {** Fonction renvoyant une chaîne de caractères contenant l'arbre entier, sous la forme d'une table. }
-    function GetText: string;
     function FindNode(const AParent: PTreeNode; const AData: string): PTreeNode; overload;
     {** Fonction renvoyant (s'il existe) le nœud correspondant à une ligne de coups, par exemple @code(e2e4 e7e5). }
     function FindNode(const ALine: TStrings): PTreeNode; overload;
     function AddLine(const ALine: TStrings): PTreeNode; overload;
     {** Fonction permettant d'ajouter dans le livre une ligne de coups sous la forme @code(e2e4 e7e5). }
     function AddLine(const ALine: string): PTreeNode; overload;
-    function FindMoveToPlay(const ALine: TStrings): string; overload;
-    function FindMoveToPlayRandom(const ALine: TStrings): string;
-    {** Fonction renvoyant un coup à jouer pour une ligne de coups donnée. Le second paramètre permet de choisir un coup au hasard lorsque plusieurs propositions existent. }
-    function FindMoveToPlay(const ALine: string; const ARandom: boolean = FALSE): string; overload;
+    function FindMoveToPlay(const ALine: TStrings; const ARandom: boolean): string; overload;
+    {** Fonction renvoyant un coup à jouer pour une ligne de coups donnée. }
+    function FindMoveToPlay(const ALine: string; const ARandom: boolean): string; overload;
     {** Remplit l'arbre à partir d'un fichier contenant des lignes complètes. }
     function LoadFromFile(const AFilename: string): boolean;
     {** Remplit l'arbre à partir d'un fichier de la forme @code((e2e4(e7e5(d2d4))(c7c5))). }
     function LoadFromFileCompact(const AFilename: string): boolean;
     {** Enregistre l'arbre dans un fichier contenant des lignes complètes. }
-    procedure SaveToFile(const AFileName: TFileName);
+    procedure SaveToFile(const {AFileName: TFileName}AList: TStringList);
     {** Enregistre l'arbre dans un fichier, sous la forme @code((e2e4(e7e5(d2d4))(c7c5))). }
     procedure SaveToFileCompact(const AFileName: TFileName);
   end;
 
 implementation
 
+(*
+procedure Log(const AStr: string);
+var
+  LFile: textfile;
+  LFilename: TFilename;
+begin
+  LFileName := ChangeFileExt({$I %FILE%}, '.log');
+  AssignFile(LFile, LFileName);
+  if FileExists(LFileName) then
+    Append(LFile)
+  else
+    Rewrite(LFile);
+  WriteLn(LFile, AStr);
+  CloseFile(LFile);
+end;
+*)
+
 constructor TTree.Create;
 begin
   inherited Create;
-  Count := 0;
-{$IFDEF AUTO_CREATE_ROOT}
-  Root := Add(nil, '');
-{$INFO A root will be automatically created, with an empty string as value.}
-{$ELSE}
-  Root := nil;
-{$ENDIF}
+  FCount := 0;
+  FRoot := nil;
 end;
 
-procedure TTree.Free;
+destructor TTree.Destroy;
 begin
   Clear;
-  inherited Free;
+  inherited Destroy;
 end;
 
-function TTree.Add(AParent: PTreeNode; AData: string): PTreeNode;
+function TTree.Add(const AParent: PTreeNode; const AData: string): PTreeNode;
 var
   LNode: PTreeNode;
 begin
+  (*
+  Log(Format('TTree.Add(%p, %s)', [AParent, AData]));
+  *)
   if AParent = nil then
   begin
-    New(Root);
-    Root^.Parent := nil;
-    Root^.Sibling := nil;
-    Root^.Child := nil;
-    Root^.Data := AData;
-    result := Root;
+    New(FRoot);
+    FRoot^.Parent := nil;
+    FRoot^.Sibling := nil;
+    FRoot^.Child := nil;
+    FRoot^.Data := AData;
+    result := FRoot;
   end else
     if AParent^.Child = nil then
     begin
@@ -134,14 +143,15 @@ begin
       LNode^.Data := AData;
       result := LNode;
     end;
-  Inc(Count);
+  Inc(FCount);
 end;
 
-function TTree.GetNodeByName(AName: string): PTreeNode;
+(*
+function TTree.GetNodeByName(const AName: string): PTreeNode;
 var
   LNode: PTreeNode;
 begin
-  LNode := Root;
+  LNode := FRoot;
   while LNode <> nil do
   begin
     if LNode^.Data = AName then
@@ -151,7 +161,7 @@ begin
   result := LNode;
 end;
 
-function TTree.GetChildByName(AParent: PTreeNode; AName: string): PTreeNode;
+function TTree.GetChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
 var
   LNode: PTreeNode;
 begin
@@ -165,7 +175,7 @@ begin
   result := LNode;
 end;
 
-function TTree.GetNextChildByName(AParent: PTreeNode; AName: string): PTreeNode;
+function TTree.GetNextChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
 var
   LNode: PTreeNode;
 begin
@@ -179,7 +189,7 @@ begin
   result := LNode;
 end;
 
-function TTree.InsertBefore(ASibling: PTreeNode; AData: string): PTreeNode;
+function TTree.InsertBefore(const ASibling: PTreeNode; const AData: string): PTreeNode;
 var
   LNode, LParent: PTreeNode;
 begin
@@ -211,25 +221,30 @@ begin
     end;
   end;
 end;
+*)
 
-procedure TTree.ClearNode(ANode: PTreeNode);
+procedure TTree.ClearNode(const ANode: PTreeNode);
 begin
+  (*
+  Log(Format('TTree.ClearNode(%p)', [ANode]));
+  *)
   if ANode = nil then
     Exit;
-  if ANode^.Sibling <> nil then ClearNode(ANode^.Sibling);
-  if ANode^.Child <> nil then ClearNode(ANode^.Child);
-  if (ANode^.Sibling = nil) and (ANode^.Child = nil) then
-    Dispose(ANode);
+  if ANode^.Sibling <> nil then
+    ClearNode(ANode^.Sibling);
+  if ANode^.Child <> nil then
+    ClearNode(ANode^.Child);
+  Dispose(ANode);
 end;
 
 procedure TTree.Clear;
 begin
-  ClearNode(Root);
-  Root := nil;
-  Count := 0;
+  ClearNode(FRoot);
+  FRoot := nil;
+  FCount := 0;
 end;
 
-function TTree.GetNodeLevel(ANode: PTreeNode): integer;
+function TTree.GetNodeLevel(const ANode: PTreeNode): integer;
 var
   LNode: PTreeNode;
 begin
@@ -247,7 +262,7 @@ begin
   end;
 end;
 
-function TTree.GetChildCount(ANode: PTreeNode): integer;
+function TTree.GetChildCount(const ANode: PTreeNode): integer;
 var
   LNode: PTreeNode;
 begin
@@ -262,10 +277,10 @@ end;
 
 function TTree.GetRoot: PTreeNode;
 begin
-  result := Root;
+  result := FRoot;
 end;
 
-function TTree.GetNext(ANode: PTreeNode): PTreeNode;
+function TTree.GetNext(const ANode: PTreeNode): PTreeNode;
 var
   LNode: PTreeNode;
 begin
@@ -281,21 +296,18 @@ begin
       result := ANode^.Sibling;
       Exit;
     end;
-    //if (ANode^.Child = nil) and (ANode^.Sibling = nil) then
-    //begin
-      LNode := ANode^.Parent;
-      while (LNode <> nil) and (LNode^.Sibling = nil) do
-        LNode := LNode^.Parent;
-      if LNode = nil then
-        result := nil
-      else
-        result := LNode^.Sibling;
-    //end;
+    LNode := ANode^.Parent;
+    while (LNode <> nil) and (LNode^.Sibling = nil) do
+      LNode := LNode^.Parent;
+    if LNode = nil then
+      result := nil
+    else
+      result := LNode^.Sibling;
   end else
     result := nil;
 end;
 
-procedure TTree.WriteNode(ANode: PTreeNode);
+procedure TTree.WriteNode(const ANode: PTreeNode);
 begin
   FText := Concat(FText, '(', ANode^.Data);
   if ANode^.Child <> nil then
@@ -303,38 +315,23 @@ begin
   FText := Concat(FText, ')');
 end;
 
-procedure TTree.WriteSiblings(ANode: PTreeNode);
+procedure TTree.WriteSiblings(const ANode: PTreeNode);
+var
+  LNode: PTreeNode;
 begin
-  WriteNode(ANode);
-  while ANode^.Sibling <> nil do
+  LNode := ANode;
+  WriteNode(LNode);
+  while LNode^.Sibling <> nil do
   begin
-    WriteNode(ANode^.Sibling);
-    ANode := ANode^.Sibling;
+    WriteNode(LNode^.Sibling);
+    LNode := LNode^.Sibling;
   end;
 end;
 
 function TTree.GetTextCompact: string;
 begin
   FText := '';
-  WriteSiblings(GetRoot^.Child);
-  result := FText;
-end;
-
-procedure TTree.WriteSiblingsRecursive(ANode: PTreeNode; const ALevel: integer);
-begin
-  while ANode <> nil do
-  begin
-    FText := Concat(FText, StringOfChar(' ', 2 * ALevel), ANode^.Data, #13#10);
-    if ANode^.Child <> nil then
-      WriteSiblingsRecursive(ANode^.Child, Succ(ALevel));
-    ANode := ANode^.Sibling;
-  end;
-end;
-
-function TTree.GetText: string;
-begin
-  FText := '';
-  WriteSiblingsRecursive(GetRoot^.Child);
+  WriteSiblings(GetRoot{^.Child});
   result := FText;
 end;
 
@@ -342,6 +339,11 @@ function TTree.FindNode(const AParent: PTreeNode; const AData: string): PTreeNod
 var
   LNode: PTreeNode;
 begin
+  if AParent = nil then
+    if (FRoot <> nil) and (FRoot^.Data = AData) then
+      Exit(FRoot)
+    else
+      Exit(nil);
   LNode := AParent^.Child;
   while LNode <> nil do
   begin
@@ -358,10 +360,10 @@ var
   LNode, LParent: PTreeNode;
 begin
   if ALine.Count = 0 then
-    Exit(Root);
+    Exit(FRoot);
   LLevel := 0;
   LNode := nil;
-  LParent := Root;
+  LParent := nil;
   while LLevel < ALine.Count do
   begin
     LNode := FindNode(LParent, ALine[LLevel]);
@@ -379,16 +381,28 @@ var
   LNode, LParent: PTreeNode;
 begin
   LLevel := 0;
-  LParent := Root;
-  while LLevel < ALine.Count do
-  begin
-    LNode := FindNode(LParent, ALine[LLevel]);
-    if LNode = nil then
-      LNode := Add(LParent, ALine[LLevel]);
-    LParent := LNode;
-    Inc(LLevel);
-  end;
-  result := LNode;
+  LNode := FRoot;
+  if LNode = nil then
+    while LLevel < ALine.Count do
+    begin
+      LNode := Add(LNode, ALine[LLevel]);
+      Inc(LLevel);
+    end
+  else
+    if LNode^.Data = ALine[LLevel] then
+    begin
+      Inc(LLevel);
+      LParent := LNode;
+      while LLevel < ALine.Count do
+      begin
+        LNode := FindNode(LParent, ALine[LLevel]);
+        if LNode = nil then
+          LNode := Add(LParent, ALine[LLevel]);
+        LParent := LNode;
+        Inc(LLevel);
+      end;
+    end else
+      result := nil;
 end;
 
 function TTree.AddLine(const ALine: string): PTreeNode;
@@ -401,48 +415,43 @@ begin
   LLine.Free;
 end;
 
-function TTree.FindMoveToPlay(const ALine: TStrings): string;
+function TTree.FindMoveToPlay(const ALine: TStrings; const ARandom: boolean): string;
 var
   LNode: PTreeNode;
+  LSiblings: TStringList;
 begin
-  LNode := FindNode(ALine);
-  if (LNode <> nil) and (LNode^.Child <> nil) then
-    result := LNode^.Child^.Data
-  else
-    result := '';
-end;
-
-function TTree.FindMoveToPlayRandom(const ALine: TStrings): string;
-var
-  LNode: PTreeNode;
-  LMoves: TStringList;
-begin
+  if ALine.Count = 0 then
+    if (FRoot <> nil)then
+      Exit(FRoot^.Data)
+    else
+      Exit('');
   LNode := FindNode(ALine);
   if (LNode <> nil) and (LNode^.Child <> nil) then
   begin
-    LMoves := TStringList.Create;
-    LNode := LNode^.Child;
-    while LNode <> nil do
+    if ARandom then
     begin
-      LMoves.Append(LNode^.Data);
-      LNode := LNode^.Sibling;
-    end;
-    result := LMoves[Random(LMoves.Count)];
-    LMoves.Free;
+      LSiblings := TStringList.Create;
+      LNode := LNode^.Child;
+      while LNode <> nil do
+      begin
+        LSiblings.Append(LNode^.Data);
+        LNode := LNode^.Sibling;
+      end;
+      result := LSiblings[Random(LSiblings.Count)];
+      LSiblings.Free;
+    end else
+      result := LNode^.Child^.Data
   end else
     result := '';
 end;
-  
+
 function TTree.FindMoveToPlay(const ALine: string; const ARandom: boolean): string;
 var
   LLine: TStringList;
 begin
   LLine := TStringList.Create;
   LLine.DelimitedText := ALine;
-  if ARandom then
-    result := FindMoveToPlayRandom(LLine)
-  else
-    result := FindMoveToPlay(LLine);
+  result := FindMoveToPlay(LLine, ARandom);
   LLine.Free;
 end;
 
@@ -546,28 +555,18 @@ begin
   LFile.Free;
 end;
 
-procedure TTree.SaveToFile(const AFileName: TFileName); 
+procedure TTree.SaveToFile(const {AFileName: TFileName}AList: TStringList); 
 var
   LNode: PTreeNode;
-  LFile, LLine, LLine2: TStringList;
+  LLine, LLine2: TStringList;
   LLevel, i: integer;
 begin
-  LFile := TStringList.Create;
   LLine := TStringList.Create;
   LLine2 := TStringList.Create;
   LLine2.Delimiter := ' ';
-{$IFDEF AUTO_CREATE_ROOT}
-  LNode := Root^.Child;
-{$ELSE}
-  LNode := Root;
-{$ENDIF}
+  LNode := FRoot;
   repeat
-{$IFDEF AUTO_CREATE_ROOT}
-    LLevel := Pred(GetNodeLevel(LNode));
-{$ELSE}
     LLevel := GetNodeLevel(LNode);
-{$ENDIF}
-    //WriteLn(LLevel);
     if LLevel > Pred(LLine.Count) then
       LLine.Append(LNode^.Data)
     else
@@ -577,12 +576,10 @@ begin
       LLine2.Clear;
       for i := 0 to LLevel do
         LLine2.Append(LLine[i]);
-      LFile.Append(LLine2.DelimitedText);
+      AList.Append(LLine2.DelimitedText);
     end;
     LNode := GetNext(LNode);
   until LNode = nil;
-  LFile.SaveToFile(AFileName);
-  LFile.Free;
   LLine.Free;
   LLine2.Free;
 end;

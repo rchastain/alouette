@@ -4,12 +4,12 @@
   Génération des coups.
 }
 
-unit Coups;
+unit Moves;
 
 interface
 
 uses
-  Echecs, Damier, Deplacement;
+  Chess, Board, Move;
 
 function FCoups(const APos: TPosition; var ALst: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): TDamier; overload;
 {** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }

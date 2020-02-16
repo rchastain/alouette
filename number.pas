@@ -4,7 +4,7 @@
   Fonction pour la numérotation des positions de départ aux échecs de Fischer, par la méthode de Reinhard Scharnagl.
 }
 
-unit Numero;
+unit Number;
 
 interface
 

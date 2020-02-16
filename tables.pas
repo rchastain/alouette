@@ -9,14 +9,14 @@ unit Tables;
 interface
 
 uses
-  Damier;
+  Board;
 
 const  
-  CCibles:    array[TTypePiece, A1..H8] of TDamier = ({$I cibles.inc});
-  CChemin:    array[A1..H8, A1..H8]     of TDamier = ({$I chemin.inc});
+  CCibles:    array[TTypePiece, A1..H8] of TDamier = ({$I targets.inc});
+  CChemin:    array[A1..H8, A1..H8]     of TDamier = ({$I path.inc});
   CCaseIdx:   array[A1..H8]             of TDamier = ({$I index.inc});
-  CCaseCoord: array[0..7, 0..7]         of TDamier = ({$I coordonnees.inc});
-  CColonne:   array[0..7]               of TDamier = ({$I colonne.inc});
+  CCaseCoord: array[0..7, 0..7]         of TDamier = ({$I coordinates.inc});
+  CColonne:   array[0..7]               of TDamier = ({$I file.inc});
 
 function EstAllumeeIdx(const ADam: TDamier; const AIdx: integer): boolean;
 procedure AllumeIdx(var ADam: TDamier; const AIdx: integer);
