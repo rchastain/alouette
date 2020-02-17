@@ -70,7 +70,7 @@ begin
 {$IFDEF DEBUG}
   s := '';
   for i := 0 to Pred(n) do
-    s := s + Format('%s,', [NomCoup(ACoups[i])]);
+    s := s + Format('%6s', [NomCoup(ACoups[i])]);
   WriteLn(LFichier[ASecondFile], s);
   Flush(LFichier[ASecondFile]);
 {$ENDIF}
@@ -86,11 +86,11 @@ begin
 {$IFDEF DEBUG}
   s := '';
   for i := 0 to Pred(n) do
-    s := s + Format('%s,', [NomCoup(ACoups[i])]);
+    s := s + Format('%6s', [NomCoup(ACoups[i])]);
   WriteLn(LFichier[ASecondFile], s);
   s := '';
   for i := 0 to Pred(n) do
-    s := s + Format('%d,', [ANotes[i]]);
+    s := s + Format('%6d', [ANotes[i]]);
   WriteLn(LFichier[ASecondFile], s);
   Flush(LFichier[ASecondFile]);
 {$ENDIF}

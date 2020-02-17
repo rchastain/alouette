@@ -67,7 +67,7 @@ var
   LCoup: string;
   LMTime, LWTime, LBTime, LMTG, LWInc, LBInc: integer;
   LPos: TPosition;
-  LEchecs960: boolean;
+  L960Ini: boolean;
   LProcessus: TProcessus;
   LProfondeur: integer;
   LLigneLivre, LCoupLivre: string;
@@ -76,10 +76,10 @@ var
 begin
   Randomize;
 
-  LitFichierIni(LEchecs960);
+  LitFichierIni(L960Ini);
   if not FichierIniExiste then
-    EcritFichierIni(LEchecs960);
-  RegleVariante(LEchecs960);
+    EcritFichierIni(L960Ini);
+  RegleVariante(L960Ini);
   
   LLigneLivre := '';
   LLivre[FALSE] := TTreeList.Create;
@@ -148,7 +148,7 @@ begin
                       else
                         Log.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
                 
-                if not LEchecs960 then
+                if not VarianteCourante then
                 begin
                   LCoupLivre := LLivre[LPos.Trait].FindMoveToPlay(Trim(LLigneLivre), TRUE);
                   if LCoupLivre <> '' then

@@ -11,10 +11,10 @@ interface
 uses
   Chess;
 
-function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer): string;
 
 var
-  LCoupProv: string = 'a1a1';
+  LTempMove: string;
   
 implementation
 
@@ -22,95 +22,97 @@ uses
   SysUtils, Move, Moves, Castling, Board, Tables, Log, History, Sort;
 
 const
-  CInfini = 99999;
-  CValeurPiece: array[PionBlanc..Dame] of integer = (100, 100, 500, 320, 330, 900);
+  CInfinite = 99999;
+  CPieceValue: array[PionBlanc..Dame] of integer = (100, 100, 500, 320, 330, 900);
   
 var
-  LLimiteTemps: cardinal;
+  LEndTime: cardinal;
 
 function Materiel(const APos: TPosition): integer;
 var
-  LIdx, LClr: integer;
+  LIndex, LSign: integer;
   LPiece: TTypePiece;
-  LBlanc, LNoir, LCase: TDamier;
+  LWhitePieces, LBlackPieces, LSquare: TDamier;
 begin
   if (APos.Pieces[APos.Trait] and APos.Rois) = 0 then
-    Exit(-1 * CInfini)
+    Exit(-1 * CInfinite)
   else if (APos.Pieces[not APos.Trait] and APos.Rois) = 0 then
-    Exit(CInfini);
+    Exit(CInfinite);
   result := 0;
-  LBlanc := APos.Pieces[FALSE];
-  LNoir := APos.Pieces[TRUE];
-  for LIdx := A1 to H8 do
+  LWhitePieces := APos.Pieces[FALSE];
+  LBlackPieces := APos.Pieces[TRUE];
+  for LIndex := A1 to H8 do
   begin
-    LCase := CCaseIdx[LIdx];
-    if EstAllumee(LBlanc, LCase) then
-      LClr := 1
-    else if EstAllumee(LNoir, LCase) then
-      LClr := -1
+    LSquare := CCaseIdx[LIndex];
+    if EstAllumee(LWhitePieces, LSquare) then
+      LSign := 1
+    else if EstAllumee(LBlackPieces, LSquare) then
+      LSign := -1
     else
       Continue;
-    LPiece := TypePieceIdx(APos, LIdx);
+    LPiece := TypePieceIdx(APos, LIndex);
     if LPiece <> Roi then
-      Inc(result, CValeurPiece[LPiece] * LClr);
+      Inc(result, CPieceValue[LPiece] * LSign);
   end;
   if APos.Trait then
     result := -1 * result;
 end;
 
-function EstLegal(const APos: TPosition; const ACoup: integer): boolean;
+function IsLegal(const APos: TPosition; const AMove: integer): boolean;
 var
   LPos: TPosition;
 begin
   LPos := APos;
-  if FRejoue(LPos, NomCoup(ACoup)) then
+  if FRejoue(LPos, NomCoup(AMove)) then
   begin
     result := TRUE;
     LPos.Trait := not LPos.Trait;
     if FEchec(LPos) then
-      Exit(FALSE);
+      result := FALSE;
   end else
     result := FALSE;
 end;
 
-function MiniMax(const APos: TPosition; const ACoup: integer; out AEchecProchain: boolean): integer;
+function MaterialEval(const APos: TPosition; const AMove: integer; out ACheckRisk: boolean): integer;
 var
-  LLst1, LLst2: array[0..199] of integer;
-  LPos1, LPos2, LPos3: TPosition;
-  LIdx1, LIdx2, LNbr1, LNbr2, LRes, LMax: integer;
+  m, mm: array[0..199] of integer;
+  p, pp, ppp: TPosition;
+  i, ii: integer;
+  c, cc: integer;
+  LRes, LMax: integer;
 begin
-  AEchecProchain := FALSE;
-  LPos1 := APos;
+  ACheckRisk := FALSE;
+  p := APos;
   result := Low(integer);
-  if FRejoue(LPos1, NomCoup(ACoup)) then
+  if FRejoue(p, NomCoup(AMove)) then
   begin
-    FCoups(LPos1, LLst1, LNbr1);
+    FCoups(p, m, c);
     result := High(integer);
-    for LIdx1 := 0 to Pred(LNbr1) do
+    for i := 0 to Pred(c) do
     begin
-      LPos2 := LPos1;
-      if FRejoue(LPos2, NomCoup(LLst1[LIdx1])) then
+      pp := p;
+      if FRejoue(pp, NomCoup(m[i])) then
       begin
-        if FEchec(LPos2) then
-          AEchecProchain := TRUE;
-        FCoups(LPos2, LLst2, LNbr2);
+        if FEchec(pp) then
+          ACheckRisk := TRUE;
+        FCoups(pp, mm, cc);
         LMax := Low(integer);
-        for LIdx2 := 0 to Pred(LNbr2) do
+        for ii := 0 to Pred(cc) do
         begin
-          LPos3 := LPos2;
-          if FRejoue(LPos3, NomCoup(LLst2[LIdx2])) then
+          ppp := pp;
+          if FRejoue(ppp, NomCoup(mm[ii])) then
           begin
-            LPos3.Trait := not LPos3.Trait;
-            if FEchec(LPos3) then
-              LRes := -1 * CInfini
+            ppp.Trait := not ppp.Trait;
+            if FEchec(ppp) then
+              LRes := -1 * CInfinite
             else
-              LRes := Materiel(LPos3);
+              LRes := Materiel(ppp);
           end else
             Continue;
           if LRes > LMax then
           begin
             LMax := LRes;
-           if LMax = CInfini then
+           if LMax = CInfinite then
              Break;
           end;
         end;
@@ -122,19 +124,20 @@ begin
   end;
 end;
 
-function Inverse(const ACoup: string): string;
+function Reverse(const AMove: string): string;
 begin
-  result := Concat(Copy(ACoup, 3, 2), Copy(ACoup, 1, 2));
+  result := Concat(Copy(AMove, 3, 2), Copy(AMove, 1, 2));
 end;
 
-function EvaluationStatique(const APos: TPosition; const ACoup: integer): integer;
+function PositionalEval(const APos: TPosition; const AMove: integer): integer;
 var
   LPos: TPosition;
   LBonusRoque: integer;
   LMalusRepetition, LMalusAnnulation: integer;
   LBonusPiece: integer = -2;
-  LTypePiece: TTypePieceLarge;
-  LDep, LArr: integer;
+  LTypePiece, LTypeCapture: TTypePieceLarge;
+  LCaptureValue: integer;
+  LFromSquare, LToSquare: integer;
   LTP: TTypePiece;
   LTC: TTypeCoup;
   LBonusEnPassant, LBonusCapture: integer;
@@ -143,22 +146,41 @@ var
   LProtections: integer;
   LMalusPiece: integer;
 begin
-  DecodeCoup(ACoup, LDep, LArr, LTP, LTC);
+  DecodeCoup(AMove, LFromSquare, LToSquare, LTP, LTC);
   
   LPos := APos;
-  LBonusRoque := Ord(EstUnRoque(LPos, ACoup)); if LBonusRoque = 1 then Assert(LTC = tcRoque);
-  LMalusRepetition := Ord(NomCoup(ACoup) = AvantDernier);
-  LMalusAnnulation := Ord(NomCoup(ACoup) = Inverse(Dernier));
-  LTypePiece := TypePieceIdx(LPos, Depart(ACoup)); Assert(LTypePiece = LTP);
+  LBonusRoque := Ord(EstUnRoque(LPos, AMove)); if LBonusRoque = 1 then Assert(LTC = tcRoque);
+  LMalusRepetition := Ord(NomCoup(AMove) = AvantDernier);
+  LMalusAnnulation := Ord(NomCoup(AMove) = Reverse(Dernier));
+  LTypePiece := TypePieceIdx(LPos, Depart(AMove)); Assert(LTypePiece = LTP);
+  LTypeCapture := TypePieceIdx(LPos, Arrivee(AMove));
+  if LTypeCapture = Neant then
+  begin
+    if LTC = tcEnPassant then
+      LCaptureValue := CPieceValue[PionBlanc]
+    else
+      LCaptureValue := 0;
+  end else
+    LCaptureValue := CPieceValue[LTypeCapture];
   result := Low(integer);
-  if not FRejoue(LPos, NomCoup(ACoup)) then
+  if not FRejoue(LPos, NomCoup(AMove)) then
     Exit;
   LBonusEchec := Ord(FEchec(LPos));
   LPos.Trait := not LPos.Trait;
   LBonusPiece := 0;
   LBonusEnPassant := Ord(LTC = tcEnPassant);
-  LBonusCapture := Ord(LTC = tcCapture);
-  LBonusMenaceRoi := Ord((CCibles[LTP, LArr] and LPos.CaseRoi[not LPos.Trait]) <> 0);
+  if LTC = tcCapture then
+  begin
+    if (LCaptureValue = CPieceValue[LTypePiece])
+    or (LCaptureValue = CPieceValue[LTypePiece] - 10) then
+      LBonusCapture := 1
+    else if LCaptureValue > CPieceValue[LTypePiece] then
+      LBonusCapture := 2
+    else
+      LBonusCapture := 0;
+  end else
+    LBonusCapture := 0;
+  LBonusMenaceRoi := Ord((CCibles[LTP, LToSquare] and LPos.CaseRoi[not LPos.Trait]) <> 0);
   LProtections := FProtections(LPos);
   case LTypePiece of
     PionBlanc, PionNoir: LMalusPiece := 0;
@@ -184,7 +206,7 @@ begin
     Format(
       '%s %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d',
       [
-        NomCoup(ACoup),
+        NomCoup(AMove),
         LBonusCapture,
         LBonusMenaceRoi,
         LBonusRoque,
@@ -209,52 +231,58 @@ begin
     Inc(result);
 end;
 
-function MeilleurCoup(const APos: TPosition; const AFRC: boolean; const ATempsDispo: integer): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer): string;
 var
   LListe, LEval: array[0..99] of integer;
   n, i, LCoup: integer;
-  LEchecProchain: boolean;
+  LCheckRisk: boolean;
 begin
   result := '0000';
-  LLimiteTemps := GetTickCount64 + ATempsDispo;
+  LTempMove := 'a1a1';
+  LEndTime := GetTickCount64 + ATime;
   Log.Ajoute('', TRUE);
   Log.Ajoute(DecodePosition(APos), TRUE);
   FCoups(APos, LListe, n);
   FRoque(APos, LListe, n);
   
   for i := 0 to Pred(n) do
-    LEval[i] := Ord(EstLegal(APos, LListe[i]));
+    LEval[i] := Ord(IsLegal(APos, LListe[i]));
   Trie(LListe, LEval, n);
   Log.Ajoute('', TRUE);
   Log.AjouteTable(LListe, n);
   
   n := CompteMeilleurs(LEval, n);
-  LCoupProv := NomCoup(LListe[Random(n)]);
-  if EstUnePromotion(APos, LCoupProv) then
-    LCoupProv := Concat(LCoupProv, 'q');
+  LTempMove := NomCoup(LListe[Random(n)]);
+  if EstUnePromotion(APos, LTempMove) then
+    LTempMove := Concat(LTempMove, 'q');
 {$IFDEF RANDOM_MOVER}
-  Exit(LCoupProv);
+  Exit(LTempMove);
 {$ENDIF}
   for i := 0 to Pred(n) do
   begin
-    LEval[i] := MiniMax(APos, LListe[i], LEchecProchain);
-    Dec(LEval[i], Ord(LEchecProchain));
+    LEval[i] := MaterialEval(APos, LListe[i], LCheckRisk);
+    Dec(LEval[i], Ord(LCheckRisk));
   end;
   Trie(LListe, LEval, n);
-  LCoupProv := NomCoup(LListe[0]);
-  if EstUnePromotion(APos, LCoupProv) then
-    LCoupProv := Concat(LCoupProv, 'q');
+  (*
+  LTempMove := NomCoup(LListe[0]);
+  if EstUnePromotion(APos, LTempMove) then
+    LTempMove := Concat(LTempMove, 'q');
+  *)
   Log.Ajoute('', TRUE);
   Log.AjouteTable(LListe, LEval, n);
   
   n := CompteMeilleurs(LEval, n);
+  LTempMove := NomCoup(LListe[Random(n)]);
+  if EstUnePromotion(APos, LTempMove) then
+    LTempMove := Concat(LTempMove, 'q');
   Log.Ajoute('', TRUE);
   for i := 0 to Pred(n) do
-    LEval[i] := EvaluationStatique(APos, LListe[i]);
+    LEval[i] := PositionalEval(APos, LListe[i]);
   
   Trie(LListe, LEval, n);
   LCoup := LListe[0];
-  if EstUnRoque(APos, LCoup) and not AFRC then
+  if EstUnRoque(APos, LCoup) and not AFrc then
   begin
     Assert(((LCoup and $FF00) shr 8) mod 8 = CColonneE);
     Reformule(LCoup);

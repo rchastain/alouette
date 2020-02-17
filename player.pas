@@ -28,7 +28,7 @@ uses
 
 var
   LPos: TPosition;
-  LEchecs960: boolean;
+  L960: boolean;
   
 procedure Oublie;
 begin
@@ -51,12 +51,12 @@ end;
 
 function Coup(const ATempsDisponible: integer): string;
 begin
-  result := MeilleurCoup(LPos, LEchecs960, ATempsDisponible);
+  result := GetBestMove(LPos, L960, ATempsDisponible);
 end;
 
 function CoupImmediat: string;
 begin
-  result := LCoupProv;
+  result := LTempMove;
 end;
 
 procedure RegleVariante(const AValeur: boolean);
@@ -64,17 +64,17 @@ const
   CPrefixe: array[boolean] of string = ('dés', '');
 begin
   Log.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
-  LEchecs960 := AValeur;
+  L960 := AValeur;
 end;
 
 function VarianteCourante: boolean;
 begin
-  result := LEchecs960;
+  result := L960;
 end;
 
 procedure NouvellePosition(const APos: string);
 begin
-  LPos := EncodePosition(APos, LEchecs960);
+  LPos := EncodePosition(APos, L960);
   NouvelleHistoire;
 end;
 
@@ -85,7 +85,7 @@ end;
 
 initialization
   Oublie;
-  LEchecs960 := FALSE;
+  L960 := FALSE;
   
 finalization
 
