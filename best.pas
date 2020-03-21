@@ -4,7 +4,7 @@
   Recherche du meilleur coup.
 }
 
-unit BestMove;
+unit Best;
 
 interface
 
@@ -150,8 +150,8 @@ begin
   
   LPos := APos;
   LBonusRoque := Ord(EstUnRoque(LPos, AMove)); if LBonusRoque = 1 then Assert(LTC = tcRoque);
-  LMalusRepetition := Ord(NomCoup(AMove) = AvantDernier);
-  LMalusAnnulation := Ord(NomCoup(AMove) = Reverse(Dernier));
+  LMalusRepetition := Ord(NomCoup(AMove) = PreviousMove);
+  LMalusAnnulation := Ord(NomCoup(AMove) = Reverse(LatestMove));
   LTypePiece := TypePieceIdx(LPos, Depart(AMove)); Assert(LTypePiece = LTP);
   LTypeCapture := TypePieceIdx(LPos, Arrivee(AMove));
   if LTypeCapture = Neant then

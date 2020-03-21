@@ -8,49 +8,49 @@ unit History;
 
 interface
 
-procedure NouvelleHistoire;
-procedure Ajoute(const ACoup: string);
-function Dernier: string;
-function AvantDernier: string;
+procedure NewHistory;
+procedure AppendMove(const AMove: string);
+function LatestMove: string;
+function PreviousMove: string;
 
 implementation
 
 uses
   SysUtils, Classes;
-  
+
 var
-  LListe: TStringList;
+  LList: TStringList;
 
-procedure NouvelleHistoire;
+procedure NewHistory;
 begin
-  LListe.Clear;
+  LList.Clear;
 end;
 
-procedure Ajoute(const ACoup: string);
+procedure AppendMove(const AMove: string);
 begin
-  LListe.Append(ACoup);
+  LList.Append(AMove);
 end;
 
-function Dernier: string;
+function LatestMove: string;
 begin
-  if LListe.Count < 2 then
+  if LList.Count < 2 then
     result := ''
   else
-    result := LListe[LListe.Count - 2];
+    result := LList[LList.Count - 2];
 end;
 
-function AvantDernier: string;
+function PreviousMove: string;
 begin
-  if LListe.Count < 4 then
+  if LList.Count < 4 then
     result := ''
   else
-    result := LListe[LListe.Count - 4];
+    result := LList[LList.Count - 4];
 end;
 
 initialization
-  LListe := TStringList.Create;
+  LList := TStringList.Create;
   
 finalization
-  LListe.Free;
+  LList.Free;
   
 end.

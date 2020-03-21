@@ -1,7 +1,7 @@
 
 {**
-  @abstract(Programme principal du moteur d'échecs UCI.)
-  Dialogue avec l'utilisateur au moyen du protocole UCI.
+  @abstract(Programme principal du moteur d'échecs.)
+  Interface UCI du moteur d'échecs.
 }
 
 program Alouette;
@@ -18,43 +18,43 @@ uses
   Player,
   Chess,
   Utils,
-  PerfTest,
+  Perft,
   Settings,
   TreeList;
 
 {$I version.inc}
   
-procedure Ecrire(const ATexte: string; const AEnvoi: boolean = TRUE);
+procedure Send(const AMessage: string; const AFlush: boolean = TRUE);
 begin
-  WriteLn(output, ATexte);
-  if AEnvoi then
+  WriteLn(output, AMessage);
+  if AFlush then
     Flush(output);
-  Log.Ajoute(Concat('< ', ATexte));
+  Log.Ajoute(Concat('< ', AMessage));
 end;
 
 type
-  {** Processus de recherche du meilleur coup. }
-  TProcessus = class(TThread)
+  {** Processus de recherche du meilleur BestMove. }
+  TSearchThread = class(TThread)
     protected
       procedure Execute; override;
   end;
 
 var
-  LTempsDispo: cardinal;
+  LTimeForMove: cardinal;
 
-{** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
-procedure TProcessus.Execute;
+{** L'action du processus consiste à demander un BestMove au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
+procedure TSearchThread.Execute;
 var
-  LTemps: cardinal;
-  LCoup: string;
+  LTimeUsed: cardinal;
+  LMove: string;
 begin
-  LTemps := GetTickCount64;
-  LCoup := Player.Coup(LTempsDispo);
-  LTemps := GetTickCount64 - LTemps;
+  LTimeUsed := GetTickCount64;
+  LMove := Player.BestMove(LTimeForMove);
+  LTimeUsed := GetTickCount64 - LTimeUsed;
   if not Terminated then
   begin
-    Ecrire(Format('bestmove %s', [LCoup]));
-    Log.Ajoute(Format('Meilleur coup trouvé en %0.3f s.', [LTemps / 1000]));
+    Send(Format('bestmove %s', [LMove]));
+    Log.Ajoute(Format('Meilleur BestMove trouvé en %0.3f s.', [LTimeUsed / 1000]));
   end;
 end;
 
@@ -64,32 +64,32 @@ const
 var
   LCmd: string;
   LIdx: integer;
-  LCoup: string;
+  LMove: string;
   LMTime, LWTime, LBTime, LMTG, LWInc, LBInc: integer;
   LPos: TPosition;
-  L960Ini: boolean;
-  LProcessus: TProcessus;
-  LProfondeur: integer;
-  LLigneLivre, LCoupLivre: string;
-  LLivre: array[boolean] of TTreeList;
+  LVariantInitialValue: boolean;
+  LThread: TSearchThread;
+  LDepth: integer;
+  LBookLine, LBookMove: string;
+  LBook: array[boolean] of TTreeList;
   
 begin
   Randomize;
 
-  LitFichierIni(L960Ini);
-  if not FichierIniExiste then
-    EcritFichierIni(L960Ini);
-  RegleVariante(L960Ini);
+  LoadSettings(LVariantInitialValue);
+  if not SettingsFileExists then
+    SaveSettings(LVariantInitialValue);
+  SetVariant(LVariantInitialValue);
   
-  LLigneLivre := '';
-  LLivre[FALSE] := TTreeList.Create;
+  LBookLine := '';
+  LBook[FALSE] := TTreeList.Create;
   if FileExists('white.txt') then
-    LLivre[FALSE].LoadFromFileCompact('white.txt');
-  LLivre[TRUE] := TTreeList.Create;
+    LBook[FALSE].LoadFromFileCompact('white.txt');
+  LBook[TRUE] := TTreeList.Create;
   if FileExists('black.txt') then
-    LLivre[TRUE].LoadFromFileCompact('black.txt');
+    LBook[TRUE].LoadFromFileCompact('black.txt');
   
-  Ecrire(Format('%s %s', [CAppName, CAppVersion]));
+  Send(Format('%s %s', [CAppName, CAppVersion]));
   while not EOF do
   begin
     ReadLn(input, LCmd);
@@ -99,68 +99,68 @@ begin
     else
       if LCmd = 'uci' then
       begin
-        Ecrire(Format('id name %s %s', [CAppName, CAppVersion]), FALSE);
-        Ecrire(Format('id author %s', [CAppAuthor]), FALSE);
-        Ecrire(Format('option name UCI_Chess960 type check default %s', [CBoolStr[VarianteCourante]]), FALSE);
-        Ecrire('uciok');
+        Send(Format('id name %s %s', [CAppName, CAppVersion]), FALSE);
+        Send(Format('id author %s', [CAppAuthor]), FALSE);
+        Send(Format('option name UCI_Chess960 type check default %s', [CBoolStr[CurrentVariant]]), FALSE);
+        Send('uciok');
       end else
         if LCmd = 'isready' then
         begin
-          Ecrire('readyok');
+          Send('readyok');
         end else
           if LCmd = 'ucinewgame' then
-            Player.Oublie
+            Player.Reset
           else
             if BeginsWith('position ', LCmd) then
             begin
               if WordPresent('startpos', LCmd) then
-                Player.PositionDepart
+                Player.LoadStartPosition
               else if WordPresent('fen', LCmd) then
-                Player.NouvellePosition(GetFen(LCmd))
+                Player.SetPosition(GetFen(LCmd))
               else
                 Log.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
-              LLigneLivre := '';
+              LBookLine := '';
               if WordPresent('moves', LCmd) then
                 for LIdx := 4 to WordsNumber(LCmd) do
                 begin
-                  LCoup := GetWord(LIdx, LCmd);
-                  if IsChessMove(LCoup) then
+                  LMove := GetWord(LIdx, LCmd);
+                  if IsChessMove(LMove) then
                   begin
-                    Player.Rejoue(LCoup);
-                    LLigneLivre := Concat(LLigneLivre, ' ', LCoup);
+                    Player.DoMove(LMove);
+                    LBookLine := Concat(LBookLine, ' ', LMove);
                   end;
                 end;
             end else
               if BeginsWith('go', LCmd) then
               begin
-                LPos := Player.PositionCourante;
+                LPos := Player.CurrentPosition;
                 if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
-                  LTempsDispo := IfThen(LPos.Trait, LBinc, LWInc)
+                  LTimeForMove := IfThen(LPos.Trait, LBinc, LWInc)
                 else
                   if IsGoCmd(LCmd, LWTime, LBTime, LMTG) then       // go wtime 59559 btime 56064 movestogo 38
-                    LTempsDispo := IfThen(LPos.Trait, LBTime div LMTG, LWTime div LMTG)
+                    LTimeForMove := IfThen(LPos.Trait, LBTime div LMTG, LWTime div LMTG)
                   else
                     if IsGoCmd(LCmd, LWTime, LBTime) then           // go wtime 600000 btime 600000
-                      LTempsDispo := IfThen(LPos.Trait, LBTime, LWTime)
+                      LTimeForMove := IfThen(LPos.Trait, LBTime, LWTime)
                     else
                       if IsGoCmd(LCmd, LMTime) then                 // go movetime 500
-                        LTempsDispo := LMTime
+                        LTimeForMove := LMTime
                       else
                         Log.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
                 
-                if not VarianteCourante then
+                if not CurrentVariant then
                 begin
-                  LCoupLivre := LLivre[LPos.Trait].FindMoveToPlay(Trim(LLigneLivre), TRUE);
-                  if LCoupLivre <> '' then
+                  LBookMove := LBook[LPos.Trait].FindMoveToPlay(Trim(LBookLine), TRUE);
+                  if LBookMove <> '' then
                   begin
-                    Log.Ajoute(Format('Coup trouvé dans le livre : %s', [LCoupLivre]));
-                    Ecrire(Format('bestmove %s', [LCoupLivre]));
+                    Log.Ajoute(Format('BestMove trouvé dans le livre : %s', [LBookMove]));
+                    Send(Format('bestmove %s', [LBookMove]));
                     Continue;
                   end;
                 end;
                 
-                LProcessus := TProcessus.Create(TRUE);
-                with LProcessus do
+                LThread := TSearchThread.Create(TRUE);
+                with LThread do
                 begin
                   FreeOnTerminate := TRUE;
                   Priority := tpHigher;
@@ -169,41 +169,41 @@ begin
               end else
                 if LCmd = 'stop' then
                 begin
-                  Ecrire(Format('bestmove %s', [Player.CoupImmediat]));
-                  if Assigned(LProcessus) then
-                    LProcessus.Terminate;
+                  Send(Format('bestmove %s', [Player.InstantMove]));
+                  if Assigned(LThread) then
+                    LThread.Terminate;
                 end else
                   if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
-                    RegleVariante(WordPresent('true', LCmd))
+                    SetVariant(WordPresent('true', LCmd))
                   else
                     if LCmd = 'show' then
-                      Ecrire(VoirPosition(PositionCourante))
+                      Send(VoirPosition(CurrentPosition))
                     else
-                      if IsPerftCmd(LCmd, LProfondeur) then
-                        EssaiPerf(PositionCourante, LProfondeur)
+                      if IsPerftCmd(LCmd, LDepth) then
+                        Start(CurrentPosition, LDepth)
                       else
                         if LCmd = 'help' then
-                          Ecrire(
-                            'go movetime <x>'#13#10 +
-                            'go wtime <x> btime <x>'#13#10 +
-                            'go wtime <x> btime <x> movestogo <x>'#13#10 +
-                            'go wtime <x> btime <x> winc <x> binc <x>'#13#10 +
-                            'help'#13#10 +
-                            'isready'#13#10 +
-                            'perft <x>'#13#10 +
-                            'position fen <fen> [moves ...]'#13#10 +
-                            'position startpos [moves ...]'#13#10 +
-                            'quit'#13#10 +
-                            'setoption name UCI_Chess960 value <true,false>'#13#10 +
-                            'show'#13#10 +
-                            'stop'#13#10 +
-                            'uci'#13#10 +
+                          Send(
+                            'go movetime <x>' + LineEnding +
+                            'go wtime <x> btime <x>' + LineEnding +
+                            'go wtime <x> btime <x> movestogo <x>' + LineEnding +
+                            'go wtime <x> btime <x> winc <x> binc <x>' + LineEnding +
+                            'help' + LineEnding +
+                            'isready' + LineEnding +
+                            'perft <x>' + LineEnding +
+                            'position fen <fen> [moves ...]' + LineEnding +
+                            'position startpos [moves ...]' + LineEnding +
+                            'quit' + LineEnding +
+                            'setoption name UCI_Chess960 value <true,false>' + LineEnding +
+                            'show' + LineEnding +
+                            'stop' + LineEnding +
+                            'uci' + LineEnding +
                             'ucinewgame'
                           )
                         else
                           Log.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
   end;
   
-  LLivre[FALSE].Free;
-  LLivre[TRUE].Free;
+  LBook[FALSE].Free;
+  LBook[TRUE].Free;
 end.

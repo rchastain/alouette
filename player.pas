@@ -11,82 +11,80 @@ interface
 uses
   Chess;
 
-procedure Oublie;
-procedure PositionDepart;
-procedure Rejoue(const ACoup: string);
-function Coup(const ATempsDisponible: integer): string;
-function CoupImmediat: string;
-procedure RegleVariante(const AValeur: boolean);
-function VarianteCourante: boolean;
-procedure NouvellePosition(const APos: string);
-function PositionCourante: TPosition;
+procedure Reset;
+procedure LoadStartPosition;
+procedure DoMove(const AMove: string);
+function BestMove(const ATimeForMove: integer): string;
+function InstantMove: string;
+procedure SetVariant(const AValue: boolean);
+function CurrentVariant: boolean;
+procedure SetPosition(const APos: string);
+function CurrentPosition: TPosition;
 
 implementation
 
 uses
-  SysUtils, Log, Move, History, BestMove;
+  SysUtils, Log, Move, History, Best;
 
 var
   LPos: TPosition;
-  L960: boolean;
+  LVariant: boolean;
   
-procedure Oublie;
+procedure Reset;
 begin
-  LPos := CPositionVierge;
+  LPos := CZeroPosition;
 end;
 
-procedure PositionDepart;
+procedure LoadStartPosition;
 begin
-  LPos := EncodePosition();
-  NouvelleHistoire;
+  LPos := EncodePosition;
+  NewHistory;
 end;
 
-procedure Rejoue(const ACoup: string);
+procedure DoMove(const AMove: string);
 begin
-  if FRejoue(LPos, ACoup) then
-    History.Ajoute(ACoup)
+  if FRejoue(LPos, AMove) then
+    History.AppendMove(AMove)
   else
-    Log.Ajoute(Format('Impossible de jouer %s.', [ACoup]));
+    Log.Ajoute(Format('Impossible de jouer %s.', [AMove]));
 end;
 
-function Coup(const ATempsDisponible: integer): string;
+function BestMove(const ATimeForMove: integer): string;
 begin
-  result := GetBestMove(LPos, L960, ATempsDisponible);
+  result := GetBestMove(LPos, LVariant, ATimeForMove);
 end;
 
-function CoupImmediat: string;
+function InstantMove: string;
 begin
   result := LTempMove;
 end;
 
-procedure RegleVariante(const AValeur: boolean);
+procedure SetVariant(const AValue: boolean);
 const
-  CPrefixe: array[boolean] of string = ('dés', '');
+  CPrefix: array[boolean] of string = ('dés', '');
 begin
-  Log.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefixe[AValeur]]));
-  L960 := AValeur;
+  Log.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefix[AValue]]));
+  LVariant := AValue;
 end;
 
-function VarianteCourante: boolean;
+function CurrentVariant: boolean;
 begin
-  result := L960;
+  result := LVariant;
 end;
 
-procedure NouvellePosition(const APos: string);
+procedure SetPosition(const APos: string);
 begin
-  LPos := EncodePosition(APos, L960);
-  NouvelleHistoire;
+  LPos := EncodePosition(APos, LVariant);
+  NewHistory;
 end;
 
-function PositionCourante: TPosition;
+function CurrentPosition: TPosition;
 begin
   result := LPos;
 end;
 
 initialization
-  Oublie;
-  L960 := FALSE;
-  
-finalization
+  Reset;
+  LVariant := FALSE;
 
 end.
