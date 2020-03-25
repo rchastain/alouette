@@ -43,10 +43,10 @@ end;
 
 procedure DoMove(const AMove: string);
 begin
-  if FRejoue(LPos, AMove) then
+  if TryDoMove(LPos, AMove) then
     History.AppendMove(AMove)
   else
-    Log.Ajoute(Format('Impossible de jouer %s.', [AMove]));
+    Log.Append(Format('ImIsMovePossible de jouer %s.', [AMove]));
 end;
 
 function BestMove(const ATimeForMove: integer): string;
@@ -63,7 +63,7 @@ procedure SetVariant(const AValue: boolean);
 const
   CPrefix: array[boolean] of string = ('dés', '');
 begin
-  Log.Ajoute(Format('Option échecs 960 %sactivée.', [CPrefix[AValue]]));
+  Log.Append(Format('Option échecs 960 %sactivée.', [CPrefix[AValue]]));
   LVariant := AValue;
 end;
 

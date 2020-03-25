@@ -12,72 +12,72 @@ uses
   Board, Tables;
 
 const
-  CBlanc = FALSE;
-  CNoir = TRUE;
-  CNeant = -1;
+  CWhite = FALSE;
+  CBlack = TRUE;
+  CNil = -1;
   
 type
-  TDonneesRoque = record
-    XTourRoi,
-    XTourDame: integer;
+  TCastlingData = record
+    KingRookCol,
+    QueenRookCol: integer;
   end;
-  TRoque = array[boolean] of TDonneesRoque;
+  TCastling = array[boolean] of TCastlingData;
   TPosition = record
-    Pieces: array[boolean] of TDamier;
-    Pions,
-    Tours,
-    Cavaliers,
-    Fous,
-    Dames,
-    Rois: TDamier;
-    Trait: boolean;
-    Roque: TRoque;
+    Pieces: array[boolean] of TBoard;
+    Pawns,
+    Rooks,
+    Knights,
+    Bishops,
+    Queens,
+    Kings: TBoard;
+    SideToMove: boolean;
+    Roque: TCastling;
     EnPassant: integer;
-    CaseRoi: array[boolean] of TDamier;
+    KingSquare: array[boolean] of TBoard;
   end;
   
 const
-  CPositionVierge: TPosition = (
+  CZeroPosition: TPosition = (
     Pieces: (0, 0);
-    Pions: 0;
-    Tours: 0;
-    Cavaliers: 0;
-    Fous: 0;
-    Dames: 0;
-    Rois: 0;
-    Trait: FALSE;
+    Pawns: 0;
+    Rooks: 0;
+    Knights: 0;
+    Bishops: 0;
+    Queens: 0;
+    Kings: 0;
+    SideToMove: FALSE;
     Roque: (
-      (XTourRoi: CNeant; XTourDame: CNeant),
-      (XTourRoi: CNeant; XTourDame: CNeant)
+      (KingRookCol: CNil; QueenRookCol: CNil),
+      (KingRookCol: CNil; QueenRookCol: CNil)
     );
-    EnPassant: CNeant;
-    CaseRoi: (0, 0)
+    EnPassant: CNil;
+    KingSquare: (0, 0)
   );
 
 const
-  CPositionDepart = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -';
-  CColonneC = 2;
-  CColonneD = 3;
-  CColonneE = 4;
-  CColonneF = 5;
-  CColonneG = 6;
-  CLigne1   = 0;
-  CLigne8   = 7;
-  CLigneRoque: array[boolean] of integer = (CLigne1, CLigne8);
+  CStartPos = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -';
+  CColC = 2;
+  CColD = 3;
+  CColE = 4;
+  CColF = 5;
+  CColG = 6;
+  CRow1 = 0;
+  CRow8 = 7;
+  CCastlingRow: array[boolean] of integer = (CRow1, CRow8);
   
 type
-  TCaseRoque = array[boolean] of integer;
+  TRookSquare = array[boolean] of integer;
   
 const
-  CATCR: TCaseRoque = (F1, F8); { Arrivée tour, côté roi.  }
-  CATCD: TCaseRoque = (D1, D8); { Arrivée tour, côté dame. }
-  CDTCR: TCaseRoque = (H1, H8); { Départ  tour, côté roi.  }
-  CDTCD: TCaseRoque = (A1, A8); { Départ  tour, côté dame. }
+  CATCR: TRookSquare = (F1, F8); { Arrivée tour côté roi. }
+  CATCD: TRookSquare = (D1, D8); { Arrivée tour côté dame. }
+  CDTCR: TRookSquare = (H1, H8); { Départ tour côté roi. }
+  CDTCD: TRookSquare = (A1, A8); { Départ tour côté dame. }
 
-function EncodePosition(const APos: string = CPositionDepart; const AFRC: boolean = FALSE): TPosition;
-function DecodePosition(const APos: TPosition; const AFRC: boolean = FALSE): string;
-function Colonne(const ACase: TDamier): integer;
-function VoirPosition(const APos: TPosition): string;
+function EncodePosition(const APos: string = CStartPos; const AVariant: boolean = FALSE): TPosition;
+function DecodePosition(const APos: TPosition; const AVariant: boolean = FALSE): string;
+function SquareToCol(const ASqr: TBoard): integer;
+function PositionToText(const APos: TPosition): string;
 
 implementation
 
@@ -85,94 +85,97 @@ uses
   SysUtils, Classes;
 
 const
-  CSymboleTrait: array[boolean] of char = ('w', 'b');
+  CColorSymbol: array[boolean] of char = ('w', 'b');
   
-procedure Reinitialise(var ARoque: TRoque);
+procedure Reinitialize(var ARoque: TCastling);
 var
-  LCouleur: boolean;
+  LColor: boolean;
 begin
-  for LCouleur := CBlanc to CNoir do
-  with ARoque[LCouleur] do
+  for LColor := CWhite to CBlack do
+  with ARoque[LColor] do
   begin
-    XTourRoi := CNeant;
-    XTourDame := CNeant;
+    KingRookCol := CNil;
+    QueenRookCol := CNil;
   end;
 end;
 
-function DecodeChaineRoqueTradition(const AChaine: string): TRoque;
+function DecodeTraditionalCastlingString(const ACastlingStr: string): TCastling;
 begin
-  Reinitialise(result);
-  if Pos('K', aChaine) > 0 then result[CBlanc].XTourRoi := 7;
-  if Pos('Q', aChaine) > 0 then result[CBlanc].XTourDame := 0;
-  if Pos('k', aChaine) > 0 then result[CNoir].XTourRoi := 7;
-  if Pos('q', aChaine) > 0 then result[CNoir].XTourDame := 0;
+  Reinitialize(result);
+  if Pos('K', ACastlingStr) > 0 then result[CWhite].KingRookCol := 7;
+  if Pos('Q', ACastlingStr) > 0 then result[CWhite].QueenRookCol := 0;
+  if Pos('k', ACastlingStr) > 0 then result[CBlack].KingRookCol := 7;
+  if Pos('q', ACastlingStr) > 0 then result[CBlack].QueenRookCol := 0;
 end;
 
-function DecodeChaineRoque(const AChaine: string; const AXRoiBlanc: integer; const AXRoiNoir: integer): TRoque;
+function DecodeCastlingString(const ACastlingStr: string; const AWhiteKingCol, ABlackKingCol: integer): TCastling;
 const
-  CLettre: array[boolean, 0..7] of char = (('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'), ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'));
+  CChar: array[boolean, 0..7] of char = (
+    ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'),
+    ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')
+  );
 var
   c1, c2: char;
   b: boolean;
   a: byte;
 begin
-  Reinitialise(result);
-  for b := CBlanc to CNoir do
+  Reinitialize(result);
+  for b := CWhite to CBlack do
   begin
-    a := Ord(CLettre[b, 0]);
-    if b then c1 := Chr(AXRoiBlanc + a) else c1 := Chr(AXRoiNoir + a);
-    for c2 := CLettre[b, 7] downto Succ(c1) do if Pos(c2, aChaine) > 0 then result[b].XTourRoi := Ord(c2) - a;
-    for c2 := CLettre[b, 0] to Pred(c1) do if Pos(c2, aChaine) > 0 then result[b].XTourDame := Ord(c2) - a;
+    a := Ord(CChar[b, 0]);
+    if b then c1 := Chr(AWhiteKingCol + a) else c1 := Chr(ABlackKingCol + a);
+    for c2 := CChar[b, 7] downto Succ(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].KingRookCol := Ord(c2) - a;
+    for c2 := CChar[b, 0] to Pred(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].QueenRookCol := Ord(c2) - a;
   end;
 end;
 
-function EncodeChaineRoque(const ARoque: TRoque; const AFRC: boolean = FALSE): string;
+function EncodeCastlingString(const ARoque: TCastling; const AVariant: boolean = FALSE): string;
 begin
   result := '';
-  if AFRC then
+  if AVariant then
   begin
-    with ARoque[CBlanc] do begin
-    if (XTourRoi  >= 0) and (XTourRoi  <= 7) then result := Chr(XTourRoi + Ord('A'));
-    if (XTourDame >= 0) and (XTourDame <= 7) then result := Concat(result, Chr(XTourDame + Ord('A')));
+    with ARoque[CWhite] do begin
+      if (KingRookCol  >= 0) and (KingRookCol  <= 7) then result := Chr(KingRookCol + Ord('A'));
+      if (QueenRookCol >= 0) and (QueenRookCol <= 7) then result := Concat(result, Chr(QueenRookCol + Ord('A')));
     end;
-    with ARoque[CNoir] do begin
-    if (XTourRoi  >= 0) and (XTourRoi  <= 7) then result := Concat(result, Chr(XTourRoi + Ord('a')));
-    if (XTourDame >= 0) and (XTourDame <= 7) then result := Concat(result, Chr(XTourDame + Ord('a')));
+    with ARoque[CBlack] do begin
+      if (KingRookCol  >= 0) and (KingRookCol  <= 7) then result := Concat(result, Chr(KingRookCol + Ord('a')));
+      if (QueenRookCol >= 0) and (QueenRookCol <= 7) then result := Concat(result, Chr(QueenRookCol + Ord('a')));
     end;
   end else
   begin
-    if ARoque[CBlanc].XTourRoi  {= 7}<> CNeant then result := 'K';
-    if ARoque[CBlanc].XTourDame {= 0}<> CNeant then result := Concat(result, 'Q');
-    if ARoque[CNoir].XTourRoi   {= 7}<> CNeant then result := Concat(result, 'k');
-    if ARoque[CNoir].XTourDame  {= 0}<> CNeant then result := Concat(result, 'q');
+    if ARoque[CWhite].KingRookCol  <> CNil then result := 'K';
+    if ARoque[CWhite].QueenRookCol <> CNil then result := Concat(result, 'Q');
+    if ARoque[CBlack].KingRookCol  <> CNil then result := Concat(result, 'k');
+    if ARoque[CBlack].QueenRookCol <> CNil then result := Concat(result, 'q');
   end;
   if result = '' then
     result := '-';
 end;
 
-function Colonne(const ACase: TDamier): integer;
+function SquareToCol(const ASqr: TBoard): integer;
 var
   x: integer;
 begin
-  result := CNeant;
+  result := CNil;
   x := 0;
-  while (result = CNeant) and (x <= 7) do
-    if EstAllumee(CColonne[x], ACase) then
+  while (result = CNil) and (x <= 7) do
+    if IsOn(CColumn[x], ASqr) then
       result := x
     else
       Inc(x);
 end;
   
-function EncodePosition(const APos: string; const AFRC: boolean): TPosition;
+function EncodePosition(const APos: string; const AVariant: boolean): TPosition;
 const
   CEpdCount = 4;
   CFenCount = 6;
 var
   x, y, i: integer;
   c: char;
-  LCase: TDamier;
+  LSqr: TBoard;
 begin
-  result := CPositionVierge;
+  result := CZeroPosition;
   with TStringList.Create, result do
   begin
     DelimitedText := APos;
@@ -198,18 +201,18 @@ begin
             end;
         else
           begin
-            LCase := CCaseCoord[x, y];
-            Allume(Pieces[c in ['a'..'z']], LCase);
+            LSqr := CCoordToSquare[x, y];
+            SwitchOn(Pieces[c in ['a'..'z']], LSqr);
             case UpCase(c) of
-              'P': Allume(Pions, LCase);
-              'R': Allume(Tours, LCase);
-              'N': Allume(Cavaliers, LCase);
-              'B': Allume(Fous, LCase); 
-              'Q': Allume(Dames, LCase);
+              'P': SwitchOn(Pawns, LSqr);
+              'R': SwitchOn(Rooks, LSqr);
+              'N': SwitchOn(Knights, LSqr);
+              'B': SwitchOn(Bishops, LSqr); 
+              'Q': SwitchOn(Queens, LSqr);
               'K':
                 begin
-                  Allume(Rois, LCase);
-                  CaseRoi[c = 'k'] := LCase;
+                  SwitchOn(Kings, LSqr);
+                  KingSquare[c = 'k'] := LSqr;
                 end;
             end;
             Inc(x);
@@ -217,21 +220,21 @@ begin
         end;
         Inc(i);
       end;
-      Trait := Strings[1] = CSymboleTrait[CNoir];
-      if AFRC then
-        Roque := DecodeChaineRoque(Strings[2], Colonne(CaseRoi[CBlanc]), Colonne(CaseRoi[CNoir]))
+      SideToMove := Strings[1] = CColorSymbol[CBlack];
+      if AVariant then
+        Roque := DecodeCastlingString(Strings[2], SquareToCol(KingSquare[CWhite]), SquareToCol(KingSquare[CBlack]))
       else
-        Roque := DecodeChaineRoqueTradition(Strings[2]);
+        Roque := DecodeTraditionalCastlingString(Strings[2]);
       if Strings[3] = '-' then
-        EnPassant := CNeant
+        EnPassant := CNil
       else
-        EnPassant := DecodeNomCase(Strings[3]);
+        EnPassant := DecodeSquareName(Strings[3]);
     end;
     Free;
   end;
 end;
 
-function DecodePosition(const APos: TPosition; const AFRC: boolean): string;
+function DecodePosition(const APos: TPosition; const AVariant: boolean): string;
 var
   x, y, n: integer;
   c: char;
@@ -244,23 +247,23 @@ begin
     y := 7;
     while y >= 0 do
     begin
-      if (Pieces[FALSE] or Pieces[TRUE]) and CCaseCoord[x, y] = 0 then
+      if (Pieces[FALSE] or Pieces[TRUE]) and CCoordToSquare[x, y] = 0 then
       begin
         n := 0;
-        while (x + n <= 7) and ((Pieces[FALSE] or Pieces[TRUE]) and CCaseCoord[x + n, y] = 0) do
+        while (x + n <= 7) and ((Pieces[FALSE] or Pieces[TRUE]) and CCoordToSquare[x + n, y] = 0) do
           Inc(n);
         result := Concat(result, IntToStr(n));
         Inc(x, n);
       end else
       begin
         c := '?';
-        if EstAllumee(Pions,        CCaseCoord[x, y]) then c := 'P' else
-        if EstAllumee(Tours,        CCaseCoord[x, y]) then c := 'R' else
-        if EstAllumee(Cavaliers,    CCaseCoord[x, y]) then c := 'N' else
-        if EstAllumee(Fous,         CCaseCoord[x, y]) then c := 'B' else
-        if EstAllumee(Dames,        CCaseCoord[x, y]) then c := 'Q' else
-        if EstAllumee(Rois,         CCaseCoord[x, y]) then c := 'K';
-        if EstAllumee(Pieces[TRUE], CCaseCoord[x, y]) then
+        if IsOn(Pawns,        CCoordToSquare[x, y]) then c := 'P' else
+        if IsOn(Rooks,        CCoordToSquare[x, y]) then c := 'R' else
+        if IsOn(Knights,      CCoordToSquare[x, y]) then c := 'N' else
+        if IsOn(Bishops,      CCoordToSquare[x, y]) then c := 'B' else
+        if IsOn(Queens,       CCoordToSquare[x, y]) then c := 'Q' else
+        if IsOn(Kings,        CCoordToSquare[x, y]) then c := 'K';
+        if IsOn(Pieces[TRUE], CCoordToSquare[x, y]) then
           c := Chr(Ord(c) + 32);
         result := Concat(result, c);
         Inc(x);
@@ -273,27 +276,27 @@ begin
         Dec(y);
       end;
     end;
-    if EnPassant = CNeant then
+    if EnPassant = CNil then
       s := '-'
     else
-      s := CNomCase[EnPassant];
+      s := CSquareToStr[EnPassant];
     result := Format(
       '%s %s %s %s',
       [
         result,
-        CSymboleTrait[Trait],
-        EncodeChaineRoque(Roque, AFRC),
+        CColorSymbol[SideToMove],
+        EncodeCastlingString(Roque, AVariant),
         s
       ]
     );
   end;
 end;
 
-function VoirPosition(const APos: TPosition): string;
+function PositionToText(const APos: TPosition): string;
 const
-  FLECHE: array[boolean] of string = ('', ' <--');
+  CArrow: array[boolean] of string = ('', ' <--');
 const
-  GRILLE =
+  CFormat =
     '+  A B C D E F G H  +%s'#13#10 +
     '8 |%s|%s|%s|%s|%s|%s|%s|%s| 8'#13#10 +
     '7 |%s|%s|%s|%s|%s|%s|%s|%s| 7'#13#10 +
@@ -317,25 +320,25 @@ begin
     begin
       i := 8 * y + x;
       c[x, y] := '?';
-      if EstAllumeeIdx(APos.Pions,     i) then c[x, y] := 'p' else
-      if EstAllumeeIdx(APos.Tours,     i) then c[x, y] := 'r' else
-      if EstAllumeeIdx(APos.Cavaliers, i) then c[x, y] := 'n' else
-      if EstAllumeeIdx(APos.Fous,      i) then c[x, y] := 'b' else
-      if EstAllumeeIdx(APos.Dames,     i) then c[x, y] := 'q' else
-      if EstAllumeeIdx(APos.Rois,      i) then c[x, y] := 'k' else
+      if IsOnIdx(APos.Pawns,   i) then c[x, y] := 'p' else
+      if IsOnIdx(APos.Rooks,   i) then c[x, y] := 'r' else
+      if IsOnIdx(APos.Knights, i) then c[x, y] := 'n' else
+      if IsOnIdx(APos.Bishops, i) then c[x, y] := 'b' else
+      if IsOnIdx(APos.Queens,  i) then c[x, y] := 'q' else
+      if IsOnIdx(APos.Kings,   i) then c[x, y] := 'k' else
         if (x + y) mod 2 = 1 then
           c[x, y] := '.'
         else
         c[x, y] := ':';
-      if EstAllumeeIdx(APos.Pieces[FALSE], i) then
+      if IsOnIdx(APos.Pieces[FALSE], i) then
         c[x, y] := UpCase(c[x, y]);
     end;
-    if APos.EnPassant = CNeant then
+    if APos.EnPassant = CNil then
       s := '-'
     else
-      s := CNomCase[APos.EnPassant];
-  result := Format(GRILLE, [
-    FLECHE[APos.Trait],
+      s := CSquareToStr[APos.EnPassant];
+  result := Format(CFormat, [
+    CArrow[APos.SideToMove],
     c[0, 7], c[1, 7], c[2, 7], c[3, 7], c[4, 7], c[5, 7], c[6, 7], c[7, 7],
     c[0, 6], c[1, 6], c[2, 6], c[3, 6], c[4, 6], c[5, 6], c[6, 6], c[7, 6],
     c[0, 5], c[1, 5], c[2, 5], c[3, 5], c[4, 5], c[5, 5], c[6, 5], c[7, 5],
@@ -344,8 +347,8 @@ begin
     c[0, 2], c[1, 2], c[2, 2], c[3, 2], c[4, 2], c[5, 2], c[6, 2], c[7, 2],
     c[0, 1], c[1, 1], c[2, 1], c[3, 1], c[4, 1], c[5, 1], c[6, 1], c[7, 1],
     c[0, 0], c[1, 0], c[2, 0], c[3, 0], c[4, 0], c[5, 0], c[6, 0], c[7, 0],
-    FLECHE[not APos.Trait],
-    EncodeChaineRoque(APos.Roque, TRUE),
+    CArrow[not APos.SideToMove],
+    EncodeCastlingString(APos.Roque, TRUE),
     s
   ]);
 end;

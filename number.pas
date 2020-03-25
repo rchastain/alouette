@@ -29,11 +29,11 @@ end;
 
 function NumeroPosition(const ABlanches: string): integer;
 const
-  CNotFound = -1;
+  CNotptBishopnd = -1;
 var
-  whiteSquareBishopPos: CNotFound..3;
-  blackSquareBishopPos: CNotFound..3;
-  queenPos: CNotFound..5;
+  whiteSquareBishopPos: CNotptBishopnd..3;
+  blackSquareBishopPos: CNotptBishopnd..3;
+  queenPos: CNotptBishopnd..5;
   krnCode: 0..9;
   i, x: integer;
   s, t: string; 
@@ -41,30 +41,30 @@ begin
   s := LigneUn(ABlanches);
   Assert(Length(s) = 8);
   
-  whiteSquareBishopPos := CNotFound;
-  blackSquareBishopPos := CNotFound;
-  queenPos := CNotFound;
+  whiteSquareBishopPos := CNotptBishopnd;
+  blackSquareBishopPos := CNotptBishopnd;
+  queenPos := CNotptBishopnd;
   
   i := 0;
-  while (i < 4) and (whiteSquareBishopPos = CNotFound) do
+  while (i < 4) and (whiteSquareBishopPos = CNotptBishopnd) do
     if s[2 * i + 2] = 'B' then
       whiteSquareBishopPos := i
     else
       Inc(i);
   
   i := 0;
-  while (i < 4) and (blackSquareBishopPos = CNotFound) do
+  while (i < 4) and (blackSquareBishopPos = CNotptBishopnd) do
     if s[2 * i + 1] = 'B' then
       blackSquareBishopPos := i
     else
       Inc(i);
   
-  Assert(whiteSquareBishopPos > CNotFound);
-  Assert(blackSquareBishopPos > CNotFound);
+  Assert(whiteSquareBishopPos > CNotptBishopnd);
+  Assert(blackSquareBishopPos > CNotptBishopnd);
   
   i := 0;
   x := 1;
-  while (x < 9) and (queenPos = CNotFound) do
+  while (x < 9) and (queenPos = CNotptBishopnd) do
   begin
     if s[x] = 'Q' then
       queenPos := i

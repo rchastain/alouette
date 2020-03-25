@@ -11,267 +11,267 @@ interface
 uses
   Chess, Board, Move;
 
-function FCoups(const APos: TPosition; var ALst: array of integer; out ACompte: integer; const ARapide: boolean = FALSE): TDamier; overload;
+function GenMoves(const APos: TPosition; var AList: array of integer; out ACount: integer; const AQuick: boolean = FALSE): TBoard; overload;
 {** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
-function FCoups(const APos: TPosition): TDamier; overload;
-function FNombreCoups(const APos: TPosition): integer;
-function FCoupsPotentielsPion(const APos: TPosition): TDamier;
-function FEchec(const APos: TPosition): boolean;
-function FProtections(const APos: TPosition): integer;
+function GenMoves(const APos: TPosition): TBoard; overload;
+function GetMovesCount(const APos: TPosition): integer;
+function GenPotentialPawnMoves(const APos: TPosition): TBoard;
+function IsCheck(const APos: TPosition): boolean;
+function GetProtectionsCount(const APos: TPosition): integer;
 
 implementation
 
 uses
   SysUtils, Tables;
 
-function FCoups(const APos: TPosition; var ALst: array of integer; out ACompte: integer; const ARapide: boolean): TDamier;
+function GenMoves(const APos: TPosition; var AList: array of integer; out ACount: integer; const AQuick: boolean): TBoard;
 var
   LCompte: integer = 0;
-procedure Accepte(const i, j: integer; const p: TTypePiece; const c: TTypeCoup = tcOrdinaire);
+procedure Accepte(const i, j: integer; const p: TPieceType; const c: TMoveType = mtCommon);
 begin
-  Allume(result, CCaseIdx[j]);
+  SwitchOn(result, CIndexToSquare[j]);
   Inc(LCompte);
-  if not ARapide then
+  if not AQuick then
   begin
-    Assert(LCompte <= Length(ALst));
-    ALst[Pred(LCompte)] := EncodeCoup(i, j, p, c);
+    Assert(LCompte <= Length(AList));
+    AList[Pred(LCompte)] := EncodeMove(i, j, p, c);
   end;
 end;
 const
-  CPion: array[boolean] of TTypePiece = (PionBlanc, PionNoir);
+  CPion: array[boolean] of TPieceType = (ptWhitePawn, ptBlackPawn);
 var
   { Pièces. }
-  LToutes: TDamier;
+  LToutes: TBoard;
   i, j, k: integer;
 begin
   LToutes := APos.Pieces[FALSE] or APos.Pieces[TRUE];
   
   result := 0; { Damier vide. }
   
-  for i := A1 to H8 do if EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[i]) then
+  for i := A1 to H8 do if IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[i]) then
   begin
     { Pion. }
-    if EstAllumee(APos.Pions, CCaseIdx[i]) then
+    if IsOn(APos.Pawns, CIndexToSquare[i]) then
     begin
       { Pas en avant. }
-      k := 8 - 16 * Ord(APos.Trait);
+      k := 8 - 16 * Ord(APos.SideToMove);
       j := i + k;
-      if not EstAllumee(LToutes, CCaseIdx[j]) then
+      if not IsOn(LToutes, CIndexToSquare[j]) then
       begin
-        Accepte(i, j, CPion[APos.Trait]);
+        Accepte(i, j, CPion[APos.SideToMove]);
         { Second pas en avant. }
-        if ((j div 8 = 2) and not APos.Trait)
-        or ((j div 8 = 5) and APos.Trait) then
+        if ((j div 8 = 2) and not APos.SideToMove)
+        or ((j div 8 = 5) and APos.SideToMove) then
         begin
           j := j + k;
-          if not EstAllumee(LToutes, CCaseIdx[j]) then
-            Accepte(i, j, CPion[APos.Trait]);
+          if not IsOn(LToutes, CIndexToSquare[j]) then
+            Accepte(i, j, CPion[APos.SideToMove]);
         end;
       end;
       { Prise côté dame. }
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
-        if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
+        if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
-          Accepte(i, j, CPion[APos.Trait], tcEnPassant) else
-          Accepte(i, j, CPion[APos.Trait], tcCapture);
+          Accepte(i, j, CPion[APos.SideToMove], mtEnPassant) else
+          Accepte(i, j, CPion[APos.SideToMove], mtCapture);
       end;
       { Prise côté roi. }
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
-        if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) xor (j = APos.EnPassant) then
+        if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
-          Accepte(i, j, CPion[APos.Trait], tcEnPassant) else
-          Accepte(i, j, CPion[APos.Trait], tcCapture);
+          Accepte(i, j, CPion[APos.SideToMove], mtEnPassant) else
+          Accepte(i, j, CPion[APos.SideToMove], mtCapture);
       end;
     end else
     { Tour. }
-    if EstAllumee(APos.Tours, CCaseIdx[i]) then
+    if IsOn(APos.Rooks, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Tour, i], CCaseIdx[j])
-        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j])
-        and ((CChemin[i, j] and LToutes) = 0) then
-          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
-          Accepte(i, j, Tour, tcCapture) else
-          Accepte(i, j, Tour);
+        if IsOn(CTargets[ptRook, i], CIndexToSquare[j])
+        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
+        and ((CPath[i, j] and LToutes) = 0) then
+          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          Accepte(i, j, ptRook, mtCapture) else
+          Accepte(i, j, ptRook);
     end else
     { Cavalier. }
-    if EstAllumee(APos.Cavaliers, CCaseIdx[i]) then
+    if IsOn(APos.Knights, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Cavalier, i], CCaseIdx[j])
-        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j]) then
-          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
-          Accepte(i, j, Cavalier, tcCapture) else
-          Accepte(i, j, Cavalier);
+        if IsOn(CTargets[ptKnight, i], CIndexToSquare[j])
+        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
+          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          Accepte(i, j, ptKnight, mtCapture) else
+          Accepte(i, j, ptKnight);
     end else
     { Fou. }
-    if EstAllumee(APos.Fous, CCaseIdx[i]) then
+    if IsOn(APos.Bishops, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Fou, i], CCaseIdx[j])
-        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j])
-        and ((CChemin[i, j] and LToutes) = 0) then
-          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
-          Accepte(i, j, Fou, tcCapture) else
-          Accepte(i, j, Fou);
+        if IsOn(CTargets[ptBishop, i], CIndexToSquare[j])
+        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
+        and ((CPath[i, j] and LToutes) = 0) then
+          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          Accepte(i, j, ptBishop, mtCapture) else
+          Accepte(i, j, ptBishop);
     end else
     { Dame. }
-    if EstAllumee(APos.Dames, CCaseIdx[i]) then
+    if IsOn(APos.Queens, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Dame, i], CCaseIdx[j])
-        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j])
-        and ((CChemin[i, j] and LToutes) = 0) then
-          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
-          Accepte(i, j, Dame, tcCapture) else
-          Accepte(i, j, Dame);
+        if IsOn(CTargets[ptQueen, i], CIndexToSquare[j])
+        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
+        and ((CPath[i, j] and LToutes) = 0) then
+          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          Accepte(i, j, ptQueen, mtCapture) else
+          Accepte(i, j, ptQueen);
     end else
     { Roi. }
-    if EstAllumee(APos.Rois, CCaseIdx[i]) then
+    if IsOn(APos.Kings, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Roi, i], CCaseIdx[j])
-        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j]) then
-          if EstAllumee(APos.Pieces[not APos.Trait], CCaseIdx[j]) then
-          Accepte(i, j, Roi, tcCapture) else
-          Accepte(i, j, Roi);
+        if IsOn(CTargets[ptKing, i], CIndexToSquare[j])
+        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
+          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          Accepte(i, j, ptKing, mtCapture) else
+          Accepte(i, j, ptKing);
     end;
   end;
-  ACompte := LCompte;
+  ACount := LCompte;
 end;
 
-function FCoups(const APos: TPosition): TDamier;
+function GenMoves(const APos: TPosition): TBoard;
 var
   LListe: array[0..0] of integer;
   LCompte: integer;
 begin
-  result := FCoups(APos, LListe, LCompte, TRUE);
+  result := GenMoves(APos, LListe, LCompte, TRUE);
 end;
 
-function FNombreCoups(const APos: TPosition): integer;
+function GetMovesCount(const APos: TPosition): integer;
 var
   LListe: array[0..0] of integer;
 begin
-  FCoups(APos, LListe, result, TRUE);
+  GenMoves(APos, LListe, result, TRUE);
 end;
 
-function FCoupsPotentielsPion(const APos: TPosition): TDamier;
+function GenPotentialPawnMoves(const APos: TPosition): TBoard;
 procedure Accepte(const i, j: integer);
 begin
-  Allume(result, CCaseIdx[j]);
+  SwitchOn(result, CIndexToSquare[j]);
 end;
 var
   { Pièces. }
   i, j: integer;
-  LPion: TTypePiece;
+  LPion: TPieceType;
 begin
-  if APos.Trait then
-    LPion := PionNoir
+  if APos.SideToMove then
+    LPion := ptBlackPawn
   else
-    LPion := PionBlanc;
+    LPion := ptWhitePawn;
   result := 0; { Damier vide. }
-  for i := A1 to H8 do if EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[i]) then
+  for i := A1 to H8 do if IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[i]) then
   begin
     { Pion. }
-    if EstAllumee(APos.Pions, CCaseIdx[i]) then
+    if IsOn(APos.Pawns, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[LPion, i], CCaseIdx[j])
-        and not EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[j]) then
+        if IsOn(CTargets[LPion, i], CIndexToSquare[j])
+        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
           Accepte(i, j);
     end;
   end;
 end;
 
-function FEchec(const APos: TPosition): boolean;
+function IsCheck(const APos: TPosition): boolean;
 var
   LPos: TPosition;
 begin
   LPos := APos;
-  LPos.Trait := not LPos.Trait;
-  result := (FCoups(LPos) and LPos.Rois) <> 0;
+  LPos.SideToMove := not LPos.SideToMove;
+  result := (GenMoves(LPos) and LPos.Kings) <> 0;
 end;
 
-function FProtections(const APos: TPosition): integer;
+function GetProtectionsCount(const APos: TPosition): integer;
 (*
 const
-  CPion: array[boolean] of TTypePiece = (PionBlanc, PionNoir);
+  CPion: array[boolean] of TPieceType = (ptWhitePawn, ptBlackPawn);
 *)
 var
   { Pièces. }
-  LToutes: TDamier;
+  LToutes: TBoard;
   i, j, k: integer;
 begin
   LToutes := APos.Pieces[FALSE] or APos.Pieces[TRUE];
   result := 0;
   
-  for i := A1 to H8 do if EstAllumee(APos.Pieces[APos.Trait], CCaseIdx[i]) then
+  for i := A1 to H8 do if IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[i]) then
   begin
     { Pion. }
-    if EstAllumee(APos.Pions, CCaseIdx[i]) then
+    if IsOn(APos.Pawns, CIndexToSquare[i]) then
     begin
-      k := 8 - 16 * Ord(APos.Trait);
+      k := 8 - 16 * Ord(APos.SideToMove);
       j := i + k;
       { Prise côté A. }
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
-        if EstAllumee(APos.Pieces[APos.Trait] and APos.Pions, CCaseIdx[j]) then
+        if IsOn(APos.Pieces[APos.SideToMove] and APos.Pawns, CIndexToSquare[j]) then
           Inc(result);
       end;
       { Prise côté H. }
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
-        if EstAllumee(APos.Pieces[APos.Trait] and APos.Pions, CCaseIdx[j]) then
+        if IsOn(APos.Pieces[APos.SideToMove] and APos.Pawns, CIndexToSquare[j]) then
           Inc(result);
       end;
     end else
     { Tour. }
-    if EstAllumee(APos.Tours, CCaseIdx[i]) then
+    if IsOn(APos.Rooks, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Tour, i], CCaseIdx[j])
-        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous or APos.Tours), CCaseIdx[j])
-        and ((CChemin[i, j] and LToutes) = 0) then
+        if IsOn(CTargets[ptRook, i], CIndexToSquare[j])
+        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks), CIndexToSquare[j])
+        and ((CPath[i, j] and LToutes) = 0) then
           Inc(result);
     end else
     { Cavalier. }
-    if EstAllumee(APos.Cavaliers, CCaseIdx[i]) then
+    if IsOn(APos.Knights, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Cavalier, i], CCaseIdx[j])
-        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous), CCaseIdx[j]) then
+        if IsOn(CTargets[ptKnight, i], CIndexToSquare[j])
+        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops), CIndexToSquare[j]) then
           Inc(result);
     end else
     { Fou. }
-    if EstAllumee(APos.Fous, CCaseIdx[i]) then
+    if IsOn(APos.Bishops, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Fou, i], CCaseIdx[j])
-        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous), CCaseIdx[j])
-        and ((CChemin[i, j] and LToutes) = 0) then
+        if IsOn(CTargets[ptBishop, i], CIndexToSquare[j])
+        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops), CIndexToSquare[j])
+        and ((CPath[i, j] and LToutes) = 0) then
           Inc(result);
     end else
     { Dame. }
-    if EstAllumee(APos.Dames, CCaseIdx[i]) then
+    if IsOn(APos.Queens, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Dame, i], CCaseIdx[j])
-        and EstAllumee(APos.Pieces[APos.Trait] and (APos.Pions or APos.Cavaliers or APos.Fous or APos.Tours or APos.Dames), CCaseIdx[j])
-        and ((CChemin[i, j] and LToutes) = 0) then
+        if IsOn(CTargets[ptQueen, i], CIndexToSquare[j])
+        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks or APos.Queens), CIndexToSquare[j])
+        and ((CPath[i, j] and LToutes) = 0) then
           Inc(result);
     end else
     { Roi. }
-    if EstAllumee(APos.Rois, CCaseIdx[i]) then
+    if IsOn(APos.Kings, CIndexToSquare[i]) then
     begin
       for j := A1 to H8 do
-        if EstAllumee(CCibles[Roi, i], CCaseIdx[j])
-        and EstAllumee(APos.Pieces[APos.Trait] and APos.Pions, CCaseIdx[j]) then
+        if IsOn(CTargets[ptKing, i], CIndexToSquare[j])
+        and IsOn(APos.Pieces[APos.SideToMove] and APos.Pawns, CIndexToSquare[j]) then
           Inc(result);
     end;
   end;

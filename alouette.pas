@@ -29,32 +29,32 @@ begin
   WriteLn(output, AMessage);
   if AFlush then
     Flush(output);
-  Log.Ajoute(Concat('< ', AMessage));
+  Log.Append(Concat('< ', AMessage));
 end;
 
 type
-  {** Processus de recherche du meilleur BestMove. }
+  {** Processus de recherche du meilleur coup. }
   TSearchThread = class(TThread)
     protected
       procedure Execute; override;
   end;
 
 var
-  LTimeForMove: cardinal;
+  LTimeAvailable: cardinal;
 
-{** L'action du processus consiste à demander un BestMove au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
+{** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TSearchThread.Execute;
 var
   LTimeUsed: cardinal;
   LMove: string;
 begin
   LTimeUsed := GetTickCount64;
-  LMove := Player.BestMove(LTimeForMove);
+  LMove := Player.BestMove(LTimeAvailable);
   LTimeUsed := GetTickCount64 - LTimeUsed;
   if not Terminated then
   begin
     Send(Format('bestmove %s', [LMove]));
-    Log.Ajoute(Format('Meilleur BestMove trouvé en %0.3f s.', [LTimeUsed / 1000]));
+    Log.Append(Format('Meilleur coup trouvé en %0.3f s.', [LTimeUsed / 1000]));
   end;
 end;
 
@@ -90,10 +90,10 @@ begin
     LBook[TRUE].LoadFromFileCompact('black.txt');
   
   Send(Format('%s %s', [CAppName, CAppVersion]));
-  while not EOF do
+  while not Eof do
   begin
     ReadLn(input, LCmd);
-    Log.Ajoute(Concat('> ', LCmd));
+    Log.Append(Concat('> ', LCmd));
     if LCmd = 'quit' then
       Break
     else
@@ -118,7 +118,7 @@ begin
               else if WordPresent('fen', LCmd) then
                 Player.SetPosition(GetFen(LCmd))
               else
-                Log.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
+                Log.Append(Format('Commande non reconnue (%s).', [LCmd]));
               LBookLine := '';
               if WordPresent('moves', LCmd) then
                 for LIdx := 4 to WordsNumber(LCmd) do
@@ -135,25 +135,25 @@ begin
               begin
                 LPos := Player.CurrentPosition;
                 if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
-                  LTimeForMove := IfThen(LPos.Trait, LBinc, LWInc)
+                  LTimeAvailable := IfThen(LPos.SideToMove, LBinc, LWInc)
                 else
                   if IsGoCmd(LCmd, LWTime, LBTime, LMTG) then       // go wtime 59559 btime 56064 movestogo 38
-                    LTimeForMove := IfThen(LPos.Trait, LBTime div LMTG, LWTime div LMTG)
+                    LTimeAvailable := IfThen(LPos.SideToMove, LBTime div LMTG, LWTime div LMTG)
                   else
                     if IsGoCmd(LCmd, LWTime, LBTime) then           // go wtime 600000 btime 600000
-                      LTimeForMove := IfThen(LPos.Trait, LBTime, LWTime)
+                      LTimeAvailable := IfThen(LPos.SideToMove, LBTime, LWTime)
                     else
                       if IsGoCmd(LCmd, LMTime) then                 // go movetime 500
-                        LTimeForMove := LMTime
+                        LTimeAvailable := LMTime
                       else
-                        Log.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
+                        Log.Append(Format('Commande non reconnue (%s).', [LCmd]));
                 
                 if not CurrentVariant then
                 begin
-                  LBookMove := LBook[LPos.Trait].FindMoveToPlay(Trim(LBookLine), TRUE);
+                  LBookMove := LBook[LPos.SideToMove].FindMoveToPlay(Trim(LBookLine), TRUE);
                   if LBookMove <> '' then
                   begin
-                    Log.Ajoute(Format('BestMove trouvé dans le livre : %s', [LBookMove]));
+                    Log.Append(Format('Coup trouvé dans le livre : %s', [LBookMove]));
                     Send(Format('bestmove %s', [LBookMove]));
                     Continue;
                   end;
@@ -177,7 +177,7 @@ begin
                     SetVariant(WordPresent('true', LCmd))
                   else
                     if LCmd = 'show' then
-                      Send(VoirPosition(CurrentPosition))
+                      Send(PositionToText(CurrentPosition))
                     else
                       if IsPerftCmd(LCmd, LDepth) then
                         Start(CurrentPosition, LDepth)
@@ -201,7 +201,7 @@ begin
                             'ucinewgame'
                           )
                         else
-                          Log.Ajoute(Format('Commande non reconnue (%s).', [LCmd]));
+                          Log.Append(Format('Commande non reconnue (%s).', [LCmd]));
   end;
   
   LBook[FALSE].Free;

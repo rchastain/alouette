@@ -24,38 +24,38 @@ var
 begin
   LPos := APos;
   result := Low(integer);
-  if not FRejoue(LPos, NomCoup(AMove)) then
+  if not TryDoMove(LPos, MoveToStr(AMove)) then
     Exit;
-  result := 0 - Ord((FCoups(LPos) and LPos.Pieces[not LPos.Trait] and LPos.Rois) <> 0);
+  result := 0 - Ord((GenMoves(LPos) and LPos.Pieces[not LPos.SideToMove] and LPos.Kings) <> 0);
 end;
 
-function GetMovesCount(const APos: TPosition; const AProf: integer): int64;
+function RecursiveGetMovesCount(const APos: TPosition; const ADepth: integer): int64;
 var
   LList, LValue: array[0..99] of integer;
   n, o, i: integer;
   LPos: TPosition;
 begin
   result := 0;
-  FCoups(APos, LList, n);
-  FRoque(APos, LList, n);
+  GenMoves(APos, LList, n);
+  GenCastling(APos, LList, n);
   for i := 0 to Pred(n) do
     LValue[i] := Evaluate(APos, LList[i]);
-  Trie(LList, LValue, n);
+  SortMoves(LList, LValue, n);
   o := 0;
   while (o < n) and (LValue[o] = 0) do
     Inc(o);
-  if AProf = 1 then
+  if ADepth = 1 then
     result := o
   else
     for i := 0 to Pred(o) do
     begin
       LPos := APos;
-      if not FRejoue(LPos, NomCoup(LList[i])) then
+      if not TryDoMove(LPos, MoveToStr(LList[i])) then
       begin
         WriteLn('Il y a quelque chose de pourri dans ce programme.');
         Continue;
       end;
-      Inc(result, GetMovesCount(LPos, Pred(AProf)));
+      Inc(result, RecursiveGetMovesCount(LPos, Pred(ADepth)));
     end;
 end;
 
@@ -71,7 +71,7 @@ begin
   for i := 1 to ADepth do
   begin
     t := GetTickCount64;
-    n := GetMovesCount(p, i);
+    n := RecursiveGetMovesCount(p, i);
     t := GetTickCount64 - t;
     WriteLn(i:10, n:16, FormatDateTime('   hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
   end;

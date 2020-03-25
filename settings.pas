@@ -3,9 +3,9 @@ unit Settings;
 
 interface
 
-procedure LitFichierIni(out AVariante: boolean);
-procedure EcritFichierIni(const AVariante: boolean);
-function FichierIniExiste: boolean;
+procedure LoadSettings(out AVariante: boolean);
+procedure SaveSettings(const AVariante: boolean);
+function SettingsFileExists: boolean;
 
 implementation
 
@@ -20,7 +20,7 @@ const
 var
   LChemin: string;
   
-procedure LitFichierIni(out AVariante: boolean);
+procedure LoadSettings(out AVariante: boolean);
 begin
   with TIniFile.Create(LChemin) do
   try
@@ -30,7 +30,7 @@ begin
   end;
 end;
 
-procedure EcritFichierIni(const AVariante: boolean);
+procedure SaveSettings(const AVariante: boolean);
 begin
   with TIniFile.Create(LChemin) do
   try
@@ -41,7 +41,7 @@ begin
   end;
 end;
 
-function FichierIniExiste: boolean;
+function SettingsFileExists: boolean;
 begin
   result := FileExists(LChemin);
 end;

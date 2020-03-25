@@ -14,11 +14,9 @@ uses
 {$ENDIF}
   SysUtils;
 
-procedure CommenceJournal;
-procedure TermineJournal;
-procedure Ajoute(const ALigne: string; const ASecondFile: boolean = FALSE);
-procedure AjouteTable(const ACoups: array of integer; const n: integer; const ASecondFile: boolean = TRUE); overload;
-procedure AjouteTable(const ACoups, ANotes: array of integer; const n: integer; const ASecondFile: boolean = TRUE); overload;
+procedure Append(const AText: string; const ASecondFile: boolean = FALSE); overload;
+procedure Append(const AMoves: array of integer; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
+procedure Append(const AMoves, AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
 
 implementation
 
@@ -26,12 +24,12 @@ uses
   Board;
 
 const
-  CNomDossier = 'journal';
+  CNomDossier = 'log';
   
 var
   LFichier: array[boolean] of text;
-  
-procedure CommenceJournal;
+
+procedure OpenLog;
 var
   LName: array[boolean] of string;
   LIdx: boolean;
@@ -46,21 +44,21 @@ begin
   end;
 end;
 
-procedure TermineJournal;
+procedure CloseLog;
 begin
   Close(LFichier[FALSE]);
   Close(LFichier[TRUE]);
 end;
 
-procedure Ajoute(const ALigne: string; const ASecondFile: boolean);
+procedure Append(const AText: string; const ASecondFile: boolean);
 begin
 {$IFDEF DEBUG}
-  WriteLn(LFichier[ASecondFile], {$IFDEF UNIX}Utf8ToAnsi({$ENDIF}ALigne{$IFDEF UNIX}){$ENDIF});
+  WriteLn(LFichier[ASecondFile], {$IFDEF UNIX}Utf8ToAnsi({$ENDIF}AText{$IFDEF UNIX}){$ENDIF});
   Flush(LFichier[ASecondFile]);
 {$ENDIF}
 end;
 
-procedure AjouteTable(const ACoups: array of integer; const n: integer; const ASecondFile: boolean);
+procedure Append(const AMoves: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
   s: string;
@@ -69,14 +67,14 @@ var
 begin
 {$IFDEF DEBUG}
   s := '';
-  for i := 0 to Pred(n) do
-    s := s + Format('%6s', [NomCoup(ACoups[i])]);
+  for i := 0 to Pred(AMovesCount) do
+    s := s + Format('%6s', [MoveToStr(AMoves[i])]);
   WriteLn(LFichier[ASecondFile], s);
   Flush(LFichier[ASecondFile]);
 {$ENDIF}
 end;
 
-procedure AjouteTable(const ACoups, ANotes: array of integer; const n: integer; const ASecondFile: boolean);
+procedure Append(const AMoves, AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
   s: string;
@@ -85,12 +83,12 @@ var
 begin
 {$IFDEF DEBUG}
   s := '';
-  for i := 0 to Pred(n) do
-    s := s + Format('%6s', [NomCoup(ACoups[i])]);
+  for i := 0 to Pred(AMovesCount) do
+    s := s + Format('%6s', [MoveToStr(AMoves[i])]);
   WriteLn(LFichier[ASecondFile], s);
   s := '';
-  for i := 0 to Pred(n) do
-    s := s + Format('%6d', [ANotes[i]]);
+  for i := 0 to Pred(AMovesCount) do
+    s := s + Format('%6d', [AValues[i]]);
   WriteLn(LFichier[ASecondFile], s);
   Flush(LFichier[ASecondFile]);
 {$ENDIF}
@@ -98,9 +96,9 @@ end;
 
 {$IFDEF DEBUG}
 initialization
-  CommenceJournal;
+  OpenLog;
 finalization
-  TermineJournal;
+  CloseLog;
 {$ENDIF}
 
 end.

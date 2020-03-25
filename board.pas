@@ -10,47 +10,62 @@ interface
 
 type
   {** Le damier est représenté par un nombre entier de 64 chiffres binaires. }
-  TDamier = Int64;
-  TTypePieceLarge = (Neant, PionBlanc, PionNoir, Tour, Cavalier, Fou, Dame, Roi);
-  TTypePiece = PionBlanc..Roi;
-  TTypeCoup = (tcOrdinaire, tcCapture, tcRoque, tcEnPassant, tcPromotion);
+  TBoard = Int64;
+  {** Type de pièce, incluant la valeur néant. }
+  TWidePieceType = (ptNil, ptWhitePawn, ptBlackPawn, ptRook, ptKnight, ptBishop, ptQueen, ptKing);
+  {** Type de pièce. }
+  TPieceType = ptWhitePawn..ptKing;
+  {** Type de coup. }
+  TMoveType = (mtCommon, mtCapture, mtCastling, mtEnPassant, mtPromotion);
   
 {** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec une seule case allumée. }
-function FCase(const AIdx: integer): TDamier; overload;
+function ToBoard(const AIdx: integer): TBoard; overload;
 {** Case pour deux nombres donnés de 0 à 7. }
-function FCase(const ACol, ALig: integer): TDamier; overload;
-function FIndex(const ACol, ALig: integer): integer;
-function NomCase(const ACol, ALig: integer; const AMaj: boolean = FALSE): string; overload;
-function NomCase(const AIdx: integer; const AMaj: boolean = FALSE): string; overload;
-function NomCoup(const ADep, AArr: integer): string; overload;
-function NomCoup(const ACoup: integer): string; overload;
-function EncodeCoup(const ADep, AArr: integer; const ATP: TTypePiece; const ATC: TTypeCoup = tcOrdinaire): integer;
-procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer); overload;
-procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer; out ATP: TTypePiece; out ATC: TTypeCoup); overload;
-function Arrivee(const ACoup: integer): integer;
-function TypePiece(const ACoup: integer): TTypePiece;
-function TypeCoup(const ACoup: integer): TTypeCoup;
-function Depart(const ACoup: integer): integer;
+function ToBoard(const ACol, ARow: integer): TBoard; overload;
+{** Index pour deux nombres donnés de 0 à 7. }
+function ToIndex(const ACol, ARow: integer): integer;
+{** Nom d'une case à partir de ses coordonnées. }
+function SquareToStr(const ACol, ARow: integer; const AUpCase: boolean = FALSE): string; overload;
+{** Nom d'une case à partir de son index. }
+function SquareToStr(const AIdx: integer; const AUpCase: boolean = FALSE): string; overload;
+{** Nom d'un coup à partir de l'index des cases. }
+function MoveToStr(const AFrom, ATo: integer): string; overload;
+{** Nom d'un coup à partir de sa représentation par un nombre entier. }
+function MoveToStr(const AMove: integer): string; overload;
+{** Conversion d'un coup en nombre entier. }
+function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveType = mtCommon): integer;
+{** Conversion d'un nombre entier en cases de départ et d'arrivée. }
+procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer); overload;
+{** Décodage d'un nombre entier représentant un coup. }
+procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveType); overload;
+{** Index de la case d'arrivée pour un coup représenté par un nombre entier. }
+function TargetIndex(const AMove: integer): integer;
+{** Type de pièce pour un coup représenté par un nombre entier. }
+function PieceType(const AMove: integer): TPieceType;
+{** Type de coup pour un coup représenté par un nombre entier. }
+function MoveType(const AMove: integer): TMoveType;
+{** Index de la case de départ pour un coup représenté par un nombre entier. }
+function StartIndex(const AMove: integer): integer;
 {** Convertit une chaîne de la forme "a1" en un nombre de 0 à 63. }
-function DecodeNomCase(const ANom: string): integer;
+function DecodeSquareName(const AName: string): integer;
 {** Pour savoir si une case est allumée dans un damier. }
-function EstAllumee(const ADam, ACase: TDamier): boolean;
+function IsOn(const ABrd, ASqr: TBoard): boolean;
 {** Allume une case dans un damier. }
-procedure Allume(var ADam: TDamier; const ACase: TDamier);
+procedure SwitchOn(var ABrd: TBoard; const ASqr: TBoard);
 {** Éteint une case. }
-procedure Eteint(var ADam: TDamier; const ACase: TDamier);
-{** Éteint une case et en allume une autre. }
-procedure Deplace(var AType, ACoul: TDamier; const ADep, AArr: TDamier);
+procedure SwitchOff(var ABrd: TBoard; const ASqr: TBoard);
+{** Éteint une case et en allume une autre, dans deux damiers à la fois. }
+procedure MovePiece(var AType, AColor: TBoard; const AFrom, ATo: TBoard);
 {** Chaîne de chiffres binaires. }
-function FChaine(const ADam: TDamier): string;
+function BoardToStr(const ABrd: TBoard): string;
 {** Chaîne de chiffres binaires en forme de damier. }
-function FChaineDamier(const ADam: TDamier): string;
+function BoardToFormattedStr(const ABrd: TBoard): string;
 {** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
-function Possible(const APiece: TTypePiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
+function IsMovePossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
-function Cibles(const APiece: TTypePiece; const AIdx: integer): TDamier;
+function GetTargets(const APiece: TPieceType; const AIdx: integer): TBoard;
 {** Les cases à survoler pour aller d'un endroit à un autre. }
-function Chemin(const ADep, AArr: integer): TDamier;
+function GetPath(const AFrom, ATo: integer): TBoard;
 
 const
   {** Numérotation des cases de 0 à 63. }
@@ -63,7 +78,7 @@ const
   A7 = 48; B7 = 49; C7 = 50; D7 = 51; E7 = 52; F7 = 53; G7 = 54; H7 = 55;
   A8 = 56; B8 = 57; C8 = 58; D8 = 59; E8 = 60; F8 = 61; G8 = 62; H8 = 63;
   
-  CNomCase: array [0..63] of string[2] = (
+  CSquareToStr: array [0..63] of string[2] = (
     'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
     'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
     'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
@@ -79,175 +94,168 @@ implementation
 uses
   SysUtils;
   
-function FCase(const AIdx: integer): TDamier;
+function ToBoard(const AIdx: integer): TBoard;
 begin
   Assert((AIdx >= 0) and (AIdx <= 63));
-  result := TDamier(1) shl AIdx;
+  result := TBoard(1) shl AIdx;
 end;
 
-function FCase(const ACol, ALig: integer): TDamier;
+function ToBoard(const ACol, ARow: integer): TBoard;
 begin
-  Assert((ACol >= 0) and (ACol <= 7) and (ALig >= 0) and ( ALig <= 7));
-  result := FCase(8 * ALig + ACol);
+  Assert((ACol >= 0) and (ACol <= 7) and (ARow >= 0) and ( ARow <= 7));
+  result := ToBoard(8 * ARow + ACol);
 end;
 
-function FIndex(const ACol, ALig: integer): integer;
+function ToIndex(const ACol, ARow: integer): integer;
 begin
-  result := 8 * ALig + ACol;
+  result := 8 * ARow + ACol;
 end;
 
-function NomCase(const ACol, ALig: integer; const AMaj: boolean): string;
+function SquareToStr(const ACol, ARow: integer; const AUpCase: boolean): string;
 begin
-  Assert((ACol >= 0) and (ACol <= 7) and (ALig >= 0) and ( ALig <= 7));
+  Assert((ACol >= 0) and (ACol <= 7) and (ARow >= 0) and ( ARow <= 7));
   result := Concat(
-    Chr(ACol + Ord('a') + (Ord('A') - Ord('a')) * Ord(AMaj)),
-    Chr(ALig + Ord('1'))
+    Chr(ACol + Ord('a') + (Ord('A') - Ord('a')) * Ord(AUpCase)),
+    Chr(ARow + Ord('1'))
   );
 end;
 
-function NomCase(const AIdx: integer; const AMaj: boolean): string;
+function SquareToStr(const AIdx: integer; const AUpCase: boolean): string;
 begin
-  result := NomCase(AIdx mod 8, AIdx div 8, AMaj);
+  result := SquareToStr(AIdx mod 8, AIdx div 8, AUpCase);
 end;
 
-function NomCoup(const ADep, AArr: integer): string;
+function MoveToStr(const AFrom, ATo: integer): string;
 begin
-  result := Concat(NomCase(ADep), NomCase(AArr));
+  result := Concat(SquareToStr(AFrom), SquareToStr(ATo));
 end;
 
-function EncodeCoup(const ADep, AArr: integer; const ATP: TTypePiece; const ATC: TTypeCoup): integer;
+function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveType): integer;
 begin
   result :=
-    Ord(ATP) shl 24
-  + Ord(ATC) shl 16
-  + ADep     shl  8
-  + AArr;
+    Ord(APieceType) shl 24
+  + Ord(AMoveType)  shl 16
+  + AFrom           shl  8
+  + ATo;
 end;
 
-procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer);
+procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer);
 begin
-  ADep := (ACoup and $0000FF00) shr 8;
-  AArr := (ACoup and $000000FF);
+  AFrom := (AMove and $0000FF00) shr 8;
+  ATo := (AMove and $000000FF);
 end;
 
-procedure DecodeCoup(const ACoup: integer; out ADep, AArr: integer; out ATP: TTypePiece; out ATC: TTypeCoup); overload;
+procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveType); overload;
 begin
-  DecodeCoup(ACoup, ADep, AArr);
-  ATP  := TTypePiece((ACoup and $FF000000) shr 24);
-  ATC  := TTypeCoup ((ACoup and $00FF0000) shr 16);
+  DecodeMove(AMove, AFrom, ATo);
+  APieceType := TPieceType((AMove and $FF000000) shr 24);
+  AMoveType := TMoveType ((AMove and $00FF0000) shr 16);
 end;
 
-function Arrivee(const ACoup: integer): integer;
+function TargetIndex(const AMove: integer): integer;
 begin
-  result := (ACoup and $000000FF) shr 0;
+  result := (AMove and $000000FF) shr 0;
 end;
 
-function Depart(const ACoup: integer): integer;
+function StartIndex(const AMove: integer): integer;
 begin
-  result := (ACoup and $0000FF00) shr 8;
+  result := (AMove and $0000FF00) shr 8;
 end;
 
-function TypePiece(const ACoup: integer): TTypePiece;
+function PieceType(const AMove: integer): TPieceType;
 begin
-  result := TTypePiece((ACoup and $FF000000) shr 24);
+  result := TPieceType((AMove and $FF000000) shr 24);
 end;
 
-function TypeCoup(const ACoup: integer): TTypeCoup;
+function MoveType(const AMove: integer): TMoveType;
 begin
-  result := TTypeCoup ((ACoup and $00FF0000) shr 16);
+  result := TMoveType ((AMove and $00FF0000) shr 16);
 end;
 
-function NomCoup(const ACoup: integer): string;
+function MoveToStr(const AMove: integer): string;
 var
-  LDepart, LArriv: integer;
+  LStartIndex, LArriv: integer;
 begin
-  DecodeCoup(ACoup, LDepart, LArriv);
-  result := Concat(NomCase(LDepart), NomCase(LArriv));
+  DecodeMove(AMove, LStartIndex, LArriv);
+  result := Concat(SquareToStr(LStartIndex), SquareToStr(LArriv));
 end;
 
-function DecodeNomCase(const ANom: string): integer;
+function DecodeSquareName(const AName: string): integer;
 begin
-  Assert((Length(ANom) = 2) and (ANom[1] in ['a'..'h']) and (ANom[2] in ['1'..'8']));
-  result := 8 * (Ord(ANom[2]) - Ord('1')) + (Ord(ANom[1]) - Ord('a'));
+  Assert((Length(AName) = 2) and (AName[1] in ['a'..'h']) and (AName[2] in ['1'..'8']));
+  result := 8 * (Ord(AName[2]) - Ord('1')) + (Ord(AName[1]) - Ord('a'));
 end;
 
-function EstAllumee(const ADam, ACase: TDamier): boolean;
+function IsOn(const ABrd, ASqr: TBoard): boolean;
 begin
-  Assert(ACase <> 0);
-  result := (ADam and ACase) = ACase;
+  Assert(ASqr <> 0);
+  result := (ABrd and ASqr) = ASqr;
 end;
 
-procedure Allume(var ADam: TDamier; const ACase: TDamier);
+procedure SwitchOn(var ABrd: TBoard; const ASqr: TBoard);
 begin
-  ADam := ADam or ACase;
+  ABrd := ABrd or ASqr;
 end;
 
-procedure Eteint(var ADam: TDamier; const ACase: TDamier);
+procedure SwitchOff(var ABrd: TBoard; const ASqr: TBoard);
 begin
-  ADam := ADam and not ACase;
+  ABrd := ABrd and not ASqr;
 end;
 
-procedure Deplace(var AType, ACoul: TDamier; const ADep, AArr: TDamier);
+procedure MovePiece(var AType, AColor: TBoard; const AFrom, ATo: TBoard);
 begin
-  AType := AType and not ADep or AArr;
-  ACoul := ACoul and not ADep or AArr;
+  AType := AType and not AFrom or ATo;
+  AColor := AColor and not AFrom or ATo;
 end;
 
-function FChaine(const ADam: TDamier): string;
+function BoardToStr(const ABrd: TBoard): string;
 const
-  CCaractere: array[boolean] of char = ('0', '1');
+  CChar: array[boolean] of char = ('0', '1');
 var
   i: integer;
 begin
   SetLength(result, 64);
   for i := 63 downto 0 do
-    result[64 - i] := CCaractere[EstAllumee(ADam, FCase(i))];
+    result[64 - i] := CChar[IsOn(ABrd, ToBoard(i))];
 end;
 
-function FChaineDamier(const ADam: TDamier): string;
+function BoardToFormattedStr(const ABrd: TBoard): string;
 var
   x, y: integer;
-  LDamier: string;
+  LBrd: string;
 begin
-  LDamier := FChaine(ADam);
+  LBrd := BoardToStr(ABrd);
   result := '+   abcdefgh   +'#13#10#13#10;
   for y := 7 downto 0 do
   begin
     result := Concat(result, IntToStr(Succ(y)), '   ');
     for x := 0 to 7 do
-      result := Concat(result, LDamier[64 - 8 * y - x]);
+      result := Concat(result, LBrd[64 - 8 * y - x]);
     result := Concat(result, '   ', IntToStr(Succ(y)), #13#10);
   end;
   result := Concat(result, #13#10'+   abcdefgh   +');
 end;
 
-function Possible(const APiece: TTypePiece; const Ax1, Ay1, Ax2, Ay2: integer): boolean;
+function IsMovePossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
 var
-  dx, dy, adx, ady: integer;
+  dx, dy, ax, ay: integer;
 begin
-  dx := Ax2 - Ax1;
-  dy := Ay2 - Ay1;
-  adx := Abs(dx);
-  ady := Abs(dy);
+  dx := AX2 - AX1;
+  dy := AY2 - AY1;
+  ax := Abs(dx);
+  ay := Abs(dy);
   case APiece of
-    PionBlanc:
-      result := (dy = 1) and (adx = 1);
-    PionNoir:
-      result := (dy = -1) and (adx = 1);
-    Tour:
-      result := (dx = 0) xor (dy = 0);
-    Cavalier:
-      result := adx * ady = 2;
-    Fou:
-      result := (dx <> 0) and (adx = ady);
-    Dame:
-      result := Possible(Tour, Ax1, Ay1, Ax2, Ay2) or Possible(Fou, Ax1, Ay1, Ax2, Ay2);
-    Roi:
-      result := (adx + ady <= 2) and ((adx = 1) or (ady = 1));
+    ptWhitePawn: result := (dy = 1) and (ax = 1);
+    ptBlackPawn: result := (dy = -1) and (ax = 1);
+    ptRook:      result := (dx = 0) xor (dy = 0);
+    ptKnight:    result := ax * ay = 2;
+    ptBishop:    result := (dx <> 0) and (ax = ay);
+    ptQueen:     result := IsMovePossible(ptRook, AX1, AY1, AX2, AY2) or IsMovePossible(ptBishop, AX1, AY1, AX2, AY2);
+    ptKing:      result := (ax + ay <= 2) and ((ax = 1) or (ay = 1));
   end;
 end;
 
-function Cibles(const APiece: TTypePiece; const AIdx: integer): TDamier;
+function GetTargets(const APiece: TPieceType; const AIdx: integer): TBoard;
 var
   x1, y1, x2, y2: integer;
 begin
@@ -256,19 +264,19 @@ begin
   result := 0;
   for y2 := 7 downto 0 do
     for x2 := 0 to 7 do
-      if Possible(APiece, x1, y1, x2, y2) then
-        Allume(result, FCase(x2, y2));
+      if IsMovePossible(APiece, x1, y1, x2, y2) then
+        SwitchOn(result, ToBoard(x2, y2));
 end;
 
-function Chemin(const ADep, AArr: integer): TDamier;
+function GetPath(const AFrom, ATo: integer): TBoard;
 var
   x1, y1, x2, y2, dx, dy: integer;
 begin
   result := 0;
-  x1 := ADep mod 8;
-  y1 := ADep div 8;
-  x2 := AArr mod 8;
-  y2 := AArr div 8;
+  x1 := AFrom mod 8;
+  y1 := AFrom div 8;
+  x2 := ATo mod 8;
+  y2 := ATo div 8;
   dx := x2 - x1;
   dy := y2 - y1;
   if ((dx <> 0) or (dy <> 0))
@@ -279,8 +287,9 @@ begin
     repeat
       Inc(x1, dx);
       Inc(y1, dy);
-      if (x1 <> x2) or (y1 <> y2) then
-        result := result or FCase(x1, y1);
+      if (x1 <> x2)
+      or (y1 <> y2) then
+        result := result or ToBoard(x1, y1);
     until (x1 = x2) and (y1 = y2);
   end;
 end;

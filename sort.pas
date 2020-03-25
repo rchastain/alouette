@@ -8,57 +8,34 @@ unit Sort;
 
 interface
 
-procedure Trie(var ACoup, ANote: array of integer; const n: integer);
-function Tronque(const AEval: array of integer; const n: integer; const ARepetition: integer = 0): integer;
+procedure SortMoves(var AMoves, AValues: array of integer; const n: integer);
 
 implementation
 
-procedure Echange(var ATableau: array of integer; const i: integer);
+procedure Swap(var AArray: array of integer; const i: integer);
 var
   j: integer;
 begin
-  j := ATableau[i];
-  ATableau[i] := ATableau[i + 1];
-  ATableau[i + 1] := j;
+  j := AArray[i];
+  AArray[i] := AArray[i + 1];
+  AArray[i + 1] := j;
 end;
 
-procedure Trie(var ACoup, ANote: array of integer; const n: integer);
+procedure SortMoves(var AMoves, AValues: array of integer; const n: integer);
 var
   LIdx: integer;
-  LFin: boolean;
+  LDone: boolean;
 begin
   repeat
-    LFin := TRUE;
+    LDone := TRUE;
     for LIdx := 0 to n - 2 do
-      if ANote[LIdx] < ANote[LIdx + 1] then
+      if AValues[LIdx] < AValues[LIdx + 1] then
       begin
-        Echange(ACoup, LIdx);
-        Echange(ANote, LIdx);
-        LFin := FALSE;
+        Swap(AMoves, LIdx);
+        Swap(AValues, LIdx);
+        LDone := FALSE;
       end;
-  until LFin;
-end;
-
-function Tronque(const AEval: array of integer; const n: integer; const ARepetition: integer): integer;
-var
-  i, j, k: integer;
-begin
-  Assert(n > 1);
-  i := Pred(n);
-  j := AEval[i];
-  i := Pred(i);
-  k := ARepetition;
-  while k >= 0 do
-  begin
-    while AEval[i] = j do
-      if i > 0 then
-        Dec(i)
-      else
-        Break;
-    j := AEval[i];
-    Dec(k);
-  end;
-  result := Succ(i);
+  until LDone;
 end;
 
 end.
