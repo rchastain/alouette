@@ -54,7 +54,7 @@ begin
   if not Terminated then
   begin
     Send(Format('bestmove %s', [LMove]));
-    Log.Append(Format('Meilleur coup trouvé en %0.3f s.', [LTimeUsed / 1000]));
+    Log.Append(Format('Meilleur coup trouvé en %0.3f s.', [LTimeUsed / 1000]), TRUE);
   end;
 end;
 
@@ -163,15 +163,16 @@ begin
                 with LThread do
                 begin
                   FreeOnTerminate := TRUE;
-                  Priority := tpHigher;
+                  //Priority := tpHigher;
+                  Priority := tpNormal;
                   Start;
                 end;
               end else
                 if LCmd = 'stop' then
                 begin
-                  Send(Format('bestmove %s', [Player.InstantMove]));
                   if Assigned(LThread) then
                     LThread.Terminate;
+                  Send(Format('bestmove %s', [Player.InstantMove]));
                 end else
                   if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
                     SetVariant(WordPresent('true', LCmd))

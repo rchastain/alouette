@@ -274,7 +274,9 @@ begin
   for i := 0 to Pred(n) do
     LEval[i] := PositionalEval(APos, LListe[i]);
   SortMoves(LListe, LEval, n);
-  LMove := LListe[0];
+  //LMove := LListe[0];
+  n := CountBestMoves(LEval, n);
+  LMove := LListe[Random(n)];
   if IsCastling(APos, LMove) and not AVariant then
   begin
     Assert(((LMove and $FF00) shr 8) mod 8 = CColE);

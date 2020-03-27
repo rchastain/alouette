@@ -46,7 +46,7 @@ begin
   k := ToIndex(AKingTarget, LRow);
   j := ToIndex(LRookStart, LRow);
   l := ToIndex(ARookTarget, LRow);
-  Log.Append(Format('Vérifications pour roi %s tour%s...', [MoveToStr(i, k), MoveToStr(j, l)]));
+  Log.Append(Format('Vérifications pour roi %s tour %s...', [MoveToStr(i, k), MoveToStr(j, l)]));
   if IsOn(APos.Pieces[APos.SideToMove] and APos.Rooks, CIndexToSquare[j]) then
     Log.Append('Position tour vérifiée (condition 1/3).')
   else
