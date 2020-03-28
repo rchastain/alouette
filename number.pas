@@ -8,15 +8,15 @@ unit Number;
 
 interface
 
-function NumeroPosition(const ABlanches: string): integer;
+function PositionNumber(const APos: string): integer;
 
 implementation
 
-function LigneUn(const AChaine: string): string;
+function Row1(const APos: string): string;
 var
   i: integer;
 begin
-  result := AChaine;
+  result := APos;
   repeat
     i := Pos('/', result);
     if i > 0 then
@@ -27,47 +27,47 @@ begin
     result := Copy(result, 1, Pred(i));
 end;
 
-function NumeroPosition(const ABlanches: string): integer;
+function PositionNumber(const APos: string): integer;
 const
-  CNotptBishopnd = -1;
+  CNotFound = -1;
 var
-  whiteSquareBishopPos: CNotptBishopnd..3;
-  blackSquareBishopPos: CNotptBishopnd..3;
-  queenPos: CNotptBishopnd..5;
-  krnCode: 0..9;
+  LWhiteSquareBishopPos: CNotFound..3;
+  LBlackSquareBishopPos: CNotFound..3;
+  LQueenPos: CNotFound..5;
+  LKRNCode: 0..9;
   i, x: integer;
   s, t: string; 
 begin
-  s := LigneUn(ABlanches);
+  s := Row1(APos);
   Assert(Length(s) = 8);
   
-  whiteSquareBishopPos := CNotptBishopnd;
-  blackSquareBishopPos := CNotptBishopnd;
-  queenPos := CNotptBishopnd;
+  LWhiteSquareBishopPos := CNotFound;
+  LBlackSquareBishopPos := CNotFound;
+  LQueenPos := CNotFound;
   
   i := 0;
-  while (i < 4) and (whiteSquareBishopPos = CNotptBishopnd) do
+  while (i < 4) and (LWhiteSquareBishopPos = CNotFound) do
     if s[2 * i + 2] = 'B' then
-      whiteSquareBishopPos := i
+      LWhiteSquareBishopPos := i
     else
       Inc(i);
   
   i := 0;
-  while (i < 4) and (blackSquareBishopPos = CNotptBishopnd) do
+  while (i < 4) and (LBlackSquareBishopPos = CNotFound) do
     if s[2 * i + 1] = 'B' then
-      blackSquareBishopPos := i
+      LBlackSquareBishopPos := i
     else
       Inc(i);
   
-  Assert(whiteSquareBishopPos > CNotptBishopnd);
-  Assert(blackSquareBishopPos > CNotptBishopnd);
+  Assert(LWhiteSquareBishopPos > CNotFound);
+  Assert(LBlackSquareBishopPos > CNotFound);
   
   i := 0;
   x := 1;
-  while (x < 9) and (queenPos = CNotptBishopnd) do
+  while (x < 9) and (LQueenPos = CNotFound) do
   begin
     if s[x] = 'Q' then
-      queenPos := i
+      LQueenPos := i
     else
     begin
       Inc(x);
@@ -83,19 +83,19 @@ begin
   
   Assert(Length(t) = 5);
   
-  if t = 'NNRKR' then krnCode := 0 else
-  if t = 'NRNKR' then krnCode := 1 else
-  if t = 'NRKNR' then krnCode := 2 else
-  if t = 'NRKRN' then krnCode := 3 else
-  if t = 'RNNKR' then krnCode := 4 else
-  if t = 'RNKNR' then krnCode := 5 else
-  if t = 'RNKRN' then krnCode := 6 else
-  if t = 'RKNNR' then krnCode := 7 else
-  if t = 'RKNRN' then krnCode := 8 else
-  if t = 'RKRNN' then krnCode := 9 else
+  if t = 'NNRKR' then LKRNCode := 0 else
+  if t = 'NRNKR' then LKRNCode := 1 else
+  if t = 'NRKNR' then LKRNCode := 2 else
+  if t = 'NRKRN' then LKRNCode := 3 else
+  if t = 'RNNKR' then LKRNCode := 4 else
+  if t = 'RNKNR' then LKRNCode := 5 else
+  if t = 'RNKRN' then LKRNCode := 6 else
+  if t = 'RKNNR' then LKRNCode := 7 else
+  if t = 'RKNRN' then LKRNCode := 8 else
+  if t = 'RKRNN' then LKRNCode := 9 else
     Assert(FALSE);
   
-  result := whiteSquareBishopPos + 4 * blackSquareBishopPos + 16 * queenPos + 96 * krnCode;
+  result := LWhiteSquareBishopPos + 4 * LBlackSquareBishopPos + 16 * LQueenPos + 96 * LKRNCode;
 end;
 
 end.
