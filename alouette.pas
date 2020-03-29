@@ -72,6 +72,8 @@ var
   LDepth: integer;
   LBookLine, LBookMove: string;
   LBook: array[boolean] of TTreeList;
+  LBookName: array[boolean] of TFileName;
+  LColor: boolean;
   
 begin
   Randomize;
@@ -81,13 +83,17 @@ begin
     SaveSettings(LVariantInitialValue);
   SetVariant(LVariantInitialValue);
   
+  LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
+  LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
+  for LColor := FALSE to TRUE do
+  begin
+    LBook[LColor] := TTreeList.Create;
+    if FileExists(LBookName[LColor]) then
+      LBook[LColor].LoadFromFileCompact(LBookName[LColor])
+    else
+      Log.Append(Format('Fichier introuvable (%s).', [LBookName[LColor]]));
+  end;
   LBookLine := '';
-  LBook[FALSE] := TTreeList.Create;
-  if FileExists('white.txt') then
-    LBook[FALSE].LoadFromFileCompact('white.txt');
-  LBook[TRUE] := TTreeList.Create;
-  if FileExists('black.txt') then
-    LBook[TRUE].LoadFromFileCompact('black.txt');
   
   Send(Format('%s %s', [CAppName, CAppVersion]));
   while not Eof do

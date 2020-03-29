@@ -214,6 +214,8 @@ function TTreeList.FindMoveToPlay(const ALine: TStrings; const ARandom: boolean)
 var
   LTreeIndex: integer;
 begin
+  if FList.Count = 0 then
+    Exit('');
   if ALine.Count = 0 then
     if ARandom then
       Exit(TTree(FList[Random(FList.Count)]).GetRoot^.Data)
