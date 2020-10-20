@@ -15,11 +15,12 @@ function IsGoCmd(const AStr: string; out WTime, BTime: integer): boolean; overlo
 function IsGoCmd(const AStr: string; out WTime, BTime, MTG: integer): boolean; overload; // go wtime 59559 btime 56064 movestogo 38
 function IsGoCmd(const AStr: string; out WTime, BTime, WInc, BInc: integer): boolean; overload; // go wtime 60000 btime 60000 winc 1000 binc 1000
 function IsPerftCmd(const AStr: string; out ADepth: integer): boolean;
+function IsConventionalStartPosition(const AStr: string): boolean;
 
 implementation
 
 uses
-  SysUtils, StrUtils;
+  SysUtils, StrUtils, Chess;
 
 function BeginsWith(const ASubStr, AStr: string): boolean;
 begin
@@ -108,6 +109,7 @@ end;
 
 function IsGoCmd(const AStr: string; out WTime, BTime, WInc, BInc: integer): boolean;
 // go wtime 60000 btime 60000 winc 1000 binc 1000
+// go wtime 2039 winc 20 btime 1690 binc 20
 begin
   WTime := 0;
   BTime := 0;
@@ -117,6 +119,10 @@ begin
     (GetWord(2, AStr) = 'wtime') and TryStrToInt(GetWord(3, AStr), WTime) and
     (GetWord(4, AStr) = 'btime') and TryStrToInt(GetWord(5, AStr), BTime) and
     (GetWord(6, AStr) = 'winc')  and TryStrToInt(GetWord(7, AStr), WInc) and
+    (GetWord(8, AStr) = 'binc')  and TryStrToInt(GetWord(9, AStr), BInc) or   
+    (GetWord(2, AStr) = 'wtime') and TryStrToInt(GetWord(3, AStr), WTime) and
+    (GetWord(6, AStr) = 'btime') and TryStrToInt(GetWord(7, AStr), BTime) and
+    (GetWord(4, AStr) = 'winc')  and TryStrToInt(GetWord(5, AStr), WInc) and
     (GetWord(8, AStr) = 'binc')  and TryStrToInt(GetWord(9, AStr), BInc);
 end;
 
@@ -129,6 +135,13 @@ begin
   result := WordPresent('perft', AStr) and TryStrToInt(GetWord(2, AStr), i);
   if result then
     ADepth := i;
+end;
+
+function IsConventionalStartPosition(const AStr: string): boolean;
+begin
+  result :=
+    (GetWord(1, AStr) = GetWord(1, CStartPos)) and
+    (GetWord(2, AStr) = GetWord(2, CStartPos));
 end;
 
 end.

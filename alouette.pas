@@ -29,7 +29,7 @@ begin
   WriteLn(output, AMessage);
   if AFlush then
     Flush(output);
-  Log.Append(Concat('< ', AMessage));
+  Log.Append(Concat('<- ', AMessage));
 end;
 
 type
@@ -54,7 +54,7 @@ begin
   if not Terminated then
   begin
     Send(Format('bestmove %s', [LMove]));
-    Log.Append(Format('Meilleur coup trouvé en %0.3f s.', [LTimeUsed / 1000]), TRUE);
+    Log.Append(Format('** Move computed in %0.3f s', [LTimeUsed / 1000]), TRUE);
   end;
 end;
 
@@ -70,10 +70,14 @@ var
   LVariantInitialValue: boolean;
   LThread: TSearchThread;
   LDepth: integer;
+  LFen: string;
+  {$IFNDEF RANDOM_MOVER}
   LBookLine, LBookMove: string;
   LBook: array[boolean] of TTreeList;
   LBookName: array[boolean] of TFileName;
   LColor: boolean;
+  LCanUseBook: boolean;
+  {$ENDIF}
   
 begin
   Randomize;
@@ -82,7 +86,8 @@ begin
   if not SettingsFileExists then
     SaveSettings(LVariantInitialValue);
   SetVariant(LVariantInitialValue);
-  
+
+  {$IFNDEF RANDOM_MOVER}
   LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
   LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
   for LColor := FALSE to TRUE do
@@ -91,15 +96,17 @@ begin
     if FileExists(LBookName[LColor]) then
       LBook[LColor].LoadFromFileCompact(LBookName[LColor])
     else
-      Log.Append(Format('Fichier introuvable (%s).', [LBookName[LColor]]));
+      Log.Append(Format('** File not found: %s', [LBookName[LColor]]));
   end;
   LBookLine := '';
+  LCanUseBook := FALSE;
+  {$ENDIF}
   
   Send(Format('%s %s', [CAppName, CAppVersion]));
   while not Eof do
   begin
     ReadLn(input, LCmd);
-    Log.Append(Concat('> ', LCmd));
+    Log.Append(Concat('-> ', LCmd));
     if LCmd = 'quit' then
       Break
     else
@@ -120,12 +127,24 @@ begin
             if BeginsWith('position ', LCmd) then
             begin
               if WordPresent('startpos', LCmd) then
-                Player.LoadStartPosition
-              else if WordPresent('fen', LCmd) then
-                Player.SetPosition(GetFen(LCmd))
-              else
-                Log.Append(Format('Commande non reconnue (%s).', [LCmd]));
+              begin
+                Player.LoadStartPosition;
+                {$IFNDEF RANDOM_MOVER}
+                LCanUseBook := TRUE;
+                {$ENDIF}
+              end else
+                if WordPresent('fen', LCmd) then
+                begin
+                  LFen := GetFen(LCmd);
+                  Player.SetPosition(LFen);
+                  {$IFNDEF RANDOM_MOVER}
+                  LCanUseBook := IsConventionalStartPosition(LFen);
+                  {$ENDIF}   
+                end else
+                  Log.Append(Format('** Unknown command: %s', [LCmd]));
+              {$IFNDEF RANDOM_MOVER}
               LBookLine := '';
+              {$ENDIF}
               if WordPresent('moves', LCmd) then
                 for LIdx := 4 to WordsNumber(LCmd) do
                 begin
@@ -133,7 +152,9 @@ begin
                   if IsChessMove(LMove) then
                   begin
                     Player.DoMove(LMove);
+                    {$IFNDEF RANDOM_MOVER}
                     LBookLine := Concat(LBookLine, ' ', LMove);
+                    {$ENDIF}
                   end;
                 end;
             end else
@@ -152,19 +173,22 @@ begin
                       if IsGoCmd(LCmd, LMTime) then                 // go movetime 500
                         LTimeAvailable := LMTime
                       else
-                        Log.Append(Format('Commande non reconnue (%s).', [LCmd]));
-                
-                if not CurrentVariant then
+                      begin
+                        LTimeAvailable := 1000;
+                        Log.Append(Format('** Unknown command: %s', [LCmd]));
+                      end;
+                {$IFNDEF RANDOM_MOVER}
+                if LCanUseBook then
                 begin
                   LBookMove := LBook[LPos.SideToMove].FindMoveToPlay(Trim(LBookLine), TRUE);
                   if LBookMove <> '' then
                   begin
-                    Log.Append(Format('Coup trouvé dans le livre : %s', [LBookMove]));
+                    Log.Append(Format('Book move: %s', [LBookMove]));
                     Send(Format('bestmove %s', [LBookMove]));
                     Continue;
                   end;
                 end;
-                
+                {$ENDIF}
                 LThread := TSearchThread.Create(TRUE);
                 with LThread do
                 begin
@@ -208,9 +232,10 @@ begin
                             'ucinewgame'
                           )
                         else
-                          Log.Append(Format('Commande non reconnue (%s).', [LCmd]));
+                          Log.Append(Format('** Unknown command: %s', [LCmd]));
   end;
-  
+{$IFNDEF RANDOM_MOVER}
   LBook[FALSE].Free;
   LBook[TRUE].Free;
+{$ENDIF}
 end.

@@ -129,8 +129,31 @@ begin
 end;
 
 function PositionalEval(const APos: TPosition; const AMove: integer): integer;
+var
+  LFrom, LTo: integer;
+  LPieceType: TPieceType;
+  LMoveType: TMoveType;
+  LPos: TPosition;
+  LProtections: integer;
 begin
   result := 0;
+  DecodeMove(AMove, LFrom, LTo, LPieceType, LMoveType);
+  (*
+  case LPieceType of
+    ptWhitePawn, ptBlackPawn: result := 0;
+    ptKnight, ptBishop: result := -1; 
+    ptRook, ptQueen: result := -2;
+    ptKing: result := -3;
+  end;
+  *)
+  LPos := APos;
+  if TryDoMove(LPos, MoveToStr(AMove)) then
+  begin
+    LPos.SideToMove := not LPos.SideToMove;
+    LProtections := GetProtectionsCount(LPos);
+    Inc(result, LProtections);
+  end;
+    
 end;
 (*
 var
@@ -138,28 +161,28 @@ var
   LBonusRoque: integer;
   LMalusRepetition, LMalusAnnulation: integer;
   LBonusPiece: integer = -2;
-  LTypePiece, LTypeCapture: TWidePieceType;
+  LPieceType, LTypeCapture: TWidePieceType;
   LCaptureValue: integer;
   LFromSquare, LToSquare: integer;
-  LTP: TPieceType;
-  LTC: TMoveType;
+  LPieceTypeBis: TPieceType;
+  LMoveType: TMoveType;
   LBonusEnPassant, LBonusCapture: integer;
   LBonusMenaceRoi: integer;
   LBonusEchec: integer;
   LProtections: integer;
   LMalusPiece: integer;
 begin
-  DecodeMove(AMove, LFromSquare, LToSquare, LTP, LTC);
+  DecodeMove(AMove, LFromSquare, LToSquare, LPieceTypeBis, LMoveType);
   
   LPos := APos;
-  LBonusRoque := Ord(IsCastling(LPos, AMove)); if LBonusRoque = 1 then Assert(LTC = mtCastling);
+  LBonusRoque := Ord(IsCastling(LPos, AMove)); if LBonusRoque = 1 then Assert(LMoveType = mtCastling);
   LMalusRepetition := Ord(MoveToStr(AMove) = PreviousPreviousMove);
   LMalusAnnulation := Ord(MoveToStr(AMove) = Reverse(PreviousMove));
-  LTypePiece := PieceTypeIdx(LPos, StartIndex(AMove)); Assert(LTypePiece = LTP);
+  LPieceType := PieceTypeIdx(LPos, StartIndex(AMove)); Assert(LPieceType = LPieceTypeBis);
   LTypeCapture := PieceTypeIdx(LPos, TargetIndex(AMove));
   if LTypeCapture = ptNil then
   begin
-    if LTC = mtEnPassant then
+    if LMoveType = mtEnPassant then
       LCaptureValue := CPieceValue[ptWhitePawn]
     else
       LCaptureValue := 0;
@@ -171,21 +194,21 @@ begin
   LBonusEchec := Ord(IsCheck(LPos));
   LPos.SideToMove := not LPos.SideToMove;
   LBonusPiece := 0;
-  LBonusEnPassant := Ord(LTC = mtEnPassant);
-  if LTC = mtCapture then
+  LBonusEnPassant := Ord(LMoveType = mtEnPassant);
+  if LMoveType = mtCapture then
   begin
-    if (LCaptureValue = CPieceValue[LTypePiece])
-    or (LCaptureValue = CPieceValue[LTypePiece] - 10) then
+    if (LCaptureValue = CPieceValue[LPieceType])
+    or (LCaptureValue = CPieceValue[LPieceType] - 10) then
       LBonusCapture := 1
-    else if LCaptureValue > CPieceValue[LTypePiece] then
+    else if LCaptureValue > CPieceValue[LPieceType] then
       LBonusCapture := 2
     else
       LBonusCapture := 0;
   end else
     LBonusCapture := 0;
-  LBonusMenaceRoi := Ord((CTargets[LTP, LToSquare] and LPos.KingSquare[not LPos.SideToMove]) <> 0);
+  LBonusMenaceRoi := Ord((CTargets[LPieceTypeBis, LToSquare] and LPos.KingSquare[not LPos.SideToMove]) <> 0);
   LProtections := GetProtectionsCount(LPos);
-  case LTypePiece of
+  case LPieceType of
     ptWhitePawn, ptBlackPawn: LMalusPiece := 0;
     ptKnight, ptBishop: LMalusPiece := 1; 
     ptRook, ptQueen: LMalusPiece := 2;
@@ -204,27 +227,6 @@ begin
     + LBonusEchec
     + LProtections
     - LMalusPiece;
-   
-  Log.Append(
-    Format(
-      '%s %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d',
-      [
-        MoveToStr(AMove),
-        LBonusCapture,
-        LBonusMenaceRoi,
-        LBonusRoque,
-        LBonusEnPassant,
-        LBonusPiece,
-        LMalusRepetition,
-        LMalusAnnulation,
-        LBonusEchec,
-        LProtections,
-        LMalusPiece,
-        result
-      ]
-    ),
-    TRUE
-  );
 end;
 *)
 
@@ -274,6 +276,7 @@ begin
   for i := 0 to Pred(n) do
     LEval[i] := PositionalEval(APos, LListe[i]);
   SortMoves(LListe, LEval, n);
+  Log.Append(LListe, LEval, n);
   //LMove := LListe[0];
   n := CountBestMoves(LEval, n);
   LMove := LListe[Random(n)];

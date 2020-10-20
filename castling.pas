@@ -48,7 +48,7 @@ begin
   l := ToIndex(ARookTarget, LRow);
   Log.Append(Format('Vérifications pour roi %s tour %s...', [MoveToStr(i, k), MoveToStr(j, l)]));
   if IsOn(APos.Pieces[APos.SideToMove] and APos.Rooks, CIndexToSquare[j]) then
-    Log.Append('Position tour vérifiée (condition 1/3).')
+    Log.Append('Position tour vérifiée (condition 1/3)')
   else
     Exit;
   LPath := CPath[i, k] or CIndexToSquare[k];
@@ -59,11 +59,11 @@ begin
   LRooks := APos.Kings and APos.Pieces[APos.SideToMove];
   d := (LPath and LAllPieces) = (LPath and LRooks);
   if b and c and d then
-    Log.Append('Liberté de passage vérifiée (condition 2/3).')
+    Log.Append('Liberté de passage vérifiée (condition 2/3)')
   else
     Exit;
   if (LThreatenedSquares and ((CIndexToSquare[i] or CPath[i, k] or CIndexToSquare[k])) = 0) then
-    Log.Append('Absence d''empêchement vérifiée (condition 3/3). Roque accepté.')
+    Log.Append('Absence d''empêchement vérifiée (condition 3/3)')
   else
     Exit;
   AppendMove(i, j);
