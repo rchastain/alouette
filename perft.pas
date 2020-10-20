@@ -67,13 +67,13 @@ var
   n: int64;
 begin
   p := APos;
-  WriteLn('Profondeur   Nombre trouvé   Temps écoulé');
+  WriteLn('Depth   Result   Time elapsed');
   for i := 1 to ADepth do
   begin
     t := GetTickCount64;
     n := RecursiveGetMovesCount(p, i);
     t := GetTickCount64 - t;
-    WriteLn(i:10, n:16, FormatDateTime('   hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
+    WriteLn(i:5, n:9, FormatDateTime('   hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
   end;
 end;
 

@@ -297,18 +297,19 @@ const
   CArrow: array[boolean] of string = ('', ' <--');
 const
   CFormat =
-    '+  A B C D E F G H  +%s'#13#10 +
-    '8 |%s|%s|%s|%s|%s|%s|%s|%s| 8'#13#10 +
-    '7 |%s|%s|%s|%s|%s|%s|%s|%s| 7'#13#10 +
-    '6 |%s|%s|%s|%s|%s|%s|%s|%s| 6'#13#10 +
-    '5 |%s|%s|%s|%s|%s|%s|%s|%s| 5'#13#10 +
-    '4 |%s|%s|%s|%s|%s|%s|%s|%s| 4'#13#10 +
-    '3 |%s|%s|%s|%s|%s|%s|%s|%s| 3'#13#10 +
-    '2 |%s|%s|%s|%s|%s|%s|%s|%s| 2'#13#10 +
-    '1 |%s|%s|%s|%s|%s|%s|%s|%s| 1'#13#10 +
-    '+  A B C D E F G H  +%s'#13#10 +
-    'Castling: %s'#13#10 +
-    'En passant: %s';
+    '+  A B C D E F G H  +%s'+ LineEnding +
+    '8 |%s|%s|%s|%s|%s|%s|%s|%s| 8'+ LineEnding +
+    '7 |%s|%s|%s|%s|%s|%s|%s|%s| 7'+ LineEnding +
+    '6 |%s|%s|%s|%s|%s|%s|%s|%s| 6'+ LineEnding +
+    '5 |%s|%s|%s|%s|%s|%s|%s|%s| 5'+ LineEnding +
+    '4 |%s|%s|%s|%s|%s|%s|%s|%s| 4'+ LineEnding +
+    '3 |%s|%s|%s|%s|%s|%s|%s|%s| 3'+ LineEnding +
+    '2 |%s|%s|%s|%s|%s|%s|%s|%s| 2'+ LineEnding +
+    '1 |%s|%s|%s|%s|%s|%s|%s|%s| 1'+ LineEnding +
+    '+  A B C D E F G H  +%s'+ LineEnding +
+    'Castling: %s'+ LineEnding +
+    'En passant: %s'+ LineEnding +
+    'FEN: %s';
 var
   x, y: integer;
   c: array[0..7, 0..7] of char;
@@ -349,7 +350,8 @@ begin
     c[0, 0], c[1, 0], c[2, 0], c[3, 0], c[4, 0], c[5, 0], c[6, 0], c[7, 0],
     CArrow[not APos.SideToMove],
     EncodeCastlingString(APos.Roque, TRUE),
-    s
+    s,
+    Decodeposition(APos, TRUE)
   ]);
 end;
 
