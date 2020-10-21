@@ -2,11 +2,9 @@
 
 ## Présentation
 
-*Alouette* est un moteur UCI capable de jouer aux échecs aléatoires de Fischer, ou échecs 960.
+*Alouette* est un moteur UCI capable de jouer aux échecs aléatoires de Fischer, ou échecs 960. C'était au départ un exercice de programmation sur les *bitboards*, c'est-à-dire sur la représentation d'un damier au moyen d'un nombre entier à 64 chiffres binaires.
 
-L'échiquier est représenté au moyen d'un nombre entier à 64 chiffres binaires.
-
-*Alouette* joue aux échecs au niveau débutant.
+*Alouette* n'est pas un adversaire très redoutable. Vous devriez pouvoir le battre facilement.
 
 ## Livre d'ouvertures
 
@@ -18,7 +16,7 @@ Ce format a auparavant été utilisé par Marc-Philippe Huget dans le moteur d'�
 
 ## Générateur de coups aléatoires
 
-L'exécutable nommé *random32* (ou *random64*) est un moteur qui joue des coups au hasard. C'est *Alouette* compilé avec l'option -dRANDOM_MOVER.
+L'exécutable nommé *random32* (ou *random64*) est un moteur qui joue des coups purement aléatoires. (C'est *Alouette* compilé avec l'option -dRANDOM_MOVER.)
 
 ## Remerciements
 
