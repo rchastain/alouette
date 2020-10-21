@@ -16,7 +16,7 @@ Ce format a auparavant été utilisé par Marc-Philippe Huget dans le moteur d'�
 
 ## Générateur de coups aléatoires
 
-L'exécutable nommé *random32* (ou *random64*) est un moteur qui joue des coups purement aléatoires. (C'est *Alouette* compilé avec l'option -dRANDOM_MOVER.)
+L'exécutable nommé *random32* (ou *random64*) est un moteur qui joue des coups purement aléatoires. C'est presque le seul programme qu'*Alouette* arrive à battre !
 
 ## Remerciements
 
