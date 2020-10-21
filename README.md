@@ -2,11 +2,9 @@
 
 ## Overview
 
-UCI chess engine able to play Fischer Random Chess.
+*Alouette* is a UCI chess engine able to play Fischer Random Chess. It was initially a programming exercise around *bitboards*.
 
-The program was started as a programming exercise around *bitboards*.
-
-It plays chess at beginner level.
+It is not a very formidable opponent. You should be able to beat him easily.
 
 ## Opening book
 
@@ -18,7 +16,7 @@ This format has been previously used by Marc-Philippe Huget in his engine [La Da
 
 ## Random mover
 
-The executable named *random32* (or *random64*) is a random mover. It's *Alouette* compiled with -dRANDOM_MOVER option.
+The executable named *random32* (or *random64*) is a pure random mover. It's almost the only engine that Alouette manages to beat!
 
 ## Author
 
