@@ -8,28 +8,32 @@ program Alouette;
 
 uses
 {$IFDEF UNIX}
-  CWString,
-  CThreads,
+  CWString, CThreads,
 {$ENDIF}
-  Classes,
-  SysUtils,
-  Math,
-  Log,
-  Player,
-  Chess,
-  Utils,
-  Perft,
-  Settings,
-  TreeList;
+  Classes, SysUtils, Math,
+  Log, Player, Chess, Utils, Perft, Settings, TreeList;
 
-{$I version.inc}
+{$I version}
   
 procedure Send(const AMessage: string; const AFlush: boolean = TRUE);
+var
+  LList: TStringList;
+  i: integer;
 begin
   WriteLn(output, AMessage);
   if AFlush then
     Flush(output);
-  Log.Append(Concat('<- ', AMessage));
+  
+  if Pos(LineEnding, AMessage) = 0 then
+    Log.Append(Concat('<- ', AMessage))
+  else
+  begin
+    LList := TStringList.Create;
+    LList.Text := AMessage;
+    for i := 0 to Pred(LList.Count) do
+      Log.Append(Concat('<- ', LList[i]));
+    LList.Free;
+  end;
 end;
 
 type

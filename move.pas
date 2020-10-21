@@ -47,7 +47,7 @@ begin
   LDep := DecodeSquareName(Copy(AMove, 1, 2));
   LArr := DecodeSquareName(Copy(AMove, 3, 2));
   
-  Assert(IsOnIdx(APos.Pieces[APos.SideToMove], LDep), 'Impossible de déterminer la couleur de la pièce.');
+  Assert(IsOnIdx(APos.Pieces[APos.SideToMove], LDep), 'Cannot evaluate piece color');
   
   if      IsOnIdx(APos.Pawns,   LDep) then if APos.SideToMove then LType := ptBlackPawn else LType := ptWhitePawn
   else if IsOnIdx(APos.Rooks,   LDep) then LType := ptRook
@@ -56,7 +56,7 @@ begin
   else if IsOnIdx(APos.Queens,  LDep) then LType := ptQueen
   else if IsOnIdx(APos.Kings,   LDep) then LType := ptKing
   else
-    Assert(FALSE, 'Impossible de déterminer le type de la pièce.');
+    Assert(FALSE, 'Cannot evaluate piece type');
 
   LColDep := LDep mod 8;
   LColArr := LArr mod 8;
@@ -71,20 +71,20 @@ begin
     begin
       if LColArr = APos.Roque[APos.SideToMove].KingRookCol then
       begin
-        Log.Append(Format('Roque côté H (%s).', [AMove]));
+        Log.Append(Format('** Castling on H side: %s', [AMove]));
         MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], LArr, CATCR[APos.SideToMove]);
         LArr := ToIndex(CColG, LLigArr);
         LSuper := LColDep = CATCR[APos.SideToMove] mod 8;
       end else
         if LColArr = APos.Roque[APos.SideToMove].QueenRookCol then
         begin
-          Log.Append(Format('Roque côté A (%s).', [AMove]));
+          Log.Append(Format('** Castling on A side: %s', [AMove]));
           MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], LArr, CATCD[APos.SideToMove]);
           LArr := ToIndex(CColC, LLigArr);
           LSuper := LColDep = CATCD[APos.SideToMove] mod 8;
         end else
         begin
-          Log.Append(Format('Impossible de rejouer %s.', [AMove]));
+          Log.Append(Format('** Impossible move: %s', [AMove]));
           Exit(FALSE);
         end;
     end else
@@ -92,16 +92,16 @@ begin
       begin
         if LColArr = CColG then
         begin
-          Log.Append(Format('Roque côté roi (%s).', [AMove]));
+          Log.Append(Format('** Castling on king side: %s', [AMove]));
           MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], CDTCR[APos.SideToMove], CATCR[APos.SideToMove]);
         end else
           if LColArr = CColC then
           begin
-            Log.Append(Format('Roque côté dame (%s).', [AMove]));
+            Log.Append(Format('** Castling on queen side: %s', [AMove]));
             MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], CDTCD[APos.SideToMove], CATCD[APos.SideToMove]);
           end else
           begin
-            Log.Append(Format('Impossible de rejouer %s.', [AMove]));
+            Log.Append(Format('** Impossible move: %s', [AMove]));
             Exit(FALSE);
           end;
       end;
@@ -181,7 +181,7 @@ begin
               LType := ptQueen;
             end;
           else
-            Log.Append(Format('Valeur inattendue (%s).', [AMove[5]]));    
+            Log.Append(Format('** Unexpected value: %s', [AMove[5]]));    
         end;
     
     { Prise en passant. }
@@ -236,7 +236,7 @@ begin
     (IsOnIdx(LBlanc, LDep) and IsOnIdx(LBlanc, LArr)) or
     (IsOnIdx(LNoir,  LDep) and IsOnIdx(LNoir,  LArr));
   if result then
-    Log.Append(Format('Roque détecté (%s).', [MoveToStr(AMove)]));
+    Log.Append(Format('** Castling move: %s', [MoveToStr(AMove)]));
 end;
 
 procedure RenameCastlingMove(var ARoque: integer);
@@ -256,7 +256,7 @@ begin
     LColArr := CColC;
   LArr := 8 * LLigArr + LColArr;
   ARoque := EncodeMove(LDep, LArr, ptKing);
-  Log.Append(Format('Reformulé %s en %s.', [LAncienNom, Concat(CSquareToStr[LDep], CSquareToStr[LArr])]));
+  Log.Append(Format('** Reformulated %s to %s', [LAncienNom, Concat(CSquareToStr[LDep], CSquareToStr[LArr])]));
 end;
 
 end.

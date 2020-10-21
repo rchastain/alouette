@@ -32,41 +32,38 @@ var
   
 procedure Reset;
 begin
-  //Log.Append(Format('%s %s %s', [{$I %FILE%}, {$I %LINE%}, 'Reset']));
   LPos := CZeroPosition;
 end;
 
 procedure LoadStartPosition;
 begin
-  //Log.Append(Format('%s %s %s', [{$I %FILE%}, {$I %LINE%}, 'LoadStartPosition']));
   LPos := EncodePosition;
   NewHistory;
 end;
 
 procedure DoMove(const AMove: string);
 begin
-  //Log.Append(Format('%s %s %s(%s)', [{$I %FILE%}, {$I %LINE%}, 'DoMove', AMove]));
   if TryDoMove(LPos, AMove) then
     History.AppendMove(AMove)
   else
-    Log.Append(Format('Impossible de jouer %s.', [AMove]));
+    Log.Append(Format('** Impossible move: %s', [AMove]));
 end;
 
 function BestMove(const ATimeAvailable: integer): string;
 begin
-  //Log.Append(Format('%s %s %s(%d)', [{$I %FILE%}, {$I %LINE%}, 'BestMove', ATimeAvailable]));
   result := GetBestMove(LPos, LVariant, ATimeAvailable);
 end;
 
 function InstantMove: string;
 begin
-  //Log.Append(Format('%s %s %s', [{$I %FILE%}, {$I %LINE%}, 'InstantMove']));
   result := LTempMove;
 end;
 
 procedure SetVariant(const AValue: boolean);
+const
+  CBoolToStr: array[boolean] of string = ('false', 'true');
 begin
-  Log.Append(Format('%s %s %s(%d)', [{$I %FILE%}, {$I %LINE%}, 'SetVariant', Ord(AValue)]));
+  Log.Append(Format('** %s %s %s(%s)', [{$I %FILE%}, {$I %LINE%}, 'SetVariant', CBoolToStr[AValue]]));
   LVariant := AValue;
 end;
 
@@ -77,7 +74,6 @@ end;
 
 procedure SetPosition(const APos: string);
 begin
-  //Log.Append(Format('%s %s %s(%s)', [{$I %FILE%}, {$I %LINE%}, 'SetPosition', APos]));
   LPos := EncodePosition(APos, LVariant);
   NewHistory;
 end;

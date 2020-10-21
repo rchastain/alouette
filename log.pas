@@ -1,7 +1,7 @@
 
 {**
   @abstract(Journal.)
-  Unité pour la production d'un journal.
+  Unité pour la production du journal.
 }
 
 unit Log;

@@ -12,11 +12,11 @@ uses
   Board;
 
 const  
-  CTargets: array[TPieceType, A1..H8] of TBoard = ({$I targets.inc});
-  CPath: array[A1..H8, A1..H8] of TBoard = ({$I path.inc});
-  CIndexToSquare: array[A1..H8] of TBoard = ({$I index.inc});
-  CCoordToSquare: array[0..7, 0..7] of TBoard = ({$I coordinates.inc});
-  CColumn: array[0..7] of TBoard = ({$I column.inc});
+  CTargets: array[TPieceType, A1..H8] of TBoard = ({$I targets});
+  CPath: array[A1..H8, A1..H8] of TBoard = ({$I path});
+  CIndexToSquare: array[A1..H8] of TBoard = ({$I index});
+  CCoordToSquare: array[0..7, 0..7] of TBoard = ({$I coordinates});
+  CColumn: array[0..7] of TBoard = ({$I column});
 
 function IsOnIdx(const ABrd: TBoard; const AIdx: integer): boolean;
 procedure SwitchOnIdx(var ABrd: TBoard; const AIdx: integer);
