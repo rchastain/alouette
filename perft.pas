@@ -1,7 +1,9 @@
 
 {**
-  @abstract(Génération chronométrée.)
-  Génération chronométrée de tous les coups jusqu'à une profondeur donnée.
+  @abstract(Essai de performance.)
+  Génération chronométrée des coups légaux jusqu'à une profondeur donnée.
+  Permet d'évaluer la performance du générateur de coups, et de détecter les éventuelles erreurs,
+  en comparant les résultats obtenus avec ceux d'autres programmes.
 }
 
 unit Perft;
@@ -16,65 +18,82 @@ procedure Start(const APos: TPosition; const ADepth: integer = 5);
 implementation
 
 uses
-  SysUtils, Move, Moves, Castling, Board, Tables, Sort;
+  SysUtils, Move, Moves, Castling, Board, Tables;
 
-function Evaluate(const APos: TPosition; const AMove: integer): integer;
+function IsLegal(const APos: TPosition; const AMove: integer): boolean;
 var
   LPos: TPosition;
 begin
   LPos := APos;
-  result := Low(integer);
-  if not TryDoMove(LPos, MoveToStr(AMove)) then
-    Exit;
-  result := 0 - Ord((GenMoves(LPos) and LPos.Pieces[not LPos.SideToMove] and LPos.Kings) <> 0);
-end;
-
-function RecursiveGetMovesCount(const APos: TPosition; const ADepth: integer): int64;
-var
-  LList, LValue: array[0..99] of integer;
-  n, o, i: integer;
-  LPos: TPosition;
-begin
-  result := 0;
-  GenMoves(APos, LList, n);
-  GenCastling(APos, LList, n);
-  for i := 0 to Pred(n) do
-    LValue[i] := Evaluate(APos, LList[i]);
-  SortMoves(LList, LValue, n);
-  o := 0;
-  while (o < n) and (LValue[o] = 0) do
-    Inc(o);
-  if ADepth = 1 then
-    result := o
-  else
-    for i := 0 to Pred(o) do
-    begin
-      LPos := APos;
-      if not TryDoMove(LPos, MoveToStr(LList[i])) then
-      begin
-        WriteLn('Il y a quelque chose de pourri dans ce programme.');
-        Continue;
-      end;
-      Inc(result, RecursiveGetMovesCount(LPos, Pred(ADepth)));
-    end;
+  result := FALSE;
+  if DoMove(LPos, MoveToStr(AMove)) then
+    with LPos do
+      result := (
+        GenMoves(LPos)
+        and Pieces[not SideToMove]
+        and Kings
+      ) = 0;
 end;
 
 procedure Start(const APos: TPosition; const ADepth: integer);
 var
-  p: TPosition;
+  LResult: array of int64;
+
+  function GetMovesCount(const APos2: TPosition; const ADepth2: integer): int64;
+  var
+    LList: array[0..99] of integer;
+    LCount, LLegalCount, i: integer;
+    LPos: TPosition;
+    LMove: string;
+  begin
+    result := 0;
+    
+    GenMoves(APos2, LList, LCount);
+    GenCastling(APos2, LList, LCount);
+    LLegalCount := 0;
+    for i := 0 to Pred(LCount) do
+      if IsLegal(APos2, LList[i]) then
+        Inc(LLegalCount);
+    
+    Inc(LResult[Pred(ADepth2)], LLegalCount);
+    
+    if ADepth2 = 1 then
+      result := LLegalCount
+    else
+      for i := 0 to Pred(LLegalCount) do
+      begin
+        LPos := APos2;
+        LMove := MoveToStr(LList[i]);
+        if DoMove(LPos, LMove) then
+          Inc(result, GetMovesCount(LPos, Pred(ADepth2)))
+        else
+        begin
+          WriteLn('Unexpected error');
+          Exit;
+        end;
+      end;
+  end;
+
+var
   i: integer;
   t: cardinal;
-  n: int64;
+  s: string;
 begin
-  p := APos;
-  WriteLn('Depth   Result   Time elapsed');
-  for i := 1 to ADepth do
-  begin
-    t := GetTickCount64;
-    n := RecursiveGetMovesCount(p, i);
-    t := GetTickCount64 - t;
-    WriteLn(i:5, n:9, FormatDateTime('   hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
-  end;
+  SetLength(LResult, ADepth);
+  for i := 0 to Pred(ADepth) do
+    LResult[i] := 0;
+  
+  t := GetTickCount64;
+  GetMovesCount(APos, ADepth);
+  t := GetTickCount64 - t;
+  
+  s := Format('Perft(%%%dd) = %%%dd', [Length(IntToStr(ADepth)), Length(IntToStr(LResult[0]))]);
+  
+  for i := Pred(ADepth) downto 0 do
+    WriteLn(Format(s, [ADepth - i, LResult[i]]));
+    
+  WriteLn('Time elapsed: ', FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
+  SetLength(LResult, 0);
 end;
 
 end.

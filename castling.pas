@@ -20,9 +20,7 @@ uses
 
 procedure GenCastling(const APos: TPosition; var AList: array of integer; var ACount: integer);
 
-procedure AppendMove(const AFrom, ATo: integer; const ACondition: boolean = TRUE);
-begin
-  if ACondition then
+  procedure SaveMove(const AFrom, ATo: integer);
   begin
     Inc(ACount);
     if ACount <= Length(AList) then
@@ -30,45 +28,48 @@ begin
     else
       Log.Append('** Cannot append move');
   end;
-end;
 
 var
-  LPieces,             { Toutes les pièces. }
-  LThreats: TBoard;    { Cases menacées par l'adversaire. }
+{** Toutes les pièces. }
+  LPieces,
+{** Cases menacées par l'adversaire. }
+  LThreats: TBoard;
   LRow,
-  LKingStartCol,          { Colonne de départ du roi. }
-  LRookStartCol: integer; { Colonne de départ de la tour. }
+{** Colonne de départ du roi. }
+  LKingFromCol,
+{** Colonne de départ de la tour. }
+  LRookFromCol: integer;
   LPos: TPosition;
   
-procedure Search(const AKingTarget, ARookTarget: integer); { Colonnes d'arrivée. }
+procedure Search(const AKingToCol, ARookToCol: integer); { Colonnes d'arrivée. }
 var
-  LKingStartIdx, LRookStartIdx, LKingTargetIdx, LRookTargetIdx: integer;
-  LPath: TBoard;  { Chemin à parcourir, y compris la case d'arrivée. }
-  LRooks: TBoard; { Pièces autorisées sur le parcours. }
-  LKing: TBoard;
+  LKingFromIdx, LRookFromIdx, LKingToIdx, LRookToIdx: integer;
+{ Chemin à parcourir, y compris la case d'arrivée. }
+  LKingPath, LRookPath, LPath: TBoard;
+{ Pièces autorisées sur le parcours. }
+  LRooks, LKing: TBoard;
 begin
-  LKingStartIdx := ToIndex(LKingStartCol, LRow);
-  LKingTargetIdx := ToIndex(AKingTarget, LRow);
-  LRookStartIdx := ToIndex(LRookStartCol, LRow);
-  LRookTargetIdx := ToIndex(ARookTarget, LRow);
-  Log.Append(Format('** Generate castling king %s rook %s', [
-    MoveToStr(LKingStartIdx, LKingTargetIdx),
-    MoveToStr(LRookStartIdx, LRookTargetIdx)
-  ]));
-  
-  if IsOn(APos.Pieces[APos.SideToMove] and APos.Rooks, CIndexToSquare[LRookStartIdx]) then
+  LKingFromIdx := ToIndex(LKingFromCol, LRow);
+  LKingToIdx := ToIndex(AKingToCol, LRow);
+  LRookFromIdx := ToIndex(LRookFromCol, LRow);
+  LRookToIdx := ToIndex(ARookToCol, LRow);
+  Log.Append(Format('** Generate castling king %s rook %s', [MoveToStr(LKingFromIdx, LKingToIdx), MoveToStr(LRookFromIdx, LRookToIdx)]));
+
+{ Vérification de la première condition : il y a bien une tour à l'endroit prévu. }
+  with APos do if IsOn(Pieces[SideToMove] and Rooks, CIndexToSquare[LRookFromIdx]) then
     Log.Append('** Rook on square (cond. 1/3)')
   else
-  begin
-    Log.Append('** Rook not found');
     Exit;
+
+{ Deuxième condition : aucune pièce n'est sur le passage du roi ni sur celui de la tour. }
+  LKingPath := CPath[LKingFromIdx, LKingToIdx] or CIndexToSquare[LKingToIdx];
+  LRookPath := CPath[LRookFromIdx, LRookToIdx] or CIndexToSquare[LRookToIdx];
+  LPath := LKingPath or LRookPath;
+  with APos do
+  begin
+    LRooks := Rooks and Pieces[SideToMove];
+    LKing  := Kings and Pieces[SideToMove];
   end;
-  
-  LPath :=
-    CPath[LKingStartIdx, LKingTargetIdx] or CIndexToSquare[LKingTargetIdx] or
-    CPath[LRookStartIdx, LRookTargetIdx] or CIndexToSquare[LRookTargetIdx];
-  LRooks := APos.Rooks and APos.Pieces[APos.SideToMove];
-  LKing := APos.Kings and APos.Pieces[APos.SideToMove];
   if ((LPath and LPieces) = (LPath and (LRooks or LKing)))
   and (CountSquaresOn(LPath and LRooks) <= 1)
   and (CountSquaresOn(LPath and LKing) <= 1)
@@ -76,12 +77,15 @@ begin
     Log.Append('** No piece on the path (cond. 2/3)')
   else
     Exit;
-  
-  if (LThreats and ((CIndexToSquare[LKingStartIdx] or CPath[LKingStartIdx, LKingTargetIdx] or CIndexToSquare[LKingTargetIdx])) = 0) then
+
+{ Dernière condition : aucune des cases sur lesquelles le roi se trouve ou se trouvera n'est menacée. }
+  LKingPath := CIndexToSquare[LKingFromIdx] or CPath[LKingFromIdx, LKingToIdx] or CIndexToSquare[LKingToIdx];
+  if (LThreats and LKingPath) = 0 then
     Log.Append('** No attacked square (cond. 3/3)')
   else
     Exit;
-  AppendMove(LKingStartIdx, LRookStartIdx);
+  
+  SaveMove(LKingFromIdx, LRookFromIdx);
 end;
 
 begin
@@ -90,14 +94,14 @@ begin
   LPos := APos;
   LPos.SideToMove := not LPos.SideToMove;
   LThreats := GenMoves(LPos) or GenPotentialPawnMoves(LPos);
-  LKingStartCol := SquareToCol(APos.KingSquare[APos.SideToMove]);
+  LKingFromCol := SquareToCol(APos.KingSquare[APos.SideToMove]);
   
-  LRookStartCol := APos.Roque[APos.SideToMove].KingRookCol;
-  if (LRookStartCol >= 0) and (LRookStartCol <= 7) then
+  LRookFromCol := APos.Roque[APos.SideToMove].KingRookCol;
+  if (LRookFromCol >= 0) and (LRookFromCol <= 7) then
     Search(CColG, CColF);
   
-  LRookStartCol := APos.Roque[APos.SideToMove].QueenRookCol;
-  if (LRookStartCol >= 0) and (LRookStartCol <= 7) then
+  LRookFromCol := APos.Roque[APos.SideToMove].QueenRookCol;
+  if (LRookFromCol >= 0) and (LRookFromCol <= 7) then
     Search(CColC, CColD);
 end;
 

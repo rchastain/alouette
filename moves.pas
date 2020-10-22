@@ -27,16 +27,18 @@ uses
 function GenMoves(const APos: TPosition; var AList: array of integer; out ACount: integer; const AQuick: boolean): TBoard;
 var
   LCompte: integer = 0;
-procedure Accepte(const i, j: integer; const p: TPieceType; const c: TMoveType = mtCommon);
-begin
-  SwitchOn(result, CIndexToSquare[j]);
-  Inc(LCompte);
-  if not AQuick then
+
+  procedure SaveMove(const i, j: integer; const p: TPieceType; const c: TMoveType = mtCommon);
   begin
-    Assert(LCompte <= Length(AList));
-    AList[Pred(LCompte)] := EncodeMove(i, j, p, c);
+    SwitchOn(result, CIndexToSquare[j]);
+    Inc(LCompte);
+    if not AQuick then
+      if LCompte <= Length(AList) then
+        AList[Pred(LCompte)] := EncodeMove(i, j, p, c)
+      else
+        Log.Append('** Cannot append move');
   end;
-end;
+
 const
   CPion: array[boolean] of TPieceType = (ptWhitePawn, ptBlackPawn);
 var
@@ -58,14 +60,14 @@ begin
       j := i + k;
       if not IsOn(LPieces, CIndexToSquare[j]) then
       begin
-        Accepte(i, j, CPion[APos.SideToMove]);
+        SaveMove(i, j, CPion[APos.SideToMove]);
         { Second pas en avant. }
         if ((j div 8 = 2) and not APos.SideToMove)
         or ((j div 8 = 5) and APos.SideToMove) then
         begin
           j := j + k;
           if not IsOn(LPieces, CIndexToSquare[j]) then
-            Accepte(i, j, CPion[APos.SideToMove]);
+            SaveMove(i, j, CPion[APos.SideToMove]);
         end;
       end;
       { Prise côté dame. }
@@ -74,8 +76,8 @@ begin
         j := Pred(i + k);
         if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
-          Accepte(i, j, CPion[APos.SideToMove], mtEnPassant) else
-          Accepte(i, j, CPion[APos.SideToMove], mtCapture);
+          SaveMove(i, j, CPion[APos.SideToMove], mtEnPassant) else
+          SaveMove(i, j, CPion[APos.SideToMove], mtCapture);
       end;
       { Prise côté roi. }
       if i mod 8 < 7 then
@@ -83,8 +85,8 @@ begin
         j := Succ(i + k);
         if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
-          Accepte(i, j, CPion[APos.SideToMove], mtEnPassant) else
-          Accepte(i, j, CPion[APos.SideToMove], mtCapture);
+          SaveMove(i, j, CPion[APos.SideToMove], mtEnPassant) else
+          SaveMove(i, j, CPion[APos.SideToMove], mtCapture);
       end;
     end else
     { Tour. }
@@ -95,8 +97,8 @@ begin
         and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
         and ((CPath[i, j] and LPieces) = 0) then
           if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
-          Accepte(i, j, ptRook, mtCapture) else
-          Accepte(i, j, ptRook);
+          SaveMove(i, j, ptRook, mtCapture) else
+          SaveMove(i, j, ptRook);
     end else
     { Cavalier. }
     if IsOn(APos.Knights, CIndexToSquare[i]) then
@@ -105,8 +107,8 @@ begin
         if IsOn(CTargets[ptKnight, i], CIndexToSquare[j])
         and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
           if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
-          Accepte(i, j, ptKnight, mtCapture) else
-          Accepte(i, j, ptKnight);
+          SaveMove(i, j, ptKnight, mtCapture) else
+          SaveMove(i, j, ptKnight);
     end else
     { Fou. }
     if IsOn(APos.Bishops, CIndexToSquare[i]) then
@@ -116,8 +118,8 @@ begin
         and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
         and ((CPath[i, j] and LPieces) = 0) then
           if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
-          Accepte(i, j, ptBishop, mtCapture) else
-          Accepte(i, j, ptBishop);
+          SaveMove(i, j, ptBishop, mtCapture) else
+          SaveMove(i, j, ptBishop);
     end else
     { Dame. }
     if IsOn(APos.Queens, CIndexToSquare[i]) then
@@ -127,8 +129,8 @@ begin
         and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
         and ((CPath[i, j] and LPieces) = 0) then
           if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
-          Accepte(i, j, ptQueen, mtCapture) else
-          Accepte(i, j, ptQueen);
+          SaveMove(i, j, ptQueen, mtCapture) else
+          SaveMove(i, j, ptQueen);
     end else
     { Roi. }
     if IsOn(APos.Kings, CIndexToSquare[i]) then
@@ -137,8 +139,8 @@ begin
         if IsOn(CTargets[ptKing, i], CIndexToSquare[j])
         and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
           if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
-          Accepte(i, j, ptKing, mtCapture) else
-          Accepte(i, j, ptKing);
+          SaveMove(i, j, ptKing, mtCapture) else
+          SaveMove(i, j, ptKing);
     end;
   end;
   ACount := LCompte;
@@ -160,10 +162,6 @@ begin
 end;
 
 function GenPotentialPawnMoves(const APos: TPosition): TBoard;
-procedure Accepte(const i, j: integer);
-begin
-  SwitchOn(result, CIndexToSquare[j]);
-end;
 var
   { Pièces. }
   i, j: integer;
@@ -182,7 +180,7 @@ begin
       for j := A1 to H8 do
         if IsOn(CTargets[LPion, i], CIndexToSquare[j])
         and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
-          Accepte(i, j);
+          SwitchOn(result, CIndexToSquare[j]);
     end;
   end;
 end;

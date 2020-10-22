@@ -43,7 +43,7 @@ end;
 
 procedure DoMove(const AMove: string);
 begin
-  if TryDoMove(LPos, AMove) then
+  if Move.DoMove(LPos, AMove) then
     History.AppendMove(AMove)
   else
     Log.Append(Format('** Impossible move: %s', [AMove]));

@@ -225,15 +225,15 @@ var
   LBrd: string;
 begin
   LBrd := BoardToStr(ABrd);
-  result := '+   abcdefgh   +'#13#10#13#10;
+  result := '+   abcdefgh   +' + LineEnding + LineEnding;
   for y := 7 downto 0 do
   begin
     result := Concat(result, IntToStr(Succ(y)), '   ');
     for x := 0 to 7 do
       result := Concat(result, LBrd[64 - 8 * y - x]);
-    result := Concat(result, '   ', IntToStr(Succ(y)), #13#10);
+    result := Concat(result, '   ', IntToStr(Succ(y)), LineEnding);
   end;
-  result := Concat(result, #13#10'+   abcdefgh   +');
+  result := Concat(result, LineEnding, '+   abcdefgh   +');
 end;
 
 function IsMovePossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;

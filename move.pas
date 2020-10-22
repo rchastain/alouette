@@ -12,8 +12,8 @@ uses
   Board, Chess;
 
 function PieceTypeIdx(const APos: TPosition; const AIdx: integer): TWidePieceType;
-{** Met à jour la position en fonction d'un coup présumé légal. Renvoie FALSE si une impossibilité de jouer le coup est détectée. }
-function TryDoMove(var APos: TPosition; const AMove: string): boolean;
+{** Met à jour la position en fonction d'un coup présumé légal. Renvoie FALSE si le coup est impossible ou illégal. }
+function DoMove(var APos: TPosition; const AMove: string): boolean;
 function IsPromotion(const APos: TPosition; const AMove: string): boolean;
 function IsCastling(const APos: TPosition; const AMove: integer): boolean;
 procedure RenameCastlingMove(var ARoque: integer);
@@ -35,7 +35,7 @@ begin
     result := ptNil;
 end;
 
-function TryDoMove(var APos: TPosition; const AMove: string): boolean;
+function DoMove(var APos: TPosition; const AMove: string): boolean;
 var
   LDep, LArr, LColDep, LColArr, LLigDep, LLigArr, LPris: integer;
   LType: TPieceType;

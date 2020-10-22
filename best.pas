@@ -65,7 +65,7 @@ var
   LPos: TPosition;
 begin
   LPos := APos;
-  if TryDoMove(LPos, MoveToStr(AMove)) then
+  if DoMove(LPos, MoveToStr(AMove)) then
   begin
     result := TRUE;
     LPos.SideToMove := not LPos.SideToMove;
@@ -85,21 +85,21 @@ var
 begin
   p := APos;
   result := Low(integer);
-  if TryDoMove(p, MoveToStr(AMove)) then
+  if DoMove(p, MoveToStr(AMove)) then
   begin
     GenMoves(p, m, c);
     result := High(integer);
     for i := 0 to Pred(c) do
     begin
       pp := p;
-      if TryDoMove(pp, MoveToStr(m[i])) then
+      if DoMove(pp, MoveToStr(m[i])) then
       begin
         GenMoves(pp, mm, cc);
         LMax := Low(integer);
         for ii := 0 to Pred(cc) do
         begin
           ppp := pp;
-          if TryDoMove(ppp, MoveToStr(mm[ii])) then
+          if DoMove(ppp, MoveToStr(mm[ii])) then
           begin
             ppp.SideToMove := not ppp.SideToMove;
             if IsCheck(ppp) then
@@ -147,7 +147,7 @@ begin
   end;
   *)
   LPos := APos;
-  if TryDoMove(LPos, MoveToStr(AMove)) then
+  if DoMove(LPos, MoveToStr(AMove)) then
   begin
     LPos.SideToMove := not LPos.SideToMove;
     LProtections := GetProtectionsCount(LPos);
@@ -189,7 +189,7 @@ begin
   end else
     LCaptureValue := CPieceValue[LTypeCapture];
   result := Low(integer);
-  if not TryDoMove(LPos, MoveToStr(AMove)) then
+  if not DoMove(LPos, MoveToStr(AMove)) then
     Exit;
   LBonusEchec := Ord(IsCheck(LPos));
   LPos.SideToMove := not LPos.SideToMove;
