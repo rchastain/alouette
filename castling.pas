@@ -64,6 +64,13 @@ begin
 { Deuxième condition : aucune pièce n'est sur le passage du roi ni sur celui de la tour. }
   LKingPath := CPath[LKingFromIdx, LKingToIdx] or CIndexToSquare[LKingToIdx];
   LRookPath := CPath[LRookFromIdx, LRookToIdx] or CIndexToSquare[LRookToIdx];
+{$IFDEF DEBUG}
+  Log.Append(Concat(
+    '** King path:',  LineEnding, BoardToFormattedStr(LKingPath), LineEnding,
+    '** Rook path:',  LineEnding, BoardToFormattedStr(LRookPath), LineEnding,
+    '** All pieces:', LineEnding, BoardToFormattedStr(LPieces)
+  ));
+{$ENDIF}
   LPath := LKingPath or LRookPath;
   with APos do
   begin
@@ -74,17 +81,21 @@ begin
   and (CountSquaresOn(LPath and LRooks) <= 1)
   and (CountSquaresOn(LPath and LKing) <= 1)
   then
-    Log.Append('** No piece on the path (cond. 2/3)')
+    Log.Append('** Path free (cond. 2/3)')
   else
     Exit;
 
 { Dernière condition : aucune des cases sur lesquelles le roi se trouve ou se trouvera n'est menacée. }
   LKingPath := CIndexToSquare[LKingFromIdx] or CPath[LKingFromIdx, LKingToIdx] or CIndexToSquare[LKingToIdx];
+{$IFDEF DEBUG}
+  Log.Append(Concat('** Threats:', LineEnding, BoardToFormattedStr(LThreats)));
+{$ENDIF}
   if (LThreats and LKingPath) = 0 then
     Log.Append('** No attacked square (cond. 3/3)')
   else
     Exit;
-  
+
+{ Enregistrement du coup. Le coup est noté comme s'il s'agissait de la prise de la tour par le roi. }
   SaveMove(LKingFromIdx, LRookFromIdx);
 end;
 
