@@ -64,7 +64,7 @@ function BoardToFormattedStr(const ABrd: TBoard): string;
 function IsMovePossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
 function GetTargets(const APiece: TPieceType; const AIdx: integer): TBoard;
-{** Les cases à survoler pour aller d'un endroit à un autre. }
+{** Les cases à traverser pour aller d'un endroit à un autre. }
 function GetPath(const AFrom, ATo: integer): TBoard;
 
 const

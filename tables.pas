@@ -1,7 +1,10 @@
 
 {**
-  @abstract(Déclarations des tables.)
-  Déclarations des tables préfabriquées. Fonctions utilisant les tables et remplaçant les fonctions correspondantes de l'unité Damier.
+  @abstract(Tables de damiers binaires précalculés.)
+  Tables de damiers binaires précalculés.
+  Cette unité inclut le code source produit par les programmes du dossier *factory*. 
+  L'unité contient également des fonctions utilisant les tables et remplaçant les fonctions correspondantes de l'unité *board*.
+  Ces dernières ont servi à fabriquer le code source, et ne sont pas utilisées dans le programme final.
 }
 
 unit Tables;
@@ -12,11 +15,11 @@ uses
   Board;
 
 const  
-  CTargets: array[TPieceType, A1..H8] of TBoard = ({$I targets});
-  CPath: array[A1..H8, A1..H8] of TBoard = ({$I path});
-  CIndexToSquare: array[A1..H8] of TBoard = ({$I index});
-  CCoordToSquare: array[0..7, 0..7] of TBoard = ({$I coordinates});
-  CColumn: array[0..7] of TBoard = ({$I column});
+  CTargets: array[TPieceType, A1..H8] of TBoard = ({$I inc/targets});
+  CPath: array[A1..H8, A1..H8] of TBoard = ({$I inc/path});
+  CIndexToSquare: array[A1..H8] of TBoard = ({$I inc/index});
+  CCoordToSquare: array[0..7, 0..7] of TBoard = ({$I inc/coordinates});
+  CColumn: array[0..7] of TBoard = ({$I inc/column});
 
 function IsOnIdx(const ABrd: TBoard; const AIdx: integer): boolean;
 procedure SwitchOnIdx(var ABrd: TBoard; const AIdx: integer);
