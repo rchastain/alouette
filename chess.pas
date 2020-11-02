@@ -30,14 +30,14 @@ type
     Bishops,
     Queens,
     Kings: TBoard;
-    SideToMove: boolean;
+    Side: boolean;
     Roque: TCastling;
     EnPassant: integer;
     KingSquare: array[boolean] of TBoard;
   end;
   
 const
-  CZeroPosition: TPosition = (
+  CNewPos: TPosition = (
     Pieces: (0, 0);
     Pawns: 0;
     Rooks: 0;
@@ -45,7 +45,7 @@ const
     Bishops: 0;
     Queens: 0;
     Kings: 0;
-    SideToMove: FALSE;
+    Side: FALSE;
     Roque: (
       (KingRookCol: CNil; QueenRookCol: CNil),
       (KingRookCol: CNil; QueenRookCol: CNil)
@@ -160,7 +160,7 @@ begin
   result := CNil;
   x := 0;
   while (result = CNil) and (x <= 7) do
-    if IsOn(CColumn[x], ASqr) then
+    if IsOn(CCol[x], ASqr) then
       result := x
     else
       Inc(x);
@@ -175,7 +175,7 @@ var
   c: char;
   LSqr: TBoard;
 begin
-  result := CZeroPosition;
+  result := CNewPos;
   with TStringList.Create, result do
   begin
     DelimitedText := APos;
@@ -201,7 +201,7 @@ begin
             end;
         else
           begin
-            LSqr := CCoordToSquare[x, y];
+            LSqr := CCrdToSqr[x, y];
             SwitchOn(Pieces[c in ['a'..'z']], LSqr);
             case UpCase(c) of
               'P': SwitchOn(Pawns, LSqr);
@@ -220,7 +220,7 @@ begin
         end;
         Inc(i);
       end;
-      SideToMove := Strings[1] = CColorSymbol[CBlack];
+      Side := Strings[1] = CColorSymbol[CBlack];
       if AVariant then
         Roque := DecodeCastlingString(Strings[2], SquareToCol(KingSquare[CWhite]), SquareToCol(KingSquare[CBlack]))
       else
@@ -247,23 +247,23 @@ begin
     y := 7;
     while y >= 0 do
     begin
-      if (Pieces[FALSE] or Pieces[TRUE]) and CCoordToSquare[x, y] = 0 then
+      if (Pieces[FALSE] or Pieces[TRUE]) and CCrdToSqr[x, y] = 0 then
       begin
         n := 0;
-        while (x + n <= 7) and ((Pieces[FALSE] or Pieces[TRUE]) and CCoordToSquare[x + n, y] = 0) do
+        while (x + n <= 7) and ((Pieces[FALSE] or Pieces[TRUE]) and CCrdToSqr[x + n, y] = 0) do
           Inc(n);
         result := Concat(result, IntToStr(n));
         Inc(x, n);
       end else
       begin
         c := '?';
-        if IsOn(Pawns,        CCoordToSquare[x, y]) then c := 'P' else
-        if IsOn(Rooks,        CCoordToSquare[x, y]) then c := 'R' else
-        if IsOn(Knights,      CCoordToSquare[x, y]) then c := 'N' else
-        if IsOn(Bishops,      CCoordToSquare[x, y]) then c := 'B' else
-        if IsOn(Queens,       CCoordToSquare[x, y]) then c := 'Q' else
-        if IsOn(Kings,        CCoordToSquare[x, y]) then c := 'K';
-        if IsOn(Pieces[TRUE], CCoordToSquare[x, y]) then
+        if IsOn(Pawns,        CCrdToSqr[x, y]) then c := 'P' else
+        if IsOn(Rooks,        CCrdToSqr[x, y]) then c := 'R' else
+        if IsOn(Knights,      CCrdToSqr[x, y]) then c := 'N' else
+        if IsOn(Bishops,      CCrdToSqr[x, y]) then c := 'B' else
+        if IsOn(Queens,       CCrdToSqr[x, y]) then c := 'Q' else
+        if IsOn(Kings,        CCrdToSqr[x, y]) then c := 'K';
+        if IsOn(Pieces[TRUE], CCrdToSqr[x, y]) then
           c := Chr(Ord(c) + 32);
         result := Concat(result, c);
         Inc(x);
@@ -279,12 +279,12 @@ begin
     if EnPassant = CNil then
       s := '-'
     else
-      s := CSquareToStr[EnPassant];
+      s := CSqrToStr[EnPassant];
     result := Format(
       '%s %s %s %s',
       [
         result,
-        CColorSymbol[SideToMove],
+        CColorSymbol[Side],
         EncodeCastlingString(Roque, AVariant),
         s
       ]
@@ -337,9 +337,9 @@ begin
     if APos.EnPassant = CNil then
       s := '-'
     else
-      s := CSquareToStr[APos.EnPassant];
+      s := CSqrToStr[APos.EnPassant];
   result := Format(CFormat, [
-    CArrow[APos.SideToMove],
+    CArrow[APos.Side],
     c[0, 7], c[1, 7], c[2, 7], c[3, 7], c[4, 7], c[5, 7], c[6, 7], c[7, 7],
     c[0, 6], c[1, 6], c[2, 6], c[3, 6], c[4, 6], c[5, 6], c[6, 6], c[7, 6],
     c[0, 5], c[1, 5], c[2, 5], c[3, 5], c[4, 5], c[5, 5], c[6, 5], c[7, 5],
@@ -348,7 +348,7 @@ begin
     c[0, 2], c[1, 2], c[2, 2], c[3, 2], c[4, 2], c[5, 2], c[6, 2], c[7, 2],
     c[0, 1], c[1, 1], c[2, 1], c[3, 1], c[4, 1], c[5, 1], c[6, 1], c[7, 1],
     c[0, 0], c[1, 0], c[2, 0], c[3, 0], c[4, 0], c[5, 0], c[6, 0], c[7, 0],
-    CArrow[not APos.SideToMove],
+    CArrow[not APos.Side],
     EncodeCastlingString(APos.Roque, TRUE),
     s,
     Decodeposition(APos, TRUE)

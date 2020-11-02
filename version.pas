@@ -1,5 +1,5 @@
 
 const
-  CAppName = 'Alouette';
+  CAppName    = 'Alouette';
   CAppVersion = '0.1.3';
-  CAppAuthor = 'Roland Chastain';
+  CAppAuthor  = 'Roland Chastain';

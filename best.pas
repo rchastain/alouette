@@ -19,44 +19,68 @@ var
 implementation
 
 uses
-  SysUtils, Move, Moves, Castling, Board, Tables, Log, History, Sort;
+  SysUtils, Move, Moves, Castling, Board, Tables, Log, History;
+
+procedure Swap(var AArray: array of integer; const i: integer);
+var
+  j: integer;
+begin
+  j := AArray[i];
+  AArray[i] := AArray[i + 1];
+  AArray[i + 1] := j;
+end;
+
+procedure SortMoves(var AMoves, AValues: array of integer; const n: integer);
+var
+  LIdx: integer;
+  LDone: boolean;
+begin
+  repeat
+    LDone := TRUE;
+    for LIdx := 0 to n - 2 do
+      if AValues[LIdx] < AValues[LIdx + 1] then
+      begin
+        Swap(AMoves, LIdx);
+        Swap(AValues, LIdx);
+        LDone := FALSE;
+      end;
+  until LDone;
+end;
 
 const
   CInfinite = 99999;
   CPieceValue: array[ptWhitePawn..ptQueen] of integer = (100, 100, 500, 320, 330, 900);
 
-(*
 var
   LEndTime: cardinal;
-*)
 
 function GetMaterialValue(const APos: TPosition): integer;
 var
-  LIndex, LSign: integer;
+  LIdx, LSgn: integer;
   LPiece: TPieceType;
-  LWhitePieces, LBlackPieces, LSquare: TBoard;
+  LWPieces, LBPieces, LSqr: TBoard;
 begin
-  if (APos.Pieces[APos.SideToMove] and APos.Kings) = 0 then
-    Exit(-1 * CInfinite)
-  else if (APos.Pieces[not APos.SideToMove] and APos.Kings) = 0 then
+  if (APos.Pieces[APos.Side] and APos.Kings) = 0 then
+    Exit(-1 * CInfinite);
+  if (APos.Pieces[not APos.Side] and APos.Kings) = 0 then
     Exit(CInfinite);
   result := 0;
-  LWhitePieces := APos.Pieces[FALSE];
-  LBlackPieces := APos.Pieces[TRUE];
-  for LIndex := A1 to H8 do
+  LWPieces := APos.Pieces[FALSE];
+  LBPieces := APos.Pieces[TRUE];
+  for LIdx := A1 to H8 do
   begin
-    LSquare := CIndexToSquare[LIndex];
-    if IsOn(LWhitePieces, LSquare) then
-      LSign := 1
-    else if IsOn(LBlackPieces, LSquare) then
-      LSign := -1
+    LSqr := CIdxToSqr[LIdx];
+    if IsOn(LWPieces, LSqr) then
+      LSgn := +1
+    else if IsOn(LBPieces, LSqr) then
+      LSgn := -1
     else
       Continue;
-    LPiece := PieceTypeIdx(APos, LIndex);
+    LPiece := PieceTypeIdx(APos, LIdx);
     if LPiece <> ptKing then
-      Inc(result, CPieceValue[LPiece] * LSign);
+      Inc(result, CPieceValue[LPiece] * LSgn);
   end;
-  if APos.SideToMove then
+  if APos.Side then
     result := -1 * result;
 end;
 
@@ -68,7 +92,7 @@ begin
   if DoMove(LPos, MoveToStr(AMove)) then
   begin
     result := TRUE;
-    LPos.SideToMove := not LPos.SideToMove;
+    LPos.Side := not LPos.Side;
     if IsCheck(LPos) then
       result := FALSE;
   end else
@@ -101,7 +125,7 @@ begin
           ppp := pp;
           if DoMove(ppp, MoveToStr(mm[ii])) then
           begin
-            ppp.SideToMove := not ppp.SideToMove;
+            ppp.Side := not ppp.Side;
             if IsCheck(ppp) then
               LRes := -1 * CInfinite
             else
@@ -123,11 +147,6 @@ begin
   end;
 end;
 
-function Reverse(const AMove: string): string;
-begin
-  result := Concat(Copy(AMove, 3, 2), Copy(AMove, 1, 2));
-end;
-
 function PositionalEval(const APos: TPosition; const AMove: integer): integer;
 var
   LFrom, LTo: integer;
@@ -138,97 +157,14 @@ var
 begin
   result := 0;
   DecodeMove(AMove, LFrom, LTo, LPieceType, LMoveType);
-  (*
-  case LPieceType of
-    ptWhitePawn, ptBlackPawn: result := 0;
-    ptKnight, ptBishop: result := -1; 
-    ptRook, ptQueen: result := -2;
-    ptKing: result := -3;
-  end;
-  *)
   LPos := APos;
   if DoMove(LPos, MoveToStr(AMove)) then
   begin
-    LPos.SideToMove := not LPos.SideToMove;
+    LPos.Side := not LPos.Side;
     LProtections := GetProtectionsCount(LPos);
     Inc(result, LProtections);
   end;
-    
 end;
-(*
-var
-  LPos: TPosition;
-  LBonusRoque: integer;
-  LMalusRepetition, LMalusAnnulation: integer;
-  LBonusPiece: integer = -2;
-  LPieceType, LTypeCapture: TWidePieceType;
-  LCaptureValue: integer;
-  LFromSquare, LToSquare: integer;
-  LPieceTypeBis: TPieceType;
-  LMoveType: TMoveType;
-  LBonusEnPassant, LBonusCapture: integer;
-  LBonusMenaceRoi: integer;
-  LBonusEchec: integer;
-  LProtections: integer;
-  LMalusPiece: integer;
-begin
-  DecodeMove(AMove, LFromSquare, LToSquare, LPieceTypeBis, LMoveType);
-  
-  LPos := APos;
-  LBonusRoque := Ord(IsCastling(LPos, AMove)); if LBonusRoque = 1 then Assert(LMoveType = mtCastling);
-  LMalusRepetition := Ord(MoveToStr(AMove) = PreviousPreviousMove);
-  LMalusAnnulation := Ord(MoveToStr(AMove) = Reverse(PreviousMove));
-  LPieceType := PieceTypeIdx(LPos, StartIndex(AMove)); Assert(LPieceType = LPieceTypeBis);
-  LTypeCapture := PieceTypeIdx(LPos, TargetIndex(AMove));
-  if LTypeCapture = ptNil then
-  begin
-    if LMoveType = mtEnPassant then
-      LCaptureValue := CPieceValue[ptWhitePawn]
-    else
-      LCaptureValue := 0;
-  end else
-    LCaptureValue := CPieceValue[LTypeCapture];
-  result := Low(integer);
-  if not DoMove(LPos, MoveToStr(AMove)) then
-    Exit;
-  LBonusEchec := Ord(IsCheck(LPos));
-  LPos.SideToMove := not LPos.SideToMove;
-  LBonusPiece := 0;
-  LBonusEnPassant := Ord(LMoveType = mtEnPassant);
-  if LMoveType = mtCapture then
-  begin
-    if (LCaptureValue = CPieceValue[LPieceType])
-    or (LCaptureValue = CPieceValue[LPieceType] - 10) then
-      LBonusCapture := 1
-    else if LCaptureValue > CPieceValue[LPieceType] then
-      LBonusCapture := 2
-    else
-      LBonusCapture := 0;
-  end else
-    LBonusCapture := 0;
-  LBonusMenaceRoi := Ord((CTargets[LPieceTypeBis, LToSquare] and LPos.KingSquare[not LPos.SideToMove]) <> 0);
-  LProtections := GetProtectionsCount(LPos);
-  case LPieceType of
-    ptWhitePawn, ptBlackPawn: LMalusPiece := 0;
-    ptKnight, ptBishop: LMalusPiece := 1; 
-    ptRook, ptQueen: LMalusPiece := 2;
-    ptKing: LMalusPiece := 3;
-  end;
-  
-  result :=
-    0
-    + LBonusCapture
-    + LBonusMenaceRoi
-    + LBonusRoque
-    + LBonusEnPassant
-    + LBonusPiece
-    - LMalusRepetition
-    - LMalusAnnulation
-    + LBonusEchec
-    + LProtections
-    - LMalusPiece;
-end;
-*)
 
 function CountBestMoves(const ANotes: array of integer; const ALim: integer): integer;
 begin
@@ -244,10 +180,9 @@ var
 begin
   result := '0000';
   LTempMove := 'a1a1';
-  (*
   LEndTime := GetTickCount64 + ATime;
-  *)
   Log.Append(DecodePosition(APos), TRUE);
+  
   GenMoves(APos, LListe, n);
   GenCastling(APos, LListe, n);
   
@@ -277,14 +212,11 @@ begin
     LEval[i] := PositionalEval(APos, LListe[i]);
   SortMoves(LListe, LEval, n);
   Log.Append(LListe, LEval, n);
-  //LMove := LListe[0];
   n := CountBestMoves(LEval, n);
   LMove := LListe[Random(n)];
   if IsCastling(APos, LMove) and not AVariant then
-  begin
-    Assert(((LMove and $FF00) shr 8) mod 8 = CColE);
     RenameCastlingMove(LMove);
-  end;
+
   result := MoveToStr(LMove);
   if IsPromotion(APos, result) then
     result := Concat(result, 'q');

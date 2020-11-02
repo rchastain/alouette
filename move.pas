@@ -25,7 +25,7 @@ uses
 
 function PieceTypeIdx(const APos: TPosition; const AIdx: integer): TWidePieceType;
 begin
-  if      IsOnIdx(APos.Pawns,   AIdx) then if APos.SideToMove then result := ptBlackPawn else result := ptWhitePawn
+  if      IsOnIdx(APos.Pawns,   AIdx) then if APos.Side then result := ptBlackPawn else result := ptWhitePawn
   else if IsOnIdx(APos.Rooks,   AIdx) then result := ptRook
   else if IsOnIdx(APos.Knights, AIdx) then result := ptKnight
   else if IsOnIdx(APos.Bishops, AIdx) then result := ptBishop
@@ -37,68 +37,67 @@ end;
 
 function DoMove(var APos: TPosition; const AMove: string): boolean;
 var
-  LDep, LArr, LColDep, LColArr, LLigDep, LLigArr, LPris: integer;
+  LFrom, LTo, LFromCol, LToCol, LFromRow, LToRow, LEnPassantCapture: integer;
   LType: TPieceType;
-  LSuper: boolean;
+  LPreserve: boolean;
 begin
   result := TRUE;
   
-  { Conversion de la chaîne en index des cases de départ et d'arrivée. L'index est un nombre de 0 à 63. }
-  LDep := DecodeSquareName(Copy(AMove, 1, 2));
-  LArr := DecodeSquareName(Copy(AMove, 3, 2));
+  { Index des cases de départ et d'arrivée. }
+  LFrom := DecodeSquareName(Copy(AMove, 1, 2));
+  LTo := DecodeSquareName(Copy(AMove, 3, 2));
   
-  Assert(IsOnIdx(APos.Pieces[APos.SideToMove], LDep), 'Cannot evaluate piece color');
+  Assert(IsOnIdx(APos.Pieces[APos.Side], LFrom), 'Cannot evaluate piece color');
   
-  if      IsOnIdx(APos.Pawns,   LDep) then if APos.SideToMove then LType := ptBlackPawn else LType := ptWhitePawn
-  else if IsOnIdx(APos.Rooks,   LDep) then LType := ptRook
-  else if IsOnIdx(APos.Knights, LDep) then LType := ptKnight
-  else if IsOnIdx(APos.Bishops, LDep) then LType := ptBishop
-  else if IsOnIdx(APos.Queens,  LDep) then LType := ptQueen
-  else if IsOnIdx(APos.Kings,   LDep) then LType := ptKing
+  if      IsOnIdx(APos.Pawns,   LFrom) then if APos.Side then LType := ptBlackPawn else LType := ptWhitePawn
+  else if IsOnIdx(APos.Rooks,   LFrom) then LType := ptRook
+  else if IsOnIdx(APos.Knights, LFrom) then LType := ptKnight
+  else if IsOnIdx(APos.Bishops, LFrom) then LType := ptBishop
+  else if IsOnIdx(APos.Queens,  LFrom) then LType := ptQueen
+  else if IsOnIdx(APos.Kings,   LFrom) then LType := ptKing
   else
     Assert(FALSE, 'Cannot evaluate piece type');
 
-  LColDep := LDep mod 8;
-  LColArr := LArr mod 8;
-  LLigDep := LDep div 8;
-  LLigArr := LArr div 8;
-  LSuper := FALSE;
+  LFromCol := LFrom mod 8;
+  LToCol   := LTo   mod 8;
+  LFromRow := LFrom div 8;
+  LToRow   := LTo   div 8;
+  LPreserve := FALSE;
   
-  { Si la pièce déplacée est un roi... }
   if LType = ptKing then
   begin
-    if IsOnIdx(APos.Rooks and APos.Pieces[APos.SideToMove], LArr) then
+    if IsOnIdx(APos.Rooks and APos.Pieces[APos.Side], LTo) then
     begin
-      if LColArr = APos.Roque[APos.SideToMove].KingRookCol then
+      if LToCol = APos.Roque[APos.Side].KingRookCol then
       begin
         Log.Append(Format('** Castling on H side: %s', [AMove]));
-        MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], LArr, CATCR[APos.SideToMove]);
-        LArr := ToIndex(CColG, LLigArr);
-        LSuper := LColDep = CATCR[APos.SideToMove] mod 8;
+        MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCR[APos.Side]);
+        LTo := ToIndex(CColG, LToRow);
+        LPreserve := LFromCol = CATCR[APos.Side] mod 8;
       end else
-        if LColArr = APos.Roque[APos.SideToMove].QueenRookCol then
+        if LToCol = APos.Roque[APos.Side].QueenRookCol then
         begin
           Log.Append(Format('** Castling on A side: %s', [AMove]));
-          MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], LArr, CATCD[APos.SideToMove]);
-          LArr := ToIndex(CColC, LLigArr);
-          LSuper := LColDep = CATCD[APos.SideToMove] mod 8;
+          MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCD[APos.Side]);
+          LTo := ToIndex(CColC, LToRow);
+          LPreserve := LFromCol = CATCD[APos.Side] mod 8;
         end else
         begin
           Log.Append(Format('** Impossible move: %s', [AMove]));
           Exit(FALSE);
         end;
     end else
-      if Abs(LColArr - LColDep) = 2 then
+      if Abs(LToCol - LFromCol) = 2 then
       begin
-        if LColArr = CColG then
+        if LToCol = CColG then
         begin
           Log.Append(Format('** Castling on king side: %s', [AMove]));
-          MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], CDTCR[APos.SideToMove], CATCR[APos.SideToMove]);
+          MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], CDTCR[APos.Side], CATCR[APos.Side]);
         end else
-          if LColArr = CColC then
+          if LToCol = CColC then
           begin
             Log.Append(Format('** Castling on queen side: %s', [AMove]));
-            MovePieceIdx(APos.Rooks, APos.Pieces[APos.SideToMove], CDTCD[APos.SideToMove], CATCD[APos.SideToMove]);
+            MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], CDTCD[APos.Side], CATCD[APos.Side]);
           end else
           begin
             Log.Append(Format('** Impossible move: %s', [AMove]));
@@ -106,42 +105,42 @@ begin
           end;
       end;
     
-    APos.Roque[APos.SideToMove].KingRookCol := CNil;
-    APos.Roque[APos.SideToMove].QueenRookCol := CNil;
-    APos.KingSquare[APos.SideToMove] := CIndexToSquare[LArr];
+    APos.Roque[APos.Side].KingRookCol := CNil;
+    APos.Roque[APos.Side].QueenRookCol := CNil;
+    APos.KingSquare[APos.Side] := CIdxToSqr[LTo];
   end;
   
   { Si la pièce déplacée est une tour... }
   if LType = ptRook then
-    with APos.Roque[APos.SideToMove] do
-      if LColDep = KingRookCol then
+    with APos.Roque[APos.Side] do
+      if LFromCol = KingRookCol then
         KingRookCol := CNil
       else
-      if LColDep = QueenRookCol then
+      if LFromCol = QueenRookCol then
         QueenRookCol := CNil;
   
   { S'il y a une pièce sur la case d'arrivée... }
-  if IsOnIdx(APos.Pieces[not APos.SideToMove], LArr) then
+  if IsOnIdx(APos.Pieces[not APos.Side], LTo) then
   begin
-    if IsOnIdx(APos.Rooks, LArr)
-    and (LLigArr = CCastlingRow[not APos.SideToMove]) then
-      with APos.Roque[not APos.SideToMove] do
-        if (LColArr = KingRookCol) then
+    if IsOnIdx(APos.Rooks, LTo)
+    and (LToRow = CCastlingRow[not APos.Side]) then
+      with APos.Roque[not APos.Side] do
+        if (LToCol = KingRookCol) then
           KingRookCol := CNil
         else
-        if LColArr = KingRookCol then
+        if LToCol = KingRookCol then
           KingRookCol := CNil;
         
     with APos do
     begin
-      SwitchOffIdx(Pawns,   LArr);
-      SwitchOffIdx(Rooks,   LArr);
-      SwitchOffIdx(Knights, LArr);
-      SwitchOffIdx(Bishops, LArr);
-      SwitchOffIdx(Queens,  LArr);
-      SwitchOffIdx(Kings,   LArr);
+      SwitchOffIdx(Pawns,   LTo);
+      SwitchOffIdx(Rooks,   LTo);
+      SwitchOffIdx(Knights, LTo);
+      SwitchOffIdx(Bishops, LTo);
+      SwitchOffIdx(Queens,  LTo);
+      SwitchOffIdx(Kings,   LTo);
     end;
-    SwitchOffIdx(APos.Pieces[not APos.SideToMove], LArr);
+    SwitchOffIdx(APos.Pieces[not APos.Side], LTo);
   end;
   
   { Si la pièce déplacée est un pion... }
@@ -150,34 +149,34 @@ begin
     { Promotion. }
     if (Length(AMove) = 4) and IsPromotion(APos, AMove) then
     begin
-      SwitchOffIdx(APos.Pawns, LDep);
-      SwitchOnIdx(APos.Queens, LDep);
+      SwitchOffIdx(APos.Pawns, LFrom);
+      SwitchOnIdx(APos.Queens, LFrom);
       LType := ptQueen;
     end else
       if (Length(AMove) = 5) then
         case AMove[5] of
           'n':
             begin
-              SwitchOffIdx(APos.Pawns, LDep);
-              SwitchOnIdx(APos.Knights, LDep);
+              SwitchOffIdx(APos.Pawns, LFrom);
+              SwitchOnIdx(APos.Knights, LFrom);
               LType := ptKnight;
             end;
           'b':
             begin
-              SwitchOffIdx(APos.Pawns, LDep);
-              SwitchOnIdx(APos.Bishops, LDep);
+              SwitchOffIdx(APos.Pawns, LFrom);
+              SwitchOnIdx(APos.Bishops, LFrom);
               LType := ptBishop;
             end;
           'r':
             begin
-              SwitchOffIdx(APos.Pawns, LDep);
-              SwitchOnIdx(APos.Rooks, LDep);
+              SwitchOffIdx(APos.Pawns, LFrom);
+              SwitchOnIdx(APos.Rooks, LFrom);
               LType := ptRook;
             end;
           'q':
             begin
-              SwitchOffIdx(APos.Pawns, LDep);
-              SwitchOnIdx(APos.Queens, LDep);
+              SwitchOffIdx(APos.Pawns, LFrom);
+              SwitchOnIdx(APos.Queens, LFrom);
               LType := ptQueen;
             end;
           else
@@ -185,78 +184,79 @@ begin
         end;
     
     { Prise en passant. }
-    if LArr = APos.EnPassant then
+    if LTo = APos.EnPassant then
     begin
-      LPris := ToIndex(LColArr, LLigDep);
-      SwitchOffIdx(APos.Pawns, LPris);
-      SwitchOffIdx(APos.Pieces[not APos.SideToMove], LPris);
+      LEnPassantCapture := ToIndex(LToCol, LFromRow);
+      SwitchOffIdx(APos.Pawns, LEnPassantCapture);
+      SwitchOffIdx(APos.Pieces[not APos.Side], LEnPassantCapture);
     end;
   end;
   
-  if ((LType = ptWhitePawn) or (LType = ptBlackPawn)) and (Abs(LLigArr - LLigDep) = 2) then
-    APos.EnPassant := ToIndex(LColDep, LLigDep + (LLigArr - LLigDep) div 2)
+  if ((LType = ptWhitePawn) or (LType = ptBlackPawn))
+  and (Abs(LToRow - LFromRow) = 2) then
+    APos.EnPassant := ToIndex(LFromCol, LFromRow + (LToRow - LFromRow) div 2)
   else
     APos.EnPassant := CNil;
   
   { Déplacement de la pièce. }
   case LType of
     ptWhitePawn,
-    ptBlackPawn: MovePieceIdx(APos.Pawns,   APos.Pieces[APos.SideToMove], LDep, LArr, LSuper);
-    ptRook:      MovePieceIdx(APos.Rooks,   APos.Pieces[APos.SideToMove], LDep, LArr, LSuper);
-    ptKnight:    MovePieceIdx(APos.Knights, APos.Pieces[APos.SideToMove], LDep, LArr, LSuper);
-    ptBishop:    MovePieceIdx(APos.Bishops, APos.Pieces[APos.SideToMove], LDep, LArr, LSuper);
-    ptQueen:     MovePieceIdx(APos.Queens,  APos.Pieces[APos.SideToMove], LDep, LArr, LSuper);
-    ptKing:      MovePieceIdx(APos.Kings,   APos.Pieces[APos.SideToMove], LDep, LArr, LSuper);
+    ptBlackPawn: MovePieceIdx(APos.Pawns,   APos.Pieces[APos.Side], LFrom, LTo, LPreserve);
+    ptRook:      MovePieceIdx(APos.Rooks,   APos.Pieces[APos.Side], LFrom, LTo, LPreserve);
+    ptKnight:    MovePieceIdx(APos.Knights, APos.Pieces[APos.Side], LFrom, LTo, LPreserve);
+    ptBishop:    MovePieceIdx(APos.Bishops, APos.Pieces[APos.Side], LFrom, LTo, LPreserve);
+    ptQueen:     MovePieceIdx(APos.Queens,  APos.Pieces[APos.Side], LFrom, LTo, LPreserve);
+    ptKing:      MovePieceIdx(APos.Kings,   APos.Pieces[APos.Side], LFrom, LTo, LPreserve);
   end;
   { Changement du trait. }
-  APos.SideToMove := not APos.SideToMove;
+  APos.Side := not APos.Side;
 end;
 
 function IsPromotion(const APos: TPosition; const AMove: string): boolean;
 var
-  LDep, LArr: integer;
+  LFrom, LTo: integer;
 begin
-  LDep := DecodeSquareName(Copy(AMove, 1, 2));
-  LArr := DecodeSquareName(Copy(AMove, 3, 2)) div 8;
-  result := IsOnIdx(APos.Pawns, LDep) and (
-    not APos.SideToMove and (LArr = CRow8)
-    or  APos.SideToMove and (LArr = CRow1)
+  LFrom := DecodeSquareName(Copy(AMove, 1, 2));
+  LTo := DecodeSquareName(Copy(AMove, 3, 2)) div 8;
+  result := IsOnIdx(APos.Pawns, LFrom) and (
+    not APos.Side and (LTo = CRow8)
+    or  APos.Side and (LTo = CRow1)
   );
 end;
 
 function IsCastling(const APos: TPosition; const AMove: integer): boolean;
 var
-  LDep, LArr: integer;
+  LFrom, LTo: integer;
   LBlanc, LNoir: TBoard;
 begin
   LBlanc := APos.Pieces[FALSE];
   LNoir := APos.Pieces[TRUE];
-  DecodeMove(AMove, LDep, LArr);
+  DecodeMove(AMove, LFrom, LTo);
   result :=
-    (IsOnIdx(LBlanc, LDep) and IsOnIdx(LBlanc, LArr)) or
-    (IsOnIdx(LNoir,  LDep) and IsOnIdx(LNoir,  LArr));
+    (IsOnIdx(LBlanc, LFrom) and IsOnIdx(LBlanc, LTo)) or
+    (IsOnIdx(LNoir,  LFrom) and IsOnIdx(LNoir,  LTo));
   if result then
     Log.Append(Format('** Castling move: %s', [MoveToStr(AMove)]));
 end;
 
 procedure RenameCastlingMove(var ARoque: integer);
 var
-  LDep, LArr, LLigDep, LLigArr, LColArr: integer;
+  LFrom, LTo, LFromRow, LToRow, LToCol: integer;
   LAncienNom: string;
 begin
-  DecodeMove(ARoque, LDep, LArr);
-  Assert((LDep >= 0) and (LDep <= 63) and (LArr >= 0) and (LArr <= 63));
-  LAncienNom := Concat(CSquareToStr[LDep], CSquareToStr[LArr]);
-  LLigDep := LDep div 8;
-  LLigArr := LArr div 8;
-  Assert((LLigArr = LLigDep) and ((LLigDep = CRow1) or (LLigDep = CRow8)));
-  if LArr mod 8 > LDep mod 8 then
-    LColArr := CColG
+  DecodeMove(ARoque, LFrom, LTo);
+  Assert((LFrom >= 0) and (LFrom <= 63) and (LTo >= 0) and (LTo <= 63));
+  LAncienNom := Concat(CSqrToStr[LFrom], CSqrToStr[LTo]);
+  LFromRow := LFrom div 8;
+  LToRow := LTo div 8;
+  Assert((LToRow = LFromRow) and ((LFromRow = CRow1) or (LFromRow = CRow8)));
+  if LTo mod 8 > LFrom mod 8 then
+    LToCol := CColG
   else
-    LColArr := CColC;
-  LArr := 8 * LLigArr + LColArr;
-  ARoque := EncodeMove(LDep, LArr, ptKing);
-  Log.Append(Format('** Reformulated %s to %s', [LAncienNom, Concat(CSquareToStr[LDep], CSquareToStr[LArr])]));
+    LToCol := CColC;
+  LTo := 8 * LToRow + LToCol;
+  ARoque := EncodeMove(LFrom, LTo, ptKing);
+  Log.Append(Format('** Reformulated %s to %s', [LAncienNom, Concat(CSqrToStr[LFrom], CSqrToStr[LTo])]));
 end;
 
 end.

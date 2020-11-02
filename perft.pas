@@ -30,7 +30,7 @@ begin
     with LPos do
       result := (
         GenMoves(LPos)
-        and Pieces[not SideToMove]
+        and Pieces[not Side]
         and Kings
       ) = 0;
 end;

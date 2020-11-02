@@ -28,11 +28,11 @@ uses
 
 var
   LPos: TPosition;
-  LVariant: boolean;
+  LVariant: boolean = FALSE;
   
 procedure Reset;
 begin
-  LPos := CZeroPosition;
+  LPos := CNewPos;
 end;
 
 procedure LoadStartPosition;
@@ -85,6 +85,5 @@ end;
 
 initialization
   Reset;
-  LVariant := FALSE;
 
 end.

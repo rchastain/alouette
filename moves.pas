@@ -30,7 +30,7 @@ var
 
   procedure SaveMove(const i, j: integer; const p: TPieceType; const c: TMoveType = mtCommon);
   begin
-    SwitchOn(result, CIndexToSquare[j]);
+    SwitchOn(result, CIdxToSqr[j]);
     Inc(LCompte);
     if not AQuick then
       if LCompte <= Length(AList) then
@@ -50,95 +50,95 @@ begin
   
   result := 0; { Damier vide. }
   
-  for i := A1 to H8 do if IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[i]) then
+  for i := A1 to H8 do if IsOn(APos.Pieces[APos.Side], CIdxToSqr[i]) then
   begin
     { Pion. }
-    if IsOn(APos.Pawns, CIndexToSquare[i]) then
+    if IsOn(APos.Pawns, CIdxToSqr[i]) then
     begin
       { Pas en avant. }
-      k := 8 - 16 * Ord(APos.SideToMove);
+      k := 8 - 16 * Ord(APos.Side);
       j := i + k;
-      if not IsOn(LPieces, CIndexToSquare[j]) then
+      if not IsOn(LPieces, CIdxToSqr[j]) then
       begin
-        SaveMove(i, j, CPion[APos.SideToMove]);
+        SaveMove(i, j, CPion[APos.Side]);
         { Second pas en avant. }
-        if ((j div 8 = 2) and not APos.SideToMove)
-        or ((j div 8 = 5) and APos.SideToMove) then
+        if ((j div 8 = 2) and not APos.Side)
+        or ((j div 8 = 5) and APos.Side) then
         begin
           j := j + k;
-          if not IsOn(LPieces, CIndexToSquare[j]) then
-            SaveMove(i, j, CPion[APos.SideToMove]);
+          if not IsOn(LPieces, CIdxToSqr[j]) then
+            SaveMove(i, j, CPion[APos.Side]);
         end;
       end;
       { Prise côté dame. }
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
-        if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) xor (j = APos.EnPassant) then
+        if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
-          SaveMove(i, j, CPion[APos.SideToMove], mtEnPassant) else
-          SaveMove(i, j, CPion[APos.SideToMove], mtCapture);
+          SaveMove(i, j, CPion[APos.Side], mtEnPassant) else
+          SaveMove(i, j, CPion[APos.Side], mtCapture);
       end;
       { Prise côté roi. }
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
-        if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) xor (j = APos.EnPassant) then
+        if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) xor (j = APos.EnPassant) then
           if j = APos.EnPassant then
-          SaveMove(i, j, CPion[APos.SideToMove], mtEnPassant) else
-          SaveMove(i, j, CPion[APos.SideToMove], mtCapture);
+          SaveMove(i, j, CPion[APos.Side], mtEnPassant) else
+          SaveMove(i, j, CPion[APos.Side], mtCapture);
       end;
     end else
     { Tour. }
-    if IsOn(APos.Rooks, CIndexToSquare[i]) then
+    if IsOn(APos.Rooks, CIdxToSqr[i]) then
     begin
       for j := A1 to H8 do
-        if IsOn(CTargets[ptRook, i], CIndexToSquare[j])
-        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
+        if IsOn(CTargets[ptRook, i], CIdxToSqr[j])
+        and not IsOn(APos.Pieces[APos.Side], CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
-          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
           SaveMove(i, j, ptRook, mtCapture) else
           SaveMove(i, j, ptRook);
     end else
     { Cavalier. }
-    if IsOn(APos.Knights, CIndexToSquare[i]) then
+    if IsOn(APos.Knights, CIdxToSqr[i]) then
     begin
       for j := A1 to H8 do
-        if IsOn(CTargets[ptKnight, i], CIndexToSquare[j])
-        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
-          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+        if IsOn(CTargets[ptKnight, i], CIdxToSqr[j])
+        and not IsOn(APos.Pieces[APos.Side], CIdxToSqr[j]) then
+          if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
           SaveMove(i, j, ptKnight, mtCapture) else
           SaveMove(i, j, ptKnight);
     end else
     { Fou. }
-    if IsOn(APos.Bishops, CIndexToSquare[i]) then
+    if IsOn(APos.Bishops, CIdxToSqr[i]) then
     begin
       for j := A1 to H8 do
-        if IsOn(CTargets[ptBishop, i], CIndexToSquare[j])
-        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
+        if IsOn(CTargets[ptBishop, i], CIdxToSqr[j])
+        and not IsOn(APos.Pieces[APos.Side], CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
-          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
           SaveMove(i, j, ptBishop, mtCapture) else
           SaveMove(i, j, ptBishop);
     end else
     { Dame. }
-    if IsOn(APos.Queens, CIndexToSquare[i]) then
+    if IsOn(APos.Queens, CIdxToSqr[i]) then
     begin
       for j := A1 to H8 do
-        if IsOn(CTargets[ptQueen, i], CIndexToSquare[j])
-        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j])
+        if IsOn(CTargets[ptQueen, i], CIdxToSqr[j])
+        and not IsOn(APos.Pieces[APos.Side], CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
-          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+          if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
           SaveMove(i, j, ptQueen, mtCapture) else
           SaveMove(i, j, ptQueen);
     end else
     { Roi. }
-    if IsOn(APos.Kings, CIndexToSquare[i]) then
+    if IsOn(APos.Kings, CIdxToSqr[i]) then
     begin
       for j := A1 to H8 do
-        if IsOn(CTargets[ptKing, i], CIndexToSquare[j])
-        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
-          if IsOn(APos.Pieces[not APos.SideToMove], CIndexToSquare[j]) then
+        if IsOn(CTargets[ptKing, i], CIdxToSqr[j])
+        and not IsOn(APos.Pieces[APos.Side], CIdxToSqr[j]) then
+          if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
           SaveMove(i, j, ptKing, mtCapture) else
           SaveMove(i, j, ptKing);
     end;
@@ -167,20 +167,20 @@ var
   i, j: integer;
   LPion: TPieceType;
 begin
-  if APos.SideToMove then
+  if APos.Side then
     LPion := ptBlackPawn
   else
     LPion := ptWhitePawn;
   result := 0; { Damier vide. }
-  for i := A1 to H8 do if IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[i]) then
+  for i := A1 to H8 do if IsOn(APos.Pieces[APos.Side], CIdxToSqr[i]) then
   begin
     { Pion. }
-    if IsOn(APos.Pawns, CIndexToSquare[i]) then
+    if IsOn(APos.Pawns, CIdxToSqr[i]) then
     begin
       for j := A1 to H8 do
-        if IsOn(CTargets[LPion, i], CIndexToSquare[j])
-        and not IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[j]) then
-          SwitchOn(result, CIndexToSquare[j]);
+        if IsOn(CTargets[LPion, i], CIdxToSqr[j])
+        and not IsOn(APos.Pieces[APos.Side], CIdxToSqr[j]) then
+          SwitchOn(result, CIdxToSqr[j]);
     end;
   end;
 end;
@@ -190,7 +190,7 @@ var
   LPos: TPosition;
 begin
   LPos := APos;
-  LPos.SideToMove := not LPos.SideToMove;
+  LPos.Side := not LPos.Side;
   result := (GenMoves(LPos) and LPos.Kings) <> 0;
 end;
 
@@ -207,79 +207,79 @@ begin
   LPieces := APos.Pieces[FALSE] or APos.Pieces[TRUE];
   result := 0;
   
-  for i := A1 to H8 do if IsOn(APos.Pieces[APos.SideToMove], CIndexToSquare[i]) then
+  for i := A1 to H8 do if IsOn(APos.Pieces[APos.Side], CIdxToSqr[i]) then
   begin
     { Pion. }
-    if IsOn(APos.Pawns, CIndexToSquare[i]) then
+    if IsOn(APos.Pawns, CIdxToSqr[i]) then
     begin
-      //Log.Append(CSquareToStr[i], TRUE);
-      k := 8 - 16 * Ord(APos.SideToMove);
+      //Log.Append(CSqrToStr[i], TRUE);
+      k := 8 - 16 * Ord(APos.Side);
       j := i + k;
       { Prise côté A. }
       if i mod 8 > 3 then
       begin
         j := Pred(i + k);
-        if IsOn(APos.Pieces[APos.SideToMove] and APos.Pawns, CIndexToSquare[j]) then
+        if IsOn(APos.Pieces[APos.Side] and APos.Pawns, CIdxToSqr[j]) then
           Inc(result);
       end;
       { Prise côté H. }
       if i mod 8 < 4 then
       begin
         j := Succ(i + k);
-        if IsOn(APos.Pieces[APos.SideToMove] and APos.Pawns, CIndexToSquare[j]) then
+        if IsOn(APos.Pieces[APos.Side] and APos.Pawns, CIdxToSqr[j]) then
           Inc(result);
       end;
     end else
     { Tour. }
-    if IsOn(APos.Rooks, CIndexToSquare[i]) then
+    if IsOn(APos.Rooks, CIdxToSqr[i]) then
     begin
       (*
       for j := A1 to H8 do
-        if IsOn(CTargets[ptRook, i], CIndexToSquare[j])
-        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks), CIndexToSquare[j])
+        if IsOn(CTargets[ptRook, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks), CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
           Inc(result);
       *)
     end else
     { Cavalier. }
-    if IsOn(APos.Knights, CIndexToSquare[i]) then
+    if IsOn(APos.Knights, CIdxToSqr[i]) then
     begin
       (*
       for j := A1 to H8 do
-        if IsOn(CTargets[ptKnight, i], CIndexToSquare[j])
-        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops), CIndexToSquare[j]) then
+        if IsOn(CTargets[ptKnight, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops), CIdxToSqr[j]) then
           Inc(result);
       *)
     end else
     { Fou. }
-    if IsOn(APos.Bishops, CIndexToSquare[i]) then
+    if IsOn(APos.Bishops, CIdxToSqr[i]) then
     begin
       (*
       for j := A1 to H8 do
-        if IsOn(CTargets[ptBishop, i], CIndexToSquare[j])
-        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops), CIndexToSquare[j])
+        if IsOn(CTargets[ptBishop, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops), CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
           Inc(result);
       *)
     end else
     { Dame. }
-    if IsOn(APos.Queens, CIndexToSquare[i]) then
+    if IsOn(APos.Queens, CIdxToSqr[i]) then
     begin
       (*
       for j := A1 to H8 do
-        if IsOn(CTargets[ptQueen, i], CIndexToSquare[j])
-        and IsOn(APos.Pieces[APos.SideToMove] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks or APos.Queens), CIndexToSquare[j])
+        if IsOn(CTargets[ptQueen, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks or APos.Queens), CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
           Inc(result);
       *)
     end else
     { Roi. }
-    if IsOn(APos.Kings, CIndexToSquare[i]) then
+    if IsOn(APos.Kings, CIdxToSqr[i]) then
     begin
       (*
       for j := A1 to H8 do
-        if IsOn(CTargets[ptKing, i], CIndexToSquare[j])
-        and IsOn(APos.Pieces[APos.SideToMove] and APos.Pawns, CIndexToSquare[j]) then
+        if IsOn(CTargets[ptKing, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[APos.Side] and APos.Pawns, CIdxToSqr[j]) then
           Inc(result);
       *)
     end;

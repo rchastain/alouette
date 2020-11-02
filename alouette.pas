@@ -166,13 +166,13 @@ begin
               begin
                 LPos := Player.CurrentPosition;
                 if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
-                  LTimeAvailable := IfThen(LPos.SideToMove, LBinc, LWInc)
+                  LTimeAvailable := IfThen(LPos.Side, LBinc, LWInc)
                 else
                   if IsGoCmd(LCmd, LWTime, LBTime, LMTG) then       // go wtime 59559 btime 56064 movestogo 38
-                    LTimeAvailable := IfThen(LPos.SideToMove, LBTime div LMTG, LWTime div LMTG)
+                    LTimeAvailable := IfThen(LPos.Side, LBTime div LMTG, LWTime div LMTG)
                   else
                     if IsGoCmd(LCmd, LWTime, LBTime) then           // go wtime 600000 btime 600000
-                      LTimeAvailable := IfThen(LPos.SideToMove, LBTime, LWTime)
+                      LTimeAvailable := IfThen(LPos.Side, LBTime, LWTime)
                     else
                       if IsGoCmd(LCmd, LMTime) then                 // go movetime 500
                         LTimeAvailable := LMTime
@@ -184,7 +184,7 @@ begin
                 {$IFNDEF RANDOM_MOVER}
                 if LCanUseBook then
                 begin
-                  LBookMove := LBook[LPos.SideToMove].FindMoveToPlay(Trim(LBookLine), TRUE);
+                  LBookMove := LBook[LPos.Side].FindMoveToPlay(Trim(LBookLine), TRUE);
                   if LBookMove <> '' then
                   begin
                     Log.Append(Format('Book move: %s', [LBookMove]));
