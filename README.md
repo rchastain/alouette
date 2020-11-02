@@ -16,10 +16,19 @@ This format has been previously used by Marc-Philippe Huget in his engine [La Da
 
 ## Random mover
 
-The executable named *random32* (or *random64*) is a pure random mover. It's almost the only engine that Alouette manages to beat!
+The executable named *random32* (or *random64*) is a pure random mover.
+
+## Credits
+
+Thanks to:
+
+* Philippe Guesset for the [optimized version](https://www.developpez.net/forums/d2001819-2/autres-langages/assembleur/x86-32-bits-64-bits/reecriture-pascal-d-fonction-assembleur/#post11124482) of the function allowing to count the bits
+* Mathieu Dalbin for the [TTree class](https://www.developpez.net/forums/d2034310/autres-langages/pascal/langage/representation-l-arbre-d-livre-d-ouvertures-aux-echecs/#post11310888) allowing to create trees of moves
 
 ## Author
 
-Alouette is an open source program written for the Free Pascal Compiler by Roland Chastain.
+*Alouette* is an open source program written for the Free Pascal Compiler by Roland Chastain.
 
-![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo.bmp)
+## Logo
+
+![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo/logo.bmp)
