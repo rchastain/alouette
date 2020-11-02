@@ -11,33 +11,30 @@ interface
 uses
   Chess;
 
-function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer): string;
-
-var
-  LTempMove: string;
+function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string): string;
   
 implementation
 
 uses
   SysUtils, Move, Moves, Castling, Board, Tables, Log, History;
 
-procedure Swap(var AArray: array of integer; const i: integer);
+procedure Swap(var AArr: array of integer; const AIdx: integer);
 var
-  j: integer;
+  LAux: integer;
 begin
-  j := AArray[i];
-  AArray[i] := AArray[i + 1];
-  AArray[i + 1] := j;
+  LAux := AArr[AIdx];
+  AArr[AIdx] := AArr[AIdx + 1];
+  AArr[AIdx + 1] := LAux;
 end;
 
-procedure SortMoves(var AMoves, AValues: array of integer; const n: integer);
+procedure Sort(var AMoves, AValues: array of integer; const ACount: integer);
 var
   LIdx: integer;
   LDone: boolean;
 begin
   repeat
     LDone := TRUE;
-    for LIdx := 0 to n - 2 do
+    for LIdx := 0 to ACount - 2 do
       if AValues[LIdx] < AValues[LIdx + 1] then
       begin
         Swap(AMoves, LIdx);
@@ -54,7 +51,7 @@ const
 var
   LEndTime: cardinal;
 
-function GetMaterialValue(const APos: TPosition): integer;
+function MaterialAdvantage(const APos: TPosition): integer;
 var
   LIdx, LSgn: integer;
   LPiece: TPieceType;
@@ -99,37 +96,37 @@ begin
     result := FALSE;
 end;
 
-function MaterialEval(const APos: TPosition; const AMove: integer): integer;
+function Eval1(const APos: TPosition; const AMove: integer): integer;
 var
-  m, mm: array[0..199] of integer;
-  p, pp, ppp: TPosition;
-  i, ii: integer;
-  c, cc: integer;
+  LMov: array[1..2, 0..199] of integer;
+  LPos: array[1..3] of TPosition;
+  LCnt: array[1..2] of integer;
   LRes, LMax: integer;
+  i, j: integer;
 begin
-  p := APos;
+  LPos[1] := APos;
   result := Low(integer);
-  if DoMove(p, MoveToStr(AMove)) then
+  if DoMove(LPos[1], MoveToStr(AMove)) then
   begin
-    GenMoves(p, m, c);
+    GenMoves(LPos[1], LMov[1], LCnt[1]);
     result := High(integer);
-    for i := 0 to Pred(c) do
+    for i := 0 to Pred(LCnt[1]) do
     begin
-      pp := p;
-      if DoMove(pp, MoveToStr(m[i])) then
+      LPos[2] := LPos[1];
+      if DoMove(LPos[2], MoveToStr(LMov[1][i])) then
       begin
-        GenMoves(pp, mm, cc);
+        GenMoves(LPos[2], LMov[2], LCnt[2]);
         LMax := Low(integer);
-        for ii := 0 to Pred(cc) do
+        for j := 0 to Pred(LCnt[2]) do
         begin
-          ppp := pp;
-          if DoMove(ppp, MoveToStr(mm[ii])) then
+          LPos[3] := LPos[2];
+          if DoMove(LPos[3], MoveToStr(LMov[2][j])) then
           begin
-            ppp.Side := not ppp.Side;
-            if IsCheck(ppp) then
+            LPos[3].Side := not LPos[3].Side;
+            if IsCheck(LPos[3]) then
               LRes := -1 * CInfinite
             else
-              LRes := GetMaterialValue(ppp);
+              LRes := MaterialAdvantage(LPos[3]);
           end else
             Continue;
           if LRes > LMax then
@@ -147,7 +144,7 @@ begin
   end;
 end;
 
-function PositionalEval(const APos: TPosition; const AMove: integer): integer;
+function Eval2(const APos: TPosition; const AMove: integer): integer;
 var
   LFrom, LTo: integer;
   LPieceType: TPieceType;
@@ -173,50 +170,57 @@ begin
     Inc(result);
 end;
 
-function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer): string;
+function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string): string;
 var
-  LListe, LEval: array[0..99] of integer;
-  n, i, LMove: integer;
-begin
-  result := '0000';
-  LTempMove := 'a1a1';
+  LList, LEval: array[0..199] of integer;
+  LCount, LMove, i: integer;
+begin  
   LEndTime := GetTickCount64 + ATime;
   Log.Append(DecodePosition(APos), TRUE);
+  Log.Append(Format('Time available: %d ms', [ATime]), TRUE);
   
-  GenMoves(APos, LListe, n);
-  GenCastling(APos, LListe, n);
+  GenMoves(APos, LList, LCount);
+  GenCastling(APos, LList, LCount);
   
-  for i := 0 to Pred(n) do
-    LEval[i] := Ord(IsLegal(APos, LListe[i]));
-  SortMoves(LListe, LEval, n);
-  Log.Append(LListe, n);
-  
-  n := CountBestMoves(LEval, n);
-  LTempMove := MoveToStr(LListe[Random(n)]);
-  if IsPromotion(APos, LTempMove) then
-    LTempMove := Concat(LTempMove, 'q');
-{$IFDEF RANDOM_MOVER}
-  Exit(LTempMove);
-{$ENDIF}
-  for i := 0 to Pred(n) do
-    LEval[i] := MaterialEval(APos, LListe[i]);
-  SortMoves(LListe, LEval, n);
-  Log.Append(LListe, LEval, n);
-  n := CountBestMoves(LEval, n);
-  LTempMove := MoveToStr(LListe[Random(n)]);
-  if IsPromotion(APos, LTempMove) then
-    LTempMove := Concat(LTempMove, 'q');
-  if n = 1 then
-    Exit(LTempMove);
-  for i := 0 to Pred(n) do
-    LEval[i] := PositionalEval(APos, LListe[i]);
-  SortMoves(LListe, LEval, n);
-  Log.Append(LListe, LEval, n);
-  n := CountBestMoves(LEval, n);
-  LMove := LListe[Random(n)];
+  { I. }
+  for i := 0 to Pred(LCount) do
+    LEval[i] := Ord(IsLegal(APos, LList[i]));
+  Sort(LList, LEval, LCount);
+  LCount := CountBestMoves(LEval, LCount);
+  LMove := LList[Random(LCount)];
   if IsCastling(APos, LMove) and not AVariant then
-    RenameCastlingMove(LMove);
+    RenameCastling(LMove);
+  AMove := MoveToStr(LMove);
+  if IsPromotion(APos, AMove) then
+    AMove := Concat(AMove, 'q');
 
+{$IFDEF RANDOM_MOVER}
+  result := AMove;
+  Exit;
+{$ENDIF}
+  
+  { II. }
+  for i := 0 to Pred(LCount) do
+    LEval[i] := Eval1(APos, LList[i]);
+  Sort(LList, LEval, LCount);
+  Log.Append(LList, LEval, LCount);
+  LCount := CountBestMoves(LEval, LCount);
+  LMove := LList[Random(LCount)];
+  if IsCastling(APos, LMove) and not AVariant then
+    RenameCastling(LMove);
+  AMove := MoveToStr(LMove);
+  if IsPromotion(APos, AMove) then
+    AMove := Concat(AMove, 'q');
+
+  { III. }
+  for i := 0 to Pred(LCount) do
+    LEval[i] := Eval2(APos, LList[i]);
+  Sort(LList, LEval, LCount);
+  Log.Append(LList, LEval, LCount);
+  LCount := CountBestMoves(LEval, LCount);
+  LMove := LList[Random(LCount)];
+  if IsCastling(APos, LMove) and not AVariant then
+    RenameCastling(LMove);
   result := MoveToStr(LMove);
   if IsPromotion(APos, result) then
     result := Concat(result, 'q');

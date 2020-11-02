@@ -58,7 +58,7 @@ begin
   if not Terminated then
   begin
     Send(Format('bestmove %s', [LMove]));
-    Log.Append(Format('** Move computed in %0.3f s', [LTimeUsed / 1000]), TRUE);
+    Log.Append(Format('Move computed in %0.3f s', [LTimeUsed / 1000]), TRUE);
   end;
 end;
 
@@ -166,13 +166,13 @@ begin
               begin
                 LPos := Player.CurrentPosition;
                 if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
-                  LTimeAvailable := IfThen(LPos.Side, LBinc, LWInc)
+                  LTimeAvailable := IfThen(LPos.Side, LBTime div 100 + LBinc, LWTime div 100 + LWInc)
                 else
                   if IsGoCmd(LCmd, LWTime, LBTime, LMTG) then       // go wtime 59559 btime 56064 movestogo 38
                     LTimeAvailable := IfThen(LPos.Side, LBTime div LMTG, LWTime div LMTG)
                   else
                     if IsGoCmd(LCmd, LWTime, LBTime) then           // go wtime 600000 btime 600000
-                      LTimeAvailable := IfThen(LPos.Side, LBTime, LWTime)
+                      LTimeAvailable := IfThen(LPos.Side, LBTime div 100, LWTime div 100)
                     else
                       if IsGoCmd(LCmd, LMTime) then                 // go movetime 500
                         LTimeAvailable := LMTime
@@ -187,7 +187,7 @@ begin
                   LBookMove := LBook[LPos.Side].FindMoveToPlay(Trim(LBookLine), TRUE);
                   if LBookMove <> '' then
                   begin
-                    Log.Append(Format('Book move: %s', [LBookMove]));
+                    Log.Append(Format('** Book %s', [LBookMove]));
                     Send(Format('bestmove %s', [LBookMove]));
                     Continue;
                   end;

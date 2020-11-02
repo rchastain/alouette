@@ -95,7 +95,7 @@ begin
   else
     Exit;
 
-{ Enregistrement du coup. Le coup est noté comme s'il s'agissait de la prise de la tour par le roi. }
+{ Enregistrement du coup. Le coup est noté comme la prise de la tour par le roi. }
   SaveMove(LKingFromIdx, LRookFromIdx);
 end;
 

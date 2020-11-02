@@ -21,7 +21,9 @@ type
     KingRookCol,
     QueenRookCol: integer;
   end;
+  
   TCastling = array[boolean] of TCastlingData;
+  
   TPosition = record
     Pieces: array[boolean] of TBoard;
     Pawns,

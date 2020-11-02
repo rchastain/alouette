@@ -49,11 +49,14 @@ end;
 
 procedure Append(const AText: string; const ASecondFile: boolean);
 begin
+{$IFDEF DEBUG}
   WriteLn(LFichier[ASecondFile], AText);
-  Flush(LFichier[ASecondFile]);
+  //Flush(LFichier[ASecondFile]);
+{$ENDIF}
 end;
 
 procedure Append(const AMoves: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
+{$IFDEF DEBUG}
 var
   s: string;
   i: integer;
@@ -62,10 +65,15 @@ begin
   for i := 0 to Pred(AMovesCount) do
     s := s + Format('%6s', [MoveToStr(AMoves[i])]);
   WriteLn(LFichier[ASecondFile], s);
-  Flush(LFichier[ASecondFile]);
+  //Flush(LFichier[ASecondFile]);
 end;
+{$ELSE}
+begin
+end;
+{$ENDIF}
 
 procedure Append(const AMoves, AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
+{$IFDEF DEBUG}
 var
   s: string;
   i: integer;
@@ -78,13 +86,19 @@ begin
   for i := 0 to Pred(AMovesCount) do
     s := s + Format('%6d', [AValues[i]]);
   WriteLn(LFichier[ASecondFile], s);
-  Flush(LFichier[ASecondFile]);
+  //Flush(LFichier[ASecondFile]);
 end;
+{$ELSE}
+begin
+end;
+{$ENDIF}
 
+{$IFDEF DEBUG}
 initialization
   OpenLog;
   
 finalization
   CloseLog;
+{$ENDIF}
 
 end.

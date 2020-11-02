@@ -29,6 +29,7 @@ uses
 var
   LPos: TPosition;
   LVariant: boolean = FALSE;
+  LMove: string;
   
 procedure Reset;
 begin
@@ -51,12 +52,13 @@ end;
 
 function BestMove(const ATimeAvailable: integer): string;
 begin
-  result := GetBestMove(LPos, LVariant, ATimeAvailable);
+  LMove := 'a1a1';
+  result := GetBestMove(LPos, LVariant, ATimeAvailable, LMove);
 end;
 
 function InstantMove: string;
 begin
-  result := LTempMove;
+  result := LMove;
 end;
 
 procedure SetVariant(const AValue: boolean);

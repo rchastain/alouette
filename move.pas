@@ -16,7 +16,7 @@ function PieceTypeIdx(const APos: TPosition; const AIdx: integer): TWidePieceTyp
 function DoMove(var APos: TPosition; const AMove: string): boolean;
 function IsPromotion(const APos: TPosition; const AMove: string): boolean;
 function IsCastling(const APos: TPosition; const AMove: integer): boolean;
-procedure RenameCastlingMove(var ARoque: integer);
+procedure RenameCastling(var AMove: integer);
 
 implementation
 
@@ -239,12 +239,12 @@ begin
     Log.Append(Format('** Castling move: %s', [MoveToStr(AMove)]));
 end;
 
-procedure RenameCastlingMove(var ARoque: integer);
+procedure RenameCastling(var AMove: integer);
 var
   LFrom, LTo, LFromRow, LToRow, LToCol: integer;
   LAncienNom: string;
 begin
-  DecodeMove(ARoque, LFrom, LTo);
+  DecodeMove(AMove, LFrom, LTo);
   Assert((LFrom >= 0) and (LFrom <= 63) and (LTo >= 0) and (LTo <= 63));
   LAncienNom := Concat(CSqrToStr[LFrom], CSqrToStr[LTo]);
   LFromRow := LFrom div 8;
@@ -255,7 +255,7 @@ begin
   else
     LToCol := CColC;
   LTo := 8 * LToRow + LToCol;
-  ARoque := EncodeMove(LFrom, LTo, ptKing);
+  AMove := EncodeMove(LFrom, LTo, ptKing);
   Log.Append(Format('** Reformulated %s to %s', [LAncienNom, Concat(CSqrToStr[LFrom], CSqrToStr[LTo])]));
 end;
 
