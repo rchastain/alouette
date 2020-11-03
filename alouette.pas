@@ -61,7 +61,7 @@ begin
   if not Terminated then
   begin
     Send(Format('bestmove %s', [LMove]));
-    Log.Append(Format('Move computed in %0.3f s', [LTimeUsed / 1000]), TRUE);
+    Log.Append(Format('** Move computed in %0.3f s', [LTimeUsed / 1000]), TRUE);
   end;
 end;
 

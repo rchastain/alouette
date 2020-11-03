@@ -71,9 +71,11 @@ var
 begin
   if LLogCreated then
   begin
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
     for i := 0 to Pred(AMovesCount) do
       Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
     WriteLn(LFichier[ASecondFile]);
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
     Flush(LFichier[ASecondFile]);
   end;
 end;
@@ -89,12 +91,14 @@ var
 begin
   if LLogCreated then
   begin
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
     for i := 0 to Pred(AMovesCount) do
       Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
     WriteLn(LFichier[ASecondFile]);
     for i := 0 to Pred(AMovesCount) do
       Write(LFichier[ASecondFile], Format('%6d', [AValues[i]]));
     WriteLn(LFichier[ASecondFile]);
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
     Flush(LFichier[ASecondFile]);
   end;
 end;

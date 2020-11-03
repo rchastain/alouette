@@ -18,6 +18,7 @@ function GetMovesCount(const APos: TPosition): integer;
 function GenPotentialPawnMoves(const APos: TPosition): TBoard;
 function IsCheck(const APos: TPosition): boolean;
 function GetProtectionsCount(const APos: TPosition): integer;
+function GetAttacksCount(const APos: TPosition): integer;
 
 implementation
 
@@ -195,10 +196,6 @@ begin
 end;
 
 function GetProtectionsCount(const APos: TPosition): integer;
-(*
-const
-  CPion: array[boolean] of TPieceType = (ptWhitePawn, ptBlackPawn);
-*)
 var
   { Toutes les pièces. }
   LPieces: TBoard;
@@ -212,7 +209,6 @@ begin
     { Pion. }
     if IsOn(APos.Pawns, CIdxToSqr[i]) then
     begin
-      //Log.Append(CSqrToStr[i], TRUE);
       k := 8 - 16 * Ord(APos.Side);
       j := i + k;
       { Prise côté A. }
@@ -233,55 +229,122 @@ begin
     { Tour. }
     if IsOn(APos.Rooks, CIdxToSqr[i]) then
     begin
-      (*
       for j := A1 to H8 do
         if IsOn(CTargets[ptRook, i], CIdxToSqr[j])
         and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks), CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
           Inc(result);
-      *)
     end else
     { Cavalier. }
     if IsOn(APos.Knights, CIdxToSqr[i]) then
     begin
-      (*
       for j := A1 to H8 do
         if IsOn(CTargets[ptKnight, i], CIdxToSqr[j])
         and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops), CIdxToSqr[j]) then
           Inc(result);
-      *)
     end else
     { Fou. }
     if IsOn(APos.Bishops, CIdxToSqr[i]) then
     begin
-      (*
       for j := A1 to H8 do
         if IsOn(CTargets[ptBishop, i], CIdxToSqr[j])
         and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops), CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
           Inc(result);
-      *)
     end else
     { Dame. }
     if IsOn(APos.Queens, CIdxToSqr[i]) then
     begin
-      (*
       for j := A1 to H8 do
         if IsOn(CTargets[ptQueen, i], CIdxToSqr[j])
-        and IsOn(APos.Pieces[APos.Side] and (APos.Pawns or APos.Knights or APos.Bishops or APos.Rooks or APos.Queens), CIdxToSqr[j])
+        and IsOn(APos.Pieces[APos.Side] and (APos.Bishops or APos.Rooks or APos.Queens), CIdxToSqr[j])
         and ((CPath[i, j] and LPieces) = 0) then
           Inc(result);
-      *)
     end else
     { Roi. }
     if IsOn(APos.Kings, CIdxToSqr[i]) then
     begin
-      (*
       for j := A1 to H8 do
         if IsOn(CTargets[ptKing, i], CIdxToSqr[j])
         and IsOn(APos.Pieces[APos.Side] and APos.Pawns, CIdxToSqr[j]) then
           Inc(result);
-      *)
+    end;
+  end;
+end;
+
+function GetAttacksCount(const APos: TPosition): integer;
+var
+  { Toutes les pièces. }
+  LPieces: TBoard;
+  i, j, k: integer;
+begin
+  LPieces := APos.Pieces[FALSE] or APos.Pieces[TRUE];
+  result := 0;
+  
+  for i := A1 to H8 do if IsOn(APos.Pieces[APos.Side], CIdxToSqr[i]) then
+  begin
+    { Pion. }
+    if IsOn(APos.Pawns, CIdxToSqr[i]) then
+    begin
+      k := 8 - 16 * Ord(APos.Side);
+      j := i + k;
+      { Prise côté A. }
+      if i mod 8 > 3 then
+      begin
+        j := Pred(i + k);
+        if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
+          Inc(result);
+      end;
+      { Prise côté H. }
+      if i mod 8 < 4 then
+      begin
+        j := Succ(i + k);
+        if IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
+          Inc(result);
+      end;
+    end else
+    { Tour. }
+    if IsOn(APos.Rooks, CIdxToSqr[i]) then
+    begin
+      for j := A1 to H8 do
+        if IsOn(CTargets[ptRook, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j])
+        and ((CPath[i, j] and LPieces) = 0) then
+          Inc(result);
+    end else
+    { Cavalier. }
+    if IsOn(APos.Knights, CIdxToSqr[i]) then
+    begin
+      for j := A1 to H8 do
+        if IsOn(CTargets[ptKnight, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
+          Inc(result);
+    end else
+    { Fou. }
+    if IsOn(APos.Bishops, CIdxToSqr[i]) then
+    begin
+      for j := A1 to H8 do
+        if IsOn(CTargets[ptBishop, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j])
+        and ((CPath[i, j] and LPieces) = 0) then
+          Inc(result);
+    end else
+    { Dame. }
+    if IsOn(APos.Queens, CIdxToSqr[i]) then
+    begin
+      for j := A1 to H8 do
+        if IsOn(CTargets[ptQueen, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j])
+        and ((CPath[i, j] and LPieces) = 0) then
+          Inc(result);
+    end else
+    { Roi. }
+    if IsOn(APos.Kings, CIdxToSqr[i]) then
+    begin
+      for j := A1 to H8 do
+        if IsOn(CTargets[ptKing, i], CIdxToSqr[j])
+        and IsOn(APos.Pieces[not APos.Side], CIdxToSqr[j]) then
+          Inc(result);
     end;
   end;
 end;

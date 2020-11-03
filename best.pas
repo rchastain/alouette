@@ -154,9 +154,10 @@ var
   LCastling,
   LEnPassant,
   LCheck,
-  LKingTargeted,
-  LTargets,
-  LProtections: integer;
+  LThreatensKing,
+  LTargetsNumber,
+  LProtections,
+  LAttacks: integer;
 begin
   DecodeMove(AMove, LFrom, LTo, LPieceType, LMoveType);
   LPos := APos;
@@ -175,25 +176,30 @@ begin
     LPos.Side := not LPos.Side;
     
     LProtections := GetProtectionsCount(LPos);
+    LAttacks := GetAttacksCount(LPos);
     
-    LKingTargeted := Ord((CTargets[LPieceType, LTo] and LPos.KingSquare[not LPos.Side]) <> 0);
+    LThreatensKing := BitCount((CTargets[LPieceType, LTo] and (LPos.KingSquare[not LPos.Side] or (LPos.Pieces[not LPos.Side] and LPos.Queens))));
     
-    LTargets := BitCount(CTargets[LPieceType, LTo]);
+    if LPieceType in [ptKnight, ptBishop] then
+      LTargetsNumber := BitCount(CTargets[LPieceType, LTo])
+    else
+      LTargetsNumber := 0;
   end else
     Assert(FALSE, 'Cannot do move');
   
-  LCastling := 50 * LCastling;
-  LEnPassant := 50 * LEnPassant;
+  LCastling := 10 * LCastling;
+  LEnPassant := 10 * LEnPassant;
   LCheck := 10 * LCheck;
+  LThreatensKing := 10 * LThreatensKing;
   
   {$IFDEF DEBUG}
   Log.Append(Format(
-    '%s Castling %d EnPassant %d Check %d Protections %d KingTargeted %d Targets %d',
-    [LMoveStr, LCastling, LEnPassant, LCheck, LProtections, LKingTargeted, LTargets]
+    '  %s Castling %0.2d EnPassant %0.2d Check %0.2d Protections %0.2d Attacks %0.2d Threatens %0.2d Targets %0.2d',
+    [LMoveStr, LCastling, LEnPassant, LCheck, LProtections, LAttacks, LThreatensKing, LTargetsNumber]
   ), TRUE);
   {$ENDIF}
   
-  result := LCastling + LEnPassant + LCheck + LProtections + LKingTargeted + LTargets;
+  result := LCastling + LEnPassant + LCheck + LProtections + LAttacks + LThreatensKing + LTargetsNumber;
 end;
 
 function CountBestMoves(const ANotes: array of integer; const AMax: integer): integer;
@@ -209,8 +215,8 @@ var
   LCount, LMove, i: integer;
 begin  
   LEndTime := GetTickCount64 + ATime;
-  Log.Append(DecodePosition(APos), TRUE);
-  Log.Append(Format('Time available: %d ms', [ATime]), TRUE);
+  Log.Append(Concat('** Position: ', DecodePosition(APos)), TRUE);
+  Log.Append(Format('** Time available: %d ms', [ATime]), TRUE);
   
   GenMoves(APos, LList, LCount);
   GenCastling(APos, LList, LCount);
