@@ -47,7 +47,8 @@ end;
 const
   CInfinite = 99999;
   CPieceValue: array[ptWhitePawn..ptQueen] of integer = (100, 100, 500, 320, 330, 900);
-
+  COpponentPieceValue: array[ptWhitePawn..ptQueen] of integer = (101, 101, 501, 321, 331, 901);
+  
 var
   LEndTime: cardinal;
 
@@ -68,14 +69,17 @@ begin
   begin
     LSqr := CIdxToSqr[LIdx];
     if IsOn(LWPieces, LSqr) then
-      LSgn := +1
+      LSgn :=  1
     else if IsOn(LBPieces, LSqr) then
       LSgn := -1
     else
       Continue;
     LPiece := PieceTypeIdx(APos, LIdx);
     if LPiece <> ptKing then
-      Inc(result, CPieceValue[LPiece] * LSgn);
+      if (not APos.Side) and (LSgn = -1) or APos.Side and (LSgn = 1) then
+        Inc(result, COpponentPieceValue[LPiece] * LSgn)
+      else
+        Inc(result, CPieceValue[LPiece] * LSgn);
   end;
   if APos.Side then
     result := -1 * result;
