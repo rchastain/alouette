@@ -24,8 +24,8 @@ const
 function IsOnIdx(const ABrd: TBoard; const AIdx: integer): boolean;
 procedure SwitchOnIdx(var ABrd: TBoard; const AIdx: integer);
 procedure SwitchOffIdx(var ABrd: TBoard; const AIdx: integer);
-procedure MovePieceIdx(var AType, ASide: TBoard; const AFrom, ATo: integer; const APreserveColorBoard: boolean = FALSE);
-function CountSquaresOn(ABrd: TBoard): integer;
+procedure MovePieceIdx(var AType, ASide: TBoard; const AFrom, ATo: integer; const APreserve: boolean = FALSE);
+function BitCount(ABrd: TBoard): integer;
 
 implementation
 
@@ -45,20 +45,20 @@ begin
   ABrd := ABrd and not CIdxToSqr[AIdx];
 end;
 
-procedure MovePieceIdx(var AType, ASide: TBoard; const AFrom, ATo: integer; const APreserveColorBoard: boolean);
+procedure MovePieceIdx(var AType, ASide: TBoard; const AFrom, ATo: integer; const APreserve: boolean);
 begin
   Assert((AFrom >= 0) and (AFrom <= 63));
   Assert((ATo   >= 0) and (ATo   <= 63));
   
   AType := AType and not CIdxToSqr[AFrom] or CIdxToSqr[ATo];
   
-  if APreserveColorBoard then
+  if APreserve then
     ASide := ASide or CIdxToSqr[ATo]
   else
     ASide := ASide and not CIdxToSqr[AFrom] or CIdxToSqr[ATo];
 end;
 
-function CountSquaresOn(ABrd: TBoard): integer;
+function BitCount(ABrd: TBoard): integer;
 begin
   ABrd := (ABrd and $5555555555555555) + ((ABrd shr  1) and $5555555555555555);
   ABrd := (ABrd and $3333333333333333) + ((ABrd shr  2) and $3333333333333333);

@@ -13,7 +13,10 @@ uses
   Classes, SysUtils, Math,
   Log, Player, Chess, Utils, Perft, Settings, TreeList;
 
-{$I version}
+const
+  CAppName    = 'Alouette';
+  CAppVersion = '0.1.4';
+  CAppAuthor  = 'Roland Chastain';
   
 procedure Send(const AMessage: string; const AFlush: boolean = TRUE);
 var
@@ -211,7 +214,7 @@ begin
                   if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
                     SetVariant(WordPresent('true', LCmd))
                   else
-                    if LCmd = 'show' then
+                    if LCmd = 'board' then
                       Send(PositionToText(CurrentPosition))
                     else
                       if IsPerftCmd(LCmd, LDepth) then
@@ -219,21 +222,23 @@ begin
                       else
                         if LCmd = 'help' then
                           Send(
-                            'go movetime <x>' + LineEnding +
-                            'go wtime <x> btime <x>' + LineEnding +
-                            'go wtime <x> btime <x> movestogo <x>' + LineEnding +
-                            'go wtime <x> btime <x> winc <x> binc <x>' + LineEnding +
-                            'help' + LineEnding +
-                            'isready' + LineEnding +
-                            'perft <x>' + LineEnding +
-                            'position fen <fen> [moves ...]' + LineEnding +
-                            'position startpos [moves ...]' + LineEnding +
-                            'quit' + LineEnding +
-                            'setoption name UCI_Chess960 value <true,false>' + LineEnding +
-                            'show' + LineEnding +
-                            'stop' + LineEnding +
-                            'uci' + LineEnding +
-                            'ucinewgame'
+                            'UCI commands:' + LineEnding +
+                            '  go movetime <x>' + LineEnding +
+                            '  go wtime <x> btime <x>' + LineEnding +
+                            '  go wtime <x> btime <x> movestogo <x>' + LineEnding +
+                            '  go wtime <x> btime <x> winc <x> binc <x>' + LineEnding +
+                            '  isready' + LineEnding +
+                            '  position fen <fen> [moves ...]' + LineEnding +
+                            '  position startpos [moves ...]' + LineEnding +
+                            '  quit' + LineEnding +
+                            '  setoption name UCI_Chess960 value <true,false>' + LineEnding +
+                            '  stop' + LineEnding +
+                            '  uci' + LineEnding +
+                            '  ucinewgame' + LineEnding +
+                            'Custom commands:' + LineEnding +
+                            '  board (displays the current board)' + LineEnding +
+                            '  help' + LineEnding +
+                            '  perft <x>'
                           )
                         else
                           Log.Append(Format('** Unknown command: %s', [LCmd]));

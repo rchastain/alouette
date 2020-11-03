@@ -25,47 +25,57 @@ const
   
 var
   LFichier: array[boolean] of text;
-
+  LLogCreated: boolean = FALSE;
+  
 procedure OpenLog;
 var
   LFileName: string;
   LIdx: boolean;
 begin
   LFileName := CNomDossier + DirectorySeparator + FormatDateTime('yyyymmddhhnnsszzz"-%d.log"', Now);
-  if not (DirectoryExists(CNomDossier) or CreateDir(CNomDossier)) then
-    raise Exception.Create('Cannot create directory');
-  for LIdx := FALSE to TRUE do
+  if DirectoryExists(CNomDossier) or CreateDir(CNomDossier) then
   begin
-    Assign(LFichier[LIdx], Format(LFileName, [Ord(LIdx)]));
-    Rewrite(LFichier[LIdx]);
+    for LIdx := FALSE to TRUE do
+    begin
+      Assign(LFichier[LIdx], Format(LFileName, [Ord(LIdx)]));
+      Rewrite(LFichier[LIdx]);
+    end;
+    LLogCreated := TRUE;
   end;
 end;
 
 procedure CloseLog;
 begin
-  Close(LFichier[FALSE]);
-  Close(LFichier[TRUE]);
+  if LLogCreated then
+  begin
+    Close(LFichier[FALSE]);
+    Close(LFichier[TRUE]);
+  end;
 end;
 
 procedure Append(const AText: string; const ASecondFile: boolean);
 begin
 {$IFDEF DEBUG}
-  WriteLn(LFichier[ASecondFile], AText);
-  //Flush(LFichier[ASecondFile]);
+  if LLogCreated then
+  begin
+    WriteLn(LFichier[ASecondFile], AText);
+    Flush(LFichier[ASecondFile]);
+  end;
 {$ENDIF}
 end;
 
 procedure Append(const AMoves: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
-  s: string;
   i: integer;
 begin
-  s := '';
-  for i := 0 to Pred(AMovesCount) do
-    s := s + Format('%6s', [MoveToStr(AMoves[i])]);
-  WriteLn(LFichier[ASecondFile], s);
-  //Flush(LFichier[ASecondFile]);
+  if LLogCreated then
+  begin
+    for i := 0 to Pred(AMovesCount) do
+      Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
+    WriteLn(LFichier[ASecondFile]);
+    Flush(LFichier[ASecondFile]);
+  end;
 end;
 {$ELSE}
 begin
@@ -75,18 +85,18 @@ end;
 procedure Append(const AMoves, AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
-  s: string;
   i: integer;
 begin
-  s := '';
-  for i := 0 to Pred(AMovesCount) do
-    s := s + Format('%6s', [MoveToStr(AMoves[i])]);
-  WriteLn(LFichier[ASecondFile], s);
-  s := '';
-  for i := 0 to Pred(AMovesCount) do
-    s := s + Format('%6d', [AValues[i]]);
-  WriteLn(LFichier[ASecondFile], s);
-  //Flush(LFichier[ASecondFile]);
+  if LLogCreated then
+  begin
+    for i := 0 to Pred(AMovesCount) do
+      Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
+    WriteLn(LFichier[ASecondFile]);
+    for i := 0 to Pred(AMovesCount) do
+      Write(LFichier[ASecondFile], Format('%6d', [AValues[i]]));
+    WriteLn(LFichier[ASecondFile]);
+    Flush(LFichier[ASecondFile]);
+  end;
 end;
 {$ELSE}
 begin

@@ -150,23 +150,56 @@ var
   LPieceType: TPieceType;
   LMoveType: TMoveType;
   LPos: TPosition;
+  LMoveStr: string;
+  LCastling,
+  LEnPassant,
+  LCheck,
+  LKingTargeted,
+  LTargets,
   LProtections: integer;
 begin
-  result := 0;
   DecodeMove(AMove, LFrom, LTo, LPieceType, LMoveType);
   LPos := APos;
-  if DoMove(LPos, MoveToStr(AMove)) then
+  Assert(LPieceType = PieceTypeIdx(LPos, StartIndex(AMove)));
+  
+  LCastling := Ord(IsCastling(LPos, AMove));
+  if LCastling = 1 then
+    Assert(LMoveType = mtCastling);
+  
+  LEnPassant := Ord(LMoveType = mtEnPassant);
+  
+  LMoveStr := MoveToStr(AMove);
+  if DoMove(LPos, LMoveStr) then
   begin
+    LCheck := Ord(IsCheck(LPos));
     LPos.Side := not LPos.Side;
+    
     LProtections := GetProtectionsCount(LPos);
-    Inc(result, LProtections);
-  end;
+    
+    LKingTargeted := Ord((CTargets[LPieceType, LTo] and LPos.KingSquare[not LPos.Side]) <> 0);
+    
+    LTargets := BitCount(CTargets[LPieceType, LTo]);
+  end else
+    Assert(FALSE, 'Cannot do move');
+  
+  LCastling := 50 * LCastling;
+  LEnPassant := 50 * LEnPassant;
+  LCheck := 10 * LCheck;
+  
+  {$IFDEF DEBUG}
+  Log.Append(Format(
+    '%s Castling %d EnPassant %d Check %d Protections %d KingTargeted %d Targets %d',
+    [LMoveStr, LCastling, LEnPassant, LCheck, LProtections, LKingTargeted, LTargets]
+  ), TRUE);
+  {$ENDIF}
+  
+  result := LCastling + LEnPassant + LCheck + LProtections + LKingTargeted + LTargets;
 end;
 
-function CountBestMoves(const ANotes: array of integer; const ALim: integer): integer;
+function CountBestMoves(const ANotes: array of integer; const AMax: integer): integer;
 begin
   result := 1;
-  while (result < ALim) and (ANotes[result] = ANotes[0]) do
+  while (result < AMax) and (ANotes[result] = ANotes[0]) do
     Inc(result);
 end;
 
@@ -182,7 +215,7 @@ begin
   GenMoves(APos, LList, LCount);
   GenCastling(APos, LList, LCount);
   
-  { I. }
+  { I }
   for i := 0 to Pred(LCount) do
     LEval[i] := Ord(IsLegal(APos, LList[i]));
   Sort(LList, LEval, LCount);
@@ -199,7 +232,7 @@ begin
   Exit;
 {$ENDIF}
   
-  { II. }
+  { II }
   for i := 0 to Pred(LCount) do
     LEval[i] := Eval1(APos, LList[i]);
   Sort(LList, LEval, LCount);
@@ -212,7 +245,7 @@ begin
   if IsPromotion(APos, AMove) then
     AMove := Concat(AMove, 'q');
 
-  { III. }
+  { III }
   for i := 0 to Pred(LCount) do
     LEval[i] := Eval2(APos, LList[i]);
   Sort(LList, LEval, LCount);

@@ -65,7 +65,7 @@ procedure SetVariant(const AValue: boolean);
 const
   CBoolToStr: array[boolean] of string = ('false', 'true');
 begin
-  Log.Append(Format('** %s %s %s(%s)', [{$I %FILE%}, {$I %LINE%}, 'SetVariant', CBoolToStr[AValue]]));
+  Log.Append(Format('** SetVariant(%s)', [CBoolToStr[AValue]]));
   LVariant := AValue;
 end;
 

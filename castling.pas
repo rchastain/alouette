@@ -78,8 +78,8 @@ begin
     LKing  := Kings and Pieces[Side];
   end;
   if ((LPath and LPieces) = (LPath and (LRooks or LKing)))
-  and (CountSquaresOn(LPath and LRooks) <= 1)
-  and (CountSquaresOn(LPath and LKing) <= 1)
+  and (BitCount(LPath and LRooks) <= 1)
+  and (BitCount(LPath and LKing) <= 1)
   then
     Log.Append('** Path free (cond. 2/3)')
   else
