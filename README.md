@@ -16,14 +16,11 @@ This format has been previously used by Marc-Philippe Huget in his engine [La Da
 
 ## Random mover
 
-The executable named *random32* (or *random64*) is a pure random mover.
+It isn't easy to find an engine that *Alouette* can beat. Fortunately, it is possible to turn *Alouette* itself into a pure random mover. For that call *make* with the command `make random`. It will create an executable named *random*.
 
 ## Credits
 
-Thanks to:
-
-* Philippe Guesset for the [optimized version](https://www.developpez.net/forums/d2001819-2/autres-langages/assembleur/x86-32-bits-64-bits/reecriture-pascal-d-fonction-assembleur/#post11124482) of the function allowing to count the bits
-* Mathieu Dalbin for the [TTree class](https://www.developpez.net/forums/d2034310/autres-langages/pascal/langage/representation-l-arbre-d-livre-d-ouvertures-aux-echecs/#post11310888) allowing to create trees of moves
+Thanks to Philippe Guesset for the [optimized version][1] of the *BitCount* function, and to Mathieu Dalbin for the [TTree class][2].
 
 ## Author
 
@@ -32,3 +29,6 @@ Thanks to:
 ## Logo
 
 ![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo/logo.bmp)
+
+[1]: https://www.developpez.net/forums/d2001819-2/autres-langages/assembleur/x86-32-bits-64-bits/reecriture-pascal-d-fonction-assembleur/#post11124482 "BitCount function"
+[2]: https://www.developpez.net/forums/d2034310/autres-langages/pascal/langage/representation-l-arbre-d-livre-d-ouvertures-aux-echecs/#post11310888 "Trees of moves"
