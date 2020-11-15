@@ -11,7 +11,7 @@ uses
   CWString, CThreads,
 {$ENDIF}
   Classes, SysUtils, Math,
-  Log, Player, Chess, Utils, Perft, Settings, TreeList;
+  Log, Player, Chess, Utils, Perft, Settings, Trees;
 
 const
   CAppName    = 'Alouette';
