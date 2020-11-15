@@ -16,7 +16,11 @@ This format has been previously used by Marc-Philippe Huget in his engine [La Da
 
 ## Random mover
 
-It isn't easy to find an engine that *Alouette* can beat. Fortunately, it is possible to turn *Alouette* itself into a pure random mover. For that call *make* with the command `make random`. It will create an executable named *random*.
+It isn't easy to find an engine that *Alouette* can beat. Fortunately, it is possible to turn *Alouette* itself into a pure random mover. For that, you can call *make* with the command `make random`. It will create an executable named *random*.
+
+## Protocol
+
+*Alouette* understands (a part of) the UCI protocol, plus some custom commands. To see a list of all available commands, run *Alouette* and type `help`.
 
 ## Credits
 
@@ -31,4 +35,4 @@ Thanks to Philippe Guesset for the [optimized version][1] of the *BitCount* func
 ![alt text](https://raw.githubusercontent.com/rchastain/alouette/master/logo/logo.bmp)
 
 [1]: https://www.developpez.net/forums/d2001819-2/autres-langages/assembleur/x86-32-bits-64-bits/reecriture-pascal-d-fonction-assembleur/#post11124482 "BitCount function"
-[2]: https://www.developpez.net/forums/d2034310/autres-langages/pascal/langage/representation-l-arbre-d-livre-d-ouvertures-aux-echecs/#post11310888 "Trees of moves"
+[2]: https://www.developpez.net/forums/d2034310/autres-langages/pascal/langage/representation-l-arbre-d-livre-d-ouvertures-aux-echecs/#post11310888 "TTree class"
