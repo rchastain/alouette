@@ -25,7 +25,7 @@ function IsOnIdx(const ABrd: TBoard; const AIdx: integer): boolean;
 procedure SwitchOnIdx(var ABrd: TBoard; const AIdx: integer);
 procedure SwitchOffIdx(var ABrd: TBoard; const AIdx: integer);
 procedure MovePieceIdx(var AType, ASide: TBoard; const AFrom, ATo: integer; const APreserve: boolean = FALSE);
-function BitCount(ABrd: TBoard): integer;
+//function BitCount(ABrd: TBoard): integer;
 
 implementation
 
@@ -58,6 +58,7 @@ begin
     ASide := ASide and not CIdxToSqr[AFrom] or CIdxToSqr[ATo];
 end;
 
+(*
 function BitCount(ABrd: TBoard): integer;
 begin
   ABrd := (ABrd and $5555555555555555) + ((ABrd shr  1) and $5555555555555555);
@@ -68,5 +69,6 @@ begin
   ABrd := (ABrd and $00000000FFFFFFFF) + ((ABrd shr 32) and $00000000FFFFFFFF);
   result := integer(ABrd);
 end;
+*)
 
 end.

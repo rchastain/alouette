@@ -64,7 +64,7 @@ begin
 { Deuxième condition : aucune pièce n'est sur le passage du roi ni sur celui de la tour. }
   LKingPath := CPath[LKingFromIdx, LKingToIdx] or CIdxToSqr[LKingToIdx];
   LRookPath := CPath[LRookFromIdx, LRookToIdx] or CIdxToSqr[LRookToIdx];
-{$IFDEF DEBUG}
+{$IFDEF DEBUG_CASTLING}
   Log.Append(Concat(
     '** King path:',  LineEnding, BoardToFormattedStr(LKingPath), LineEnding,
     '** Rook path:',  LineEnding, BoardToFormattedStr(LRookPath), LineEnding,
@@ -78,8 +78,8 @@ begin
     LKing  := Kings and Pieces[Side];
   end;
   if ((LPath and LPieces) = (LPath and (LRooks or LKing)))
-  and (BitCount(LPath and LRooks) <= 1)
-  and (BitCount(LPath and LKing) <= 1)
+  and (PopCnt(QWord(LPath and LRooks)) <= 1)
+  and (PopCnt(QWord(LPath and LKing)) <= 1)
   then
     Log.Append('** Path free (cond. 2/3)')
   else
@@ -87,7 +87,7 @@ begin
 
 { Dernière condition : aucune des cases sur lesquelles le roi se trouve ou se trouvera n'est menacée. }
   LKingPath := CIdxToSqr[LKingFromIdx] or CPath[LKingFromIdx, LKingToIdx] or CIdxToSqr[LKingToIdx];
-{$IFDEF DEBUG}
+{$IFDEF DEBUG_CASTLING}
   Log.Append(Concat('** Threats:', LineEnding, BoardToFormattedStr(LThreats)));
 {$ENDIF}
   if (LThreats and LKingPath) = 0 then

@@ -47,7 +47,6 @@ end;
 const
   CInfinite = 99999;
   CPieceValue: array[ptWhitePawn..ptQueen] of integer = (100, 100, 500, 320, 330, 900);
-  COpponentPieceValue: array[ptWhitePawn..ptQueen] of integer = (101, 101, 501, 321, 331, 901);
   
 var
   LEndTime: cardinal;
@@ -76,10 +75,7 @@ begin
       Continue;
     LPiece := PieceTypeIdx(APos, LIdx);
     if LPiece <> ptKing then
-      if (not APos.Side) and (LSgn = -1) or APos.Side and (LSgn = 1) then
-        Inc(result, COpponentPieceValue[LPiece] * LSgn)
-      else
-        Inc(result, CPieceValue[LPiece] * LSgn);
+      Inc(result, CPieceValue[LPiece] * LSgn);
   end;
   if APos.Side then
     result := -1 * result;
@@ -182,10 +178,10 @@ begin
     LProtections := GetProtectionsCount(LPos);
     LAttacks := GetAttacksCount(LPos);
     
-    LThreatensKing := BitCount((CTargets[LPieceType, LTo] and (LPos.KingSquare[not LPos.Side] or (LPos.Pieces[not LPos.Side] and LPos.Queens))));
+    LThreatensKing := PopCnt(QWord((CTargets[LPieceType, LTo] and (LPos.KingSquare[not LPos.Side] or (LPos.Pieces[not LPos.Side] and LPos.Queens)))));
     
     if LPieceType in [ptKnight, ptBishop] then
-      LTargetsNumber := BitCount(CTargets[LPieceType, LTo])
+      LTargetsNumber := PopCnt(QWord(CTargets[LPieceType, LTo]))
     else
       LTargetsNumber := 0;
   end else
