@@ -37,7 +37,7 @@ end;
 
 function Start(const APos: TPosition; const ADepth: integer; const AOutput: boolean): integer;
 var
-  LResult: array of int64;
+  LRes: array of int64;
 
   function GetMovesCount(const APos2: TPosition; const ADepth2: integer): int64;
   var
@@ -54,7 +54,7 @@ var
       if IsLegal(APos2, LList[i]) then
         Inc(LLegalCount);
     
-    Inc(LResult[Pred(ADepth2)], LLegalCount);
+    Inc(LRes[Pred(ADepth2)], LLegalCount);
     
     if ADepth2 = 1 then
       result := LLegalCount
@@ -77,27 +77,27 @@ var
   t: cardinal;
   s: string;
 begin
-  SetLength(LResult, ADepth);
+  SetLength(LRes, ADepth);
   for i := 0 to Pred(ADepth) do
-    LResult[i] := 0;
+    LRes[i] := 0;
   
   t := GetTickCount64;
   GetMovesCount(APos, ADepth);
   t := GetTickCount64 - t;
   
-  result := LResult[Pred(ADepth)];
+  result := LRes[Pred(ADepth)];
   
   if AOutput then
   begin
-    s := Format('Perft(%%%dd) = %%%dd', [Length(IntToStr(ADepth)), Length(IntToStr(LResult[0]))]);
+    s := Format('Perft(%%%dd) = %%%dd', [Length(IntToStr(ADepth)), Length(IntToStr(LRes[0]))]);
     
     for i := Pred(ADepth) downto 0 do
-      WriteLn(Format(s, [ADepth - i, LResult[i]]));
+      WriteLn(Format(s, [ADepth - i, LRes[i]]));
     
     WriteLn('Time elapsed: ', FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
   end;
   
-  SetLength(LResult, 0);
+  SetLength(LRes, 0);
 end;
 
 end.

@@ -12,8 +12,8 @@ uses
   SysUtils, Board;
 
 procedure Append(const AText: string; const ASecondFile: boolean = FALSE); overload;
-procedure Append(const AMoves: array of TMove; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
-procedure Append(const AMoves: array of TMove; const AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
+procedure Append(const AMoves: array of TMove; const ACount: integer; const ASecondFile: boolean = TRUE); overload;
+procedure Append(const AMoves: array of TMove; const AValues: array of integer; const ACount: integer; const ASecondFile: boolean = TRUE); overload;
 
 implementation
 
@@ -61,18 +61,18 @@ begin
 {$ENDIF}
 end;
 
-procedure Append(const AMoves: array of TMove; const AMovesCount: integer; const ASecondFile: boolean);
+procedure Append(const AMoves: array of TMove; const ACount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
   i: integer;
 begin
   if LLogCreated then
   begin
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
-    for i := 0 to Pred(AMovesCount) do
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
+    for i := 0 to Pred(ACount) do
       Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
     WriteLn(LFichier[ASecondFile]);
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
     Flush(LFichier[ASecondFile]);
   end;
 end;
@@ -81,21 +81,21 @@ begin
 end;
 {$ENDIF}
 
-procedure Append(const AMoves: array of TMove; const AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
+procedure Append(const AMoves: array of TMove; const AValues: array of integer; const ACount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
   i: integer;
 begin
   if LLogCreated then
   begin
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
-    for i := 0 to Pred(AMovesCount) do
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
+    for i := 0 to Pred(ACount) do
       Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
     WriteLn(LFichier[ASecondFile]);
-    for i := 0 to Pred(AMovesCount) do
+    for i := 0 to Pred(ACount) do
       Write(LFichier[ASecondFile], Format('%6d', [AValues[i]]));
     WriteLn(LFichier[ASecondFile]);
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * AMovesCount));
+    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
     Flush(LFichier[ASecondFile]);
   end;
 end;

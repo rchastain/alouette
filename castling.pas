@@ -20,11 +20,11 @@ uses
 
 procedure GenCastling(const APos: TPosition; var AList: array of TMove; var ACount: integer);
 
-  procedure SaveMove(const AFrom, ATo: integer);
+  procedure SaveMove(const AFr, ATo: integer);
   begin
     Inc(ACount);
     if ACount <= Length(AList) then
-      AList[Pred(ACount)] := EncodeMove(AFrom, ATo, ptKing, [mtCastling])
+      AList[Pred(ACount)] := EncodeMove(AFr, ATo, ptKing, [mtCastling])
     else
       Log.Append('** Cannot append move');
   end;
@@ -107,11 +107,11 @@ begin
   LThreats := GenMoves(LPos) or GenPotentialPawnMoves(LPos);
   LKingFromCol := SquareToCol(APos.KingSquare[APos.Side]);
   
-  LRookFromCol := APos.Roque[APos.Side].KingRookCol;
+  LRookFromCol := APos.Roque[APos.Side].HRookFile;
   if (LRookFromCol >= 0) and (LRookFromCol <= 7) then
     Search(CColG, CColF);
   
-  LRookFromCol := APos.Roque[APos.Side].QueenRookCol;
+  LRookFromCol := APos.Roque[APos.Side].ARookFile;
   if (LRookFromCol >= 0) and (LRookFromCol <= 7) then
     Search(CColC, CColD);
 end;

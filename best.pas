@@ -11,7 +11,7 @@ interface
 uses
   Chess;
 
-function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean = FALSE): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean = FALSE): string;
   
 implementation
 
@@ -203,7 +203,7 @@ begin
     Inc(result);
 end;
 
-function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean): string;
 var
   LList, LEval: array[0..199] of integer;
   LCount, LMove, i: integer;
@@ -221,7 +221,7 @@ begin
   Sort(LList, LEval, LCount);
   LCount := CountBestMoves(LEval, LCount);
   LMove := LList[Random(LCount)];
-  if IsCastling(APos, LMove) and not AVariant then
+  if IsCastling(APos, LMove) and not AFrc then
     RenameCastling(LMove);
   AMove := MoveToStr(LMove);
   if IsPromotion(APos, AMove) then
@@ -240,7 +240,7 @@ begin
   Log.Append(LList, LEval, LCount);
   LCount := CountBestMoves(LEval, LCount);
   LMove := LList[Random(LCount)];
-  if IsCastling(APos, LMove) and not AVariant then
+  if IsCastling(APos, LMove) and not AFrc then
     RenameCastling(LMove);
   AMove := MoveToStr(LMove);
   if IsPromotion(APos, AMove) then
@@ -253,7 +253,7 @@ begin
   Log.Append(LList, LEval, LCount);
   LCount := CountBestMoves(LEval, LCount);
   LMove := LList[Random(LCount)];
-  if IsCastling(APos, LMove) and not AVariant then
+  if IsCastling(APos, LMove) and not AFrc then
     RenameCastling(LMove);
   result := MoveToStr(LMove);
   if IsPromotion(APos, result) then

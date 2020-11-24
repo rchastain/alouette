@@ -18,8 +18,8 @@ const
   
 type
   TCastlingData = record
-    KingRookCol,
-    QueenRookCol: integer;
+    HRookFile,
+    ARookFile: integer;
   end;
   
   TCastling = array[boolean] of TCastlingData;
@@ -49,8 +49,8 @@ const
     Kings: 0;
     Side: FALSE;
     Roque: (
-      (KingRookCol: CNil; QueenRookCol: CNil),
-      (KingRookCol: CNil; QueenRookCol: CNil)
+      (HRookFile: CNil; ARookFile: CNil),
+      (HRookFile: CNil; ARookFile: CNil)
     );
     EnPassant: CNil;
     KingSquare: (0, 0)
@@ -96,18 +96,18 @@ begin
   for LColor := CWhite to CBlack do
   with ARoque[LColor] do
   begin
-    KingRookCol := CNil;
-    QueenRookCol := CNil;
+    HRookFile := CNil;
+    ARookFile := CNil;
   end;
 end;
 
 function DecodeTraditionalCastlingString(const ACastlingStr: string): TCastling;
 begin
   Reinitialize(result);
-  if Pos('K', ACastlingStr) > 0 then result[CWhite].KingRookCol := 7;
-  if Pos('Q', ACastlingStr) > 0 then result[CWhite].QueenRookCol := 0;
-  if Pos('k', ACastlingStr) > 0 then result[CBlack].KingRookCol := 7;
-  if Pos('q', ACastlingStr) > 0 then result[CBlack].QueenRookCol := 0;
+  if Pos('K', ACastlingStr) > 0 then result[CWhite].HRookFile := 7;
+  if Pos('Q', ACastlingStr) > 0 then result[CWhite].ARookFile := 0;
+  if Pos('k', ACastlingStr) > 0 then result[CBlack].HRookFile := 7;
+  if Pos('q', ACastlingStr) > 0 then result[CBlack].ARookFile := 0;
 end;
 
 function DecodeCastlingString(const ACastlingStr: string; const AWhiteKingCol, ABlackKingCol: integer): TCastling;
@@ -126,8 +126,8 @@ begin
   begin
     a := Ord(CChar[b, 0]);
     if b then c1 := Chr(AWhiteKingCol + a) else c1 := Chr(ABlackKingCol + a);
-    for c2 := CChar[b, 7] downto Succ(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].KingRookCol := Ord(c2) - a;
-    for c2 := CChar[b, 0] to Pred(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].QueenRookCol := Ord(c2) - a;
+    for c2 := CChar[b, 7] downto Succ(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].HRookFile := Ord(c2) - a;
+    for c2 := CChar[b, 0] to Pred(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].ARookFile := Ord(c2) - a;
   end;
 end;
 
@@ -137,19 +137,19 @@ begin
   if AVariant then
   begin
     with ARoque[CWhite] do begin
-      if (KingRookCol  >= 0) and (KingRookCol  <= 7) then result := Chr(KingRookCol + Ord('A'));
-      if (QueenRookCol >= 0) and (QueenRookCol <= 7) then result := Concat(result, Chr(QueenRookCol + Ord('A')));
+      if (HRookFile  >= 0) and (HRookFile  <= 7) then result := Chr(HRookFile + Ord('A'));
+      if (ARookFile >= 0) and (ARookFile <= 7) then result := Concat(result, Chr(ARookFile + Ord('A')));
     end;
     with ARoque[CBlack] do begin
-      if (KingRookCol  >= 0) and (KingRookCol  <= 7) then result := Concat(result, Chr(KingRookCol + Ord('a')));
-      if (QueenRookCol >= 0) and (QueenRookCol <= 7) then result := Concat(result, Chr(QueenRookCol + Ord('a')));
+      if (HRookFile  >= 0) and (HRookFile  <= 7) then result := Concat(result, Chr(HRookFile + Ord('a')));
+      if (ARookFile >= 0) and (ARookFile <= 7) then result := Concat(result, Chr(ARookFile + Ord('a')));
     end;
   end else
   begin
-    if ARoque[CWhite].KingRookCol  <> CNil then result := 'K';
-    if ARoque[CWhite].QueenRookCol <> CNil then result := Concat(result, 'Q');
-    if ARoque[CBlack].KingRookCol  <> CNil then result := Concat(result, 'k');
-    if ARoque[CBlack].QueenRookCol <> CNil then result := Concat(result, 'q');
+    if ARoque[CWhite].HRookFile  <> CNil then result := 'K';
+    if ARoque[CWhite].ARookFile <> CNil then result := Concat(result, 'Q');
+    if ARoque[CBlack].HRookFile  <> CNil then result := Concat(result, 'k');
+    if ARoque[CBlack].ARookFile <> CNil then result := Concat(result, 'q');
   end;
   if result = '' then
     result := '-';

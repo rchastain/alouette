@@ -38,7 +38,7 @@ end;
 
 function DoMove(var APos: TPosition; const AMove: TMove): boolean;
 var
-  LFr, LTo, LFrCol, LToCol, LFrRow, LToRow, LEnPassantCapture: integer;
+  LFr, LTo, LFrCol, LToCol, LFrRow, LToRow, LEnPassantCapt: integer;
   LPieceType: TPieceType;
   LMoveType: TMoveTypeSet;
   LPreserve: boolean;
@@ -66,14 +66,14 @@ begin
   begin
     if IsOnIdx(APos.Rooks and APos.Pieces[APos.Side], LTo) then
     begin
-      if LToCol = APos.Roque[APos.Side].KingRookCol then
+      if LToCol = APos.Roque[APos.Side].HRookFile then
       begin
         //Log.Append(Format('** Castling on H side: %s', [AMove]));
         MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCR[APos.Side]);
         LTo := ToIndex(CColG, LToRow);
         LPreserve := LFrCol = CATCR[APos.Side] mod 8;
       end else
-        if LToCol = APos.Roque[APos.Side].QueenRookCol then
+        if LToCol = APos.Roque[APos.Side].ARookFile then
         begin
           //Log.Append(Format('** Castling on A side: %s', [AMove]));
           MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCD[APos.Side]);
@@ -103,19 +103,19 @@ begin
           end;
       end;
     
-    APos.Roque[APos.Side].KingRookCol := CNil;
-    APos.Roque[APos.Side].QueenRookCol := CNil;
+    APos.Roque[APos.Side].HRookFile := CNil;
+    APos.Roque[APos.Side].ARookFile := CNil;
     APos.KingSquare[APos.Side] := CIdxToSqr[LTo];
   end;
   
   { Si la pièce déplacée est une tour... }
   if LPieceType = ptRook then
     with APos.Roque[APos.Side] do
-      if LFrCol = KingRookCol then
-        KingRookCol := CNil
+      if LFrCol = HRookFile then
+        HRookFile := CNil
       else
-        if LFrCol = QueenRookCol then
-          QueenRookCol := CNil;
+        if LFrCol = ARookFile then
+          ARookFile := CNil;
   
   { S'il y a une pièce sur la case d'arrivée... }
   if IsOnIdx(APos.Pieces[not APos.Side], LTo) then
@@ -123,11 +123,11 @@ begin
     if IsOnIdx(APos.Rooks, LTo)
     and (LToRow = CCastlingRow[not APos.Side]) then
       with APos.Roque[not APos.Side] do
-        if (LToCol = KingRookCol) then
-          KingRookCol := CNil
+        if (LToCol = HRookFile) then
+          HRookFile := CNil
         else
-        if LToCol = KingRookCol then
-          KingRookCol := CNil;
+        if LToCol = HRookFile then
+          HRookFile := CNil;
         
     with APos do
     begin
@@ -173,9 +173,9 @@ begin
       { Prise en passant. }
       if LTo = APos.EnPassant then
       begin
-        LEnPassantCapture := ToIndex(LToCol, LFrRow);
-        SwitchOffIdx(APos.Pawns, LEnPassantCapture);
-        SwitchOffIdx(APos.Pieces[not APos.Side], LEnPassantCapture);
+        LEnPassantCapt := ToIndex(LToCol, LFrRow);
+        SwitchOffIdx(APos.Pawns, LEnPassantCapt);
+        SwitchOffIdx(APos.Pieces[not APos.Side], LEnPassantCapt);
       end;
   end;
   
@@ -201,7 +201,7 @@ end;
 
 function DoMove(var APos: TPosition; const AMove: string): boolean;
 var
-  LFr, LTo, LFrCol, LToCol, LFrRow, LToRow, LEnPassantCapture: integer;
+  LFr, LTo, LFrCol, LToCol, LFrRow, LToRow, LEnPassantCapt: integer;
   LType: TPieceType;
   LPreserve: boolean;
 begin
@@ -232,14 +232,14 @@ begin
   begin
     if IsOnIdx(APos.Rooks and APos.Pieces[APos.Side], LTo) then
     begin
-      if LToCol = APos.Roque[APos.Side].KingRookCol then
+      if LToCol = APos.Roque[APos.Side].HRookFile then
       begin
         Log.Append(Format('** Castling on H side: %s', [AMove]));
         MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCR[APos.Side]);
         LTo := ToIndex(CColG, LToRow);
         LPreserve := LFrCol = CATCR[APos.Side] mod 8;
       end else
-        if LToCol = APos.Roque[APos.Side].QueenRookCol then
+        if LToCol = APos.Roque[APos.Side].ARookFile then
         begin
           Log.Append(Format('** Castling on A side: %s', [AMove]));
           MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCD[APos.Side]);
@@ -269,19 +269,19 @@ begin
           end;
       end;
     
-    APos.Roque[APos.Side].KingRookCol := CNil;
-    APos.Roque[APos.Side].QueenRookCol := CNil;
+    APos.Roque[APos.Side].HRookFile := CNil;
+    APos.Roque[APos.Side].ARookFile := CNil;
     APos.KingSquare[APos.Side] := CIdxToSqr[LTo];
   end;
   
   { Si la pièce déplacée est une tour... }
   if LType = ptRook then
     with APos.Roque[APos.Side] do
-      if LFrCol = KingRookCol then
-        KingRookCol := CNil
+      if LFrCol = HRookFile then
+        HRookFile := CNil
       else
-      if LFrCol = QueenRookCol then
-        QueenRookCol := CNil;
+      if LFrCol = ARookFile then
+        ARookFile := CNil;
   
   { S'il y a une pièce sur la case d'arrivée... }
   if IsOnIdx(APos.Pieces[not APos.Side], LTo) then
@@ -289,11 +289,11 @@ begin
     if IsOnIdx(APos.Rooks, LTo)
     and (LToRow = CCastlingRow[not APos.Side]) then
       with APos.Roque[not APos.Side] do
-        if (LToCol = KingRookCol) then
-          KingRookCol := CNil
+        if (LToCol = HRookFile) then
+          HRookFile := CNil
         else
-        if LToCol = KingRookCol then
-          KingRookCol := CNil;
+        if LToCol = HRookFile then
+          HRookFile := CNil;
         
     with APos do
     begin
@@ -351,9 +351,9 @@ begin
     { Prise en passant. }
     if LTo = APos.EnPassant then
     begin
-      LEnPassantCapture := ToIndex(LToCol, LFrRow);
-      SwitchOffIdx(APos.Pawns, LEnPassantCapture);
-      SwitchOffIdx(APos.Pieces[not APos.Side], LEnPassantCapture);
+      LEnPassantCapt := ToIndex(LToCol, LFrRow);
+      SwitchOffIdx(APos.Pawns, LEnPassantCapt);
+      SwitchOffIdx(APos.Pieces[not APos.Side], LEnPassantCapt);
     end;
   end;
   

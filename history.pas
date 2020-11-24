@@ -8,7 +8,7 @@ unit History;
 
 interface
 
-procedure NewHistory;
+procedure ResetHistory;
 procedure AppendMove(const AMove: string);
 
 implementation
@@ -19,7 +19,7 @@ uses
 var
   LList: TStringList;
 
-procedure NewHistory;
+procedure ResetHistory;
 begin
   LList.Clear;
 end;

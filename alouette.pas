@@ -10,8 +10,7 @@ uses
 {$IFDEF UNIX}
   CWString, CThreads,
 {$ENDIF}
-  Classes, SysUtils, Math,
-  Log, Player, Chess, Utils, Perft, Settings, Trees;
+  Classes, SysUtils, Math, Log, Player, Chess, Utils, Perft, Trees;
 
 const
   CAppName    = 'Alouette';
@@ -75,7 +74,6 @@ var
   LMove: string;
   LMTime, LWTime, LBTime, LMTG, LWInc, LBInc: integer;
   LPos: TPosition;
-  LVariantInitialValue: boolean;
   LThread: TSearchThread;
   LDepth: integer;
   LFen: string;
@@ -87,14 +85,8 @@ var
   
 begin
   Randomize;
-
-  LoadSettings(LVariantInitialValue);
-  if not SettingsFileExists then
-    SaveSettings(LVariantInitialValue);
-  SetVariant(LVariantInitialValue);
-  
+  SetVariant(FALSE);
   LRandomMove := (ParamCount = 1) and ((ParamStr(1) = '-r') or (ParamStr(1) = '--random'));
-  
   LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
   LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
   for LColor := FALSE to TRUE do
@@ -109,6 +101,7 @@ begin
   LCanUseBook := FALSE;
   
   Send(Format('%s %s', [CAppName, CAppVersion]));
+  
   while not Eof do
   begin
     ReadLn(input, LCmd);

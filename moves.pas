@@ -192,29 +192,29 @@ end;
 
 function GenMoves(const APos: TPosition): TBoard;
 var
-  LListe: array[0..0] of integer;
-  LCompte: integer;
+  LList: array[0..0] of integer;
+  LCount: integer;
 begin
-  result := GenMoves(APos, LListe, LCompte, TRUE);
+  result := GenMoves(APos, LList, LCount, TRUE);
 end;
 
 function GetMovesCount(const APos: TPosition): integer;
 var
-  LListe: array[0..0] of integer;
+  LList: array[0..0] of integer;
 begin
-  GenMoves(APos, LListe, result, TRUE);
+  GenMoves(APos, LList, result, TRUE);
 end;
 
 function GenPotentialPawnMoves(const APos: TPosition): TBoard;
 var
   { Pièces. }
   i, j: integer;
-  LPion: TPieceType;
+  LPawn: TPieceType;
 begin
   if APos.Side then
-    LPion := ptBlackPawn
+    LPawn := ptBlackPawn
   else
-    LPion := ptWhitePawn;
+    LPawn := ptWhitePawn;
   result := 0; { Damier vide. }
   for i := A1 to H8 do if IsOn(APos.Pieces[APos.Side], CIdxToSqr[i]) then
   begin
@@ -222,7 +222,7 @@ begin
     if IsOn(APos.Pawns, CIdxToSqr[i]) then
     begin
       for j := A1 to H8 do
-        if IsOn(CTargets[LPion, i], CIdxToSqr[j])
+        if IsOn(CTargets[LPawn, i], CIdxToSqr[j])
         and not IsOn(APos.Pieces[APos.Side], CIdxToSqr[j]) then
           SwitchOn(result, CIdxToSqr[j]);
     end;

@@ -65,7 +65,7 @@ function BoardToStr(const ABrd: TBoard): string;
 {** Chaîne de chiffres binaires en forme de damier. }
 function BoardToFormattedStr(const ABrd: TBoard): string;
 {** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
-function IsMovePossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
+function IsPossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
 function GetTargets(const APiece: TPieceType; const AIdx: integer): TBoard;
 {** Les cases à traverser pour aller d'un endroit à un autre. }
@@ -282,7 +282,7 @@ begin
   result := Concat(result, LineEnding, '+   abcdefgh   +');
 end;
 
-function IsMovePossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
+function IsPossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
 var
   dx, dy, ax, ay: integer;
 begin
@@ -296,7 +296,7 @@ begin
     ptRook:      result := (dx = 0) xor (dy = 0);
     ptKnight:    result := ax * ay = 2;
     ptBishop:    result := (dx <> 0) and (ax = ay);
-    ptQueen:     result := IsMovePossible(ptRook, AX1, AY1, AX2, AY2) or IsMovePossible(ptBishop, AX1, AY1, AX2, AY2);
+    ptQueen:     result := IsPossible(ptRook, AX1, AY1, AX2, AY2) or IsPossible(ptBishop, AX1, AY1, AX2, AY2);
     ptKing:      result := (ax + ay <= 2) and ((ax = 1) or (ay = 1));
   end;
 end;
@@ -310,7 +310,7 @@ begin
   result := 0;
   for y2 := 7 downto 0 do
     for x2 := 0 to 7 do
-      if IsMovePossible(APiece, x1, y1, x2, y2) then
+      if IsPossible(APiece, x1, y1, x2, y2) then
         SwitchOn(result, ToBoard(x2, y2));
 end;
 

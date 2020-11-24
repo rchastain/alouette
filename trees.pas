@@ -41,12 +41,6 @@ type
     constructor Create;
     destructor Destroy; override;
     function Add(const AParent: PTreeNode; const AData: string): PTreeNode;
-    (*
-    function GetNodeByName(const AName: string): PTreeNode;
-    function GetChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
-    function GetNextChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
-    function InsertBefore(const ASibling: PTreeNode; const AData: string): PTreeNode;
-    *)
     procedure Clear;
     function GetNodeLevel(const ANode: PTreeNode): integer;
     function GetChildCount(const ANode: PTreeNode): integer;
@@ -94,23 +88,6 @@ type
   
 implementation
 
-(*
-procedure Log(const AStr: string);
-var
-  LFile: textfile;
-  LFilename: TFilename;
-begin
-  LFileName := ChangeFileExt({$I %FILE%}, '.log');
-  AssignFile(LFile, LFileName);
-  if FileExists(LFileName) then
-    Append(LFile)
-  else
-    Rewrite(LFile);
-  WriteLn(LFile, AStr);
-  CloseFile(LFile);
-end;
-*)
-
 constructor TTree.Create;
 begin
   inherited Create;
@@ -128,9 +105,6 @@ function TTree.Add(const AParent: PTreeNode; const AData: string): PTreeNode;
 var
   LNode: PTreeNode;
 begin
-  (*
-  Log(Format('TTree.Add(%p, %s)', [AParent, AData]));
-  *)
   if AParent = nil then
   begin
     New(FRoot);
@@ -165,88 +139,8 @@ begin
   Inc(FCount);
 end;
 
-(*
-function TTree.GetNodeByName(const AName: string): PTreeNode;
-var
-  LNode: PTreeNode;
-begin
-  LNode := FRoot;
-  while LNode <> nil do
-  begin
-    if LNode^.Data = AName then
-      Break;
-    LNode := GetNext(LNode);
-  end;
-  result := LNode;
-end;
-
-function TTree.GetChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
-var
-  LNode: PTreeNode;
-begin
-  LNode := AParent^.Child;
-  while LNode <> nil do
-  begin
-    if LNode^.Data = AName then
-      Break;
-    LNode := LNode^.Sibling;
-  end;
-  result := LNode;
-end;
-
-function TTree.GetNextChildByName(const AParent: PTreeNode; const AName: string): PTreeNode;
-var
-  LNode: PTreeNode;
-begin
-  LNode := AParent^.Child;
-  while LNode <> nil do
-  begin
-    if LNode^.Data > AName then
-      Break;
-    LNode := LNode^.Sibling;
-  end;
-  result := LNode;
-end;
-
-function TTree.InsertBefore(const ASibling: PTreeNode; const AData: string): PTreeNode;
-var
-  LNode, LParent: PTreeNode;
-begin
-  LParent := ASibling^.Parent;
-  if LParent = nil then
-  begin
-    result := nil;
-    Exit;
-  end else
-  begin
-    if LParent^.Child = ASibling then
-    begin
-      New(LNode);
-      LNode^.Parent := LParent;
-      LNode^.Sibling := LParent^.Child;
-      LNode^.Child := nil;
-      LNode^.Data := AData;
-      LParent^.Child := LNode;
-      result := LNode;
-    end else
-    begin
-      New(LNode);
-      LNode^.Parent := LParent;
-      LNode^.Sibling := ASibling^.Sibling;
-      LNode^.Child := nil;
-      LNode^.Data := AData;
-      ASibling^.Sibling := LNode;
-      result := LNode;
-    end;
-  end;
-end;
-*)
-
 procedure TTree.ClearNode(const ANode: PTreeNode);
 begin
-  (*
-  Log(Format('TTree.ClearNode(%p)', [ANode]));
-  *)
   if ANode = nil then
     Exit;
   if ANode^.Sibling <> nil then
