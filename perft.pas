@@ -13,7 +13,7 @@ interface
 uses
   Chess;
 
-procedure Start(const APos: TPosition; const ADepth: integer = 5);
+function Start(const APos: TPosition; const ADepth: integer = 5; const AOutput: boolean = TRUE): integer;
 
 implementation
 
@@ -35,7 +35,7 @@ begin
       ) = 0;
 end;
 
-procedure Start(const APos: TPosition; const ADepth: integer);
+function Start(const APos: TPosition; const ADepth: integer; const AOutput: boolean): integer;
 var
   LResult: array of int64;
 
@@ -45,6 +45,9 @@ var
     LCount, LLegalCount, i: integer;
     LPos: TPosition;
     LMove: string;
+    LFrom, LTo: integer;
+    LPieceType: TPieceType;
+    LMoveType: TMoveTypeSet;
   begin
     result := 0;
     
@@ -53,7 +56,10 @@ var
     LLegalCount := 0;
     for i := 0 to Pred(LCount) do
       if IsLegal(APos2, LList[i]) then
-        Inc(LLegalCount);
+      begin
+        DecodeMove(LList[i], LFrom, LTo, LPieceType, LMoveType);
+        Inc(LLegalCount, 3 * Ord(mtPromotion in LMoveType) + 1);
+      end;
     
     Inc(LResult[Pred(ADepth2)], LLegalCount);
     
@@ -87,12 +93,18 @@ begin
   GetMovesCount(APos, ADepth);
   t := GetTickCount64 - t;
   
-  s := Format('Perft(%%%dd) = %%%dd', [Length(IntToStr(ADepth)), Length(IntToStr(LResult[0]))]);
+  result := LResult[Pred(ADepth)];
   
-  for i := Pred(ADepth) downto 0 do
-    WriteLn(Format(s, [ADepth - i, LResult[i]]));
+  if AOutput then
+  begin
+    s := Format('Perft(%%%dd) = %%%dd', [Length(IntToStr(ADepth)), Length(IntToStr(LResult[0]))]);
     
-  WriteLn('Time elapsed: ', FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
+    for i := Pred(ADepth) downto 0 do
+      WriteLn(Format(s, [ADepth - i, LResult[i]]));
+    
+    WriteLn('Time elapsed: ', FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
+  end;
+  
   SetLength(LResult, 0);
 end;
 

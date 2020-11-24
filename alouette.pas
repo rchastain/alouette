@@ -48,6 +48,7 @@ type
 
 var
   LTimeAvailable: cardinal;
+  LRandomMove: boolean;
 
 {** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TSearchThread.Execute;
@@ -56,7 +57,7 @@ var
   LMove: string;
 begin
   LTimeUsed := GetTickCount64;
-  LMove := Player.BestMove(LTimeAvailable);
+  LMove := Player.BestMove(LTimeAvailable, LRandomMove);
   LTimeUsed := GetTickCount64 - LTimeUsed;
   if not Terminated then
   begin
@@ -78,13 +79,11 @@ var
   LThread: TSearchThread;
   LDepth: integer;
   LFen: string;
-  {$IFNDEF RANDOM_MOVER}
   LBookLine, LBookMove: string;
   LBook: array[boolean] of TTreeList;
   LBookName: array[boolean] of TFileName;
   LColor: boolean;
   LCanUseBook: boolean;
-  {$ENDIF}
   
 begin
   Randomize;
@@ -93,21 +92,24 @@ begin
   if not SettingsFileExists then
     SaveSettings(LVariantInitialValue);
   SetVariant(LVariantInitialValue);
-
-  {$IFNDEF RANDOM_MOVER}
-  LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
-  LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
-  for LColor := FALSE to TRUE do
+  
+  LRandomMove := (ParamCount = 1) and ((ParamStr(1) = '-r') or (ParamStr(1) = '--random'));
+  
+  if not LRandomMove then
   begin
-    LBook[LColor] := TTreeList.Create;
-    if FileExists(LBookName[LColor]) then
-      LBook[LColor].LoadFromFileCompact(LBookName[LColor])
-    else
-      Log.Append(Format('** File not found: %s', [LBookName[LColor]]));
+    LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
+    LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
+    for LColor := FALSE to TRUE do
+    begin
+      LBook[LColor] := TTreeList.Create;
+      if FileExists(LBookName[LColor]) then
+        LBook[LColor].LoadFromFileCompact(LBookName[LColor])
+      else
+        Log.Append(Format('** File not found: %s', [LBookName[LColor]]));
+    end;
+    LBookLine := '';
+    LCanUseBook := FALSE;
   end;
-  LBookLine := '';
-  LCanUseBook := FALSE;
-  {$ENDIF}
   
   Send(Format('%s %s', [CAppName, CAppVersion]));
   while not Eof do
@@ -136,22 +138,17 @@ begin
               if WordPresent('startpos', LCmd) then
               begin
                 Player.LoadStartPosition;
-                {$IFNDEF RANDOM_MOVER}
-                LCanUseBook := TRUE;
-                {$ENDIF}
+                LCanUseBook := not LRandomMove;
               end else
                 if WordPresent('fen', LCmd) then
                 begin
                   LFen := GetFen(LCmd);
                   Player.SetPosition(LFen);
-                  {$IFNDEF RANDOM_MOVER}
-                  LCanUseBook := IsConventionalStartPosition(LFen);
-                  {$ENDIF}   
+                  LCanUseBook := IsConventionalStartPosition(LFen) and not LRandomMove;  
                 end else
                   Log.Append(Format('** Unknown command: %s', [LCmd]));
-              {$IFNDEF RANDOM_MOVER}
+              
               LBookLine := '';
-              {$ENDIF}
               if WordPresent('moves', LCmd) then
                 for LIdx := 4 to WordsNumber(LCmd) do
                 begin
@@ -159,9 +156,7 @@ begin
                   if IsChessMove(LMove) then
                   begin
                     Player.DoMove(LMove);
-                    {$IFNDEF RANDOM_MOVER}
                     LBookLine := Concat(LBookLine, ' ', LMove);
-                    {$ENDIF}
                   end;
                 end;
             end else
@@ -184,7 +179,7 @@ begin
                         LTimeAvailable := 1000;
                         Log.Append(Format('** Unknown command: %s', [LCmd]));
                       end;
-                {$IFNDEF RANDOM_MOVER}
+
                 if LCanUseBook then
                 begin
                   LBookMove := LBook[LPos.Side].FindMoveToPlay(Trim(LBookLine), TRUE);
@@ -195,12 +190,11 @@ begin
                     Continue;
                   end;
                 end;
-                {$ENDIF}
+
                 LThread := TSearchThread.Create(TRUE);
                 with LThread do
                 begin
                   FreeOnTerminate := TRUE;
-                  //Priority := tpHigher;
                   Priority := tpNormal;
                   Start;
                 end;
@@ -243,8 +237,10 @@ begin
                         else
                           Log.Append(Format('** Unknown command: %s', [LCmd]));
   end;
-{$IFNDEF RANDOM_MOVER}
-  LBook[FALSE].Free;
-  LBook[TRUE].Free;
-{$ENDIF}
+  
+  if not LRandomMove then
+  begin
+    LBook[FALSE].Free;
+    LBook[TRUE].Free;
+  end;
 end.

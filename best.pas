@@ -11,7 +11,7 @@ interface
 uses
   Chess;
 
-function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string): string;
+function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean = FALSE): string;
   
 implementation
 
@@ -148,7 +148,7 @@ function Eval2(const APos: TPosition; const AMove: integer): integer;
 var
   LFrom, LTo: integer;
   LPieceType: TPieceType;
-  LMoveType: TMoveType;
+  LMoveType: TMoveTypeSet;
   LPos: TPosition;
   LMoveStr: string;
   LCastling,
@@ -165,9 +165,9 @@ begin
   
   LCastling := Ord(IsCastling(LPos, AMove));
   if LCastling = 1 then
-    Assert(LMoveType = mtCastling);
+    Assert(mtCastling in LMoveType);
   
-  LEnPassant := Ord(LMoveType = mtEnPassant);
+  LEnPassant := Ord(mtEnPassant in LMoveType);
   
   LMoveStr := MoveToStr(AMove);
   if DoMove(LPos, LMoveStr) then
@@ -209,7 +209,7 @@ begin
     Inc(result);
 end;
 
-function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string): string;
+function GetBestMove(const APos: TPosition; const AVariant: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean): string;
 var
   LList, LEval: array[0..199] of integer;
   LCount, LMove, i: integer;
@@ -233,10 +233,11 @@ begin
   if IsPromotion(APos, AMove) then
     AMove := Concat(AMove, 'q');
 
-{$IFDEF RANDOM_MOVER}
-  result := AMove;
-  Exit;
-{$ENDIF}
+  if ARandomMove then
+  begin
+    result := AMove;
+    Exit;
+  end;
   
   { II }
   for i := 0 to Pred(LCount) do

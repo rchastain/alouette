@@ -29,7 +29,7 @@ function GenMoves(const APos: TPosition; var AList: array of integer; out ACount
 var
   LCompte: integer = 0;
 
-  procedure SaveMove(const i, j: integer; const p: TPieceType; const c: TMoveType = mtCommon);
+  procedure SaveMove(const i, j: integer; const p: TPieceType; const c: TMoveTypeSet = []);
   begin
     SwitchOn(result, CIdxToSqr[j]);
     Inc(LCompte);
@@ -52,7 +52,7 @@ begin
   LActive := APos.Pieces[APos.Side];
   LPassive := APos.Pieces[not APos.Side];
   result := 0; { Damier vide. }
-  i := BsfQWord(LActive);
+  i := BsfQWord(QWord(LActive));
   while LActive <> 0 do
   begin
     { Pion. }
@@ -62,8 +62,13 @@ begin
       j := i + k;
       if not IsOn(LPieces, CIdxToSqr[j]) then
       begin
-        SaveMove(i, j, CPion[APos.Side]);
-        if j div 8 = 3 * Ord(APos.Side) + 2 then
+        if ((j div 8 = 7) and not APos.Side)
+        or ((j div 8 = 0) and APos.Side) then
+          SaveMove(i, j, CPion[APos.Side], [mtPromotion])
+        else
+          SaveMove(i, j, CPion[APos.Side]);
+        if ((j div 8 = 2) and not APos.Side)
+        or ((j div 8 = 5) and APos.Side) then
         begin
           j := j + k;
           if not IsOn(LPieces, CIdxToSqr[j]) then
@@ -74,101 +79,109 @@ begin
       begin
         j := Pred(i + k);
         if j = APos.EnPassant then
-          SaveMove(i, j, CPion[APos.Side], mtEnPassant)
+          SaveMove(i, j, CPion[APos.Side], [mtCapture, mtEnPassant])
         else
           if IsOn(LPassive, CIdxToSqr[j]) then
-            SaveMove(i, j, CPion[APos.Side], mtCapture);
+            if ((j div 8 = 7) and not APos.Side)
+            or ((j div 8 = 0) and APos.Side) then
+              SaveMove(i, j, CPion[APos.Side], [mtCapture, mtPromotion])
+            else
+              SaveMove(i, j, CPion[APos.Side], [mtCapture]);
       end;
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
         if j = APos.EnPassant then
-          SaveMove(i, j, CPion[APos.Side], mtEnPassant)
+          SaveMove(i, j, CPion[APos.Side], [mtCapture, mtEnPassant])
         else
           if IsOn(LPassive, CIdxToSqr[j]) then
-            SaveMove(i, j, CPion[APos.Side], mtCapture);
+            if ((j div 8 = 7) and not APos.Side)
+            or ((j div 8 = 0) and APos.Side) then
+              SaveMove(i, j, CPion[APos.Side], [mtCapture, mtPromotion])
+            else
+              SaveMove(i, j, CPion[APos.Side], [mtCapture]);
       end;
     end else
     { Tour. }
     if IsOn(APos.Rooks, CIdxToSqr[i]) then
     begin
       LTargets := CTargets[ptRook, i] and not APos.Pieces[APos.Side];
-      j := BsfQWord(LTargets);
+      j := BsfQWord(QWord(LTargets));
       while LTargets <> 0 do
       begin
         if (CPath[i, j] and LPieces) = 0 then
           if IsOn(LPassive, CIdxToSqr[j]) then
-            SaveMove(i, j, ptRook, mtCapture)
+            SaveMove(i, j, ptRook, [mtCapture])
           else
             SaveMove(i, j, ptRook);
         LTargets := LTargets and not CIdxToSqr[j];
-        j := BsfQWord(LTargets);
+        j := BsfQWord(QWord(LTargets));
       end;
     end else
     { Cavalier. }
     if IsOn(APos.Knights, CIdxToSqr[i]) then
     begin
       LTargets := CTargets[ptKnight, i] and not APos.Pieces[APos.Side];
-      j := BsfQWord(LTargets);
+      j := BsfQWord(QWord(LTargets));
       while LTargets <> 0 do
       begin
         if IsOn(LPassive, CIdxToSqr[j]) then
-          SaveMove(i, j, ptKnight, mtCapture)
+          SaveMove(i, j, ptKnight, [mtCapture])
         else
           SaveMove(i, j, ptKnight);
         LTargets := LTargets and not CIdxToSqr[j];
-        j := BsfQWord(LTargets);
+        j := BsfQWord(QWord(LTargets));
       end;
     end else
     { Fou. }
     if IsOn(APos.Bishops, CIdxToSqr[i]) then
     begin
       LTargets := CTargets[ptBishop, i] and not APos.Pieces[APos.Side];
-      j := BsfQWord(LTargets);
+      j := BsfQWord(QWord(LTargets));
       while LTargets <> 0 do
       begin
         if (CPath[i, j] and LPieces) = 0 then
           if IsOn(LPassive, CIdxToSqr[j]) then
-            SaveMove(i, j, ptBishop, mtCapture)
+            SaveMove(i, j, ptBishop, [mtCapture])
           else
             SaveMove(i, j, ptBishop);
         LTargets := LTargets and not CIdxToSqr[j];
-        j := BsfQWord(LTargets);
+        j := BsfQWord(QWord(LTargets));
       end;
     end else
     { Dame. }
     if IsOn(APos.Queens, CIdxToSqr[i]) then
     begin
       LTargets := CTargets[ptQueen, i] and not APos.Pieces[APos.Side];
-      j := BsfQWord(LTargets);
+      j := BsfQWord(QWord(LTargets));
       while LTargets <> 0 do
       begin
         if (CPath[i, j] and LPieces) = 0 then
           if IsOn(LPassive, CIdxToSqr[j]) then
-            SaveMove(i, j, ptQueen, mtCapture)
+            SaveMove(i, j, ptQueen, [mtCapture])
           else
             SaveMove(i, j, ptQueen);
         LTargets := LTargets and not CIdxToSqr[j];
-        j := BsfQWord(LTargets);
+        j := BsfQWord(QWord(LTargets));
       end;
     end else
     { Roi. }
     if IsOn(APos.Kings, CIdxToSqr[i]) then
     begin
       LTargets := CTargets[ptKing, i] and not APos.Pieces[APos.Side];
-      j := BsfQWord(LTargets);
+      j := BsfQWord(QWord(LTargets));
       while LTargets <> 0 do
       begin
         if IsOn(LPassive, CIdxToSqr[j]) then
-          SaveMove(i, j, ptKing, mtCapture)
+          SaveMove(i, j, ptKing, [mtCapture])
         else
           SaveMove(i, j, ptKing);
         LTargets := LTargets and not CIdxToSqr[j];
-        j := BsfQWord(LTargets);
+        j := BsfQWord(QWord(LTargets));
       end;
     end;
     LActive := LActive and not CIdxToSqr[i];
-    i := BsfQWord(LActive);
+    i := BsfQWord(QWord(LActive));
   end;
   ACount := LCompte;
 end;

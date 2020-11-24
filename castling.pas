@@ -24,7 +24,7 @@ procedure GenCastling(const APos: TPosition; var AList: array of integer; var AC
   begin
     Inc(ACount);
     if ACount <= Length(AList) then
-      AList[Pred(ACount)] := EncodeMove(AFrom, ATo, ptKing, mtCastling)
+      AList[Pred(ACount)] := EncodeMove(AFrom, ATo, ptKing, [mtCastling])
     else
       Log.Append('** Cannot append move');
   end;

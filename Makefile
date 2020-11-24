@@ -1,11 +1,15 @@
 
+PC=fpc
+DEBUG=false
+ifeq ($(DEBUG),true)
+	PFLAGS=-FcUTF8 -B -Mobjfpc -Sah -FUunits -dDEBUG -ghl
+else
+	PFLAGS=-FcUTF8 -B -Mobjfpc -Sh -FUunits -dRELEASE -CX -XX -Xs
+endif
+
 alouette: alouette.pas
 	mkdir -p units
-	fpc $^ -o$@ -Mobjfpc -Sh -FcUTF8 -FUunits -dRELEASE -B -CX -XX -Xs
-
-random: alouette.pas
-	mkdir -p units
-	fpc $^ -o$@ -Mobjfpc -Sh -FcUTF8 -FUunits -dRELEASE -B -CX -XX -Xs -dRANDOM_MOVER
+	$(PC) $^ -o$@ $(PFLAGS)
 
 clean:
 	rm -f units/*.o

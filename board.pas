@@ -17,7 +17,9 @@ type
   TPieceType = ptWhitePawn..ptKing;
   {** Type de coup. }
   TMoveType = (mtCommon, mtCapture, mtCastling, mtEnPassant, mtPromotion);
-  
+  {** }
+  TMoveTypeSet = set of TMoveType;
+
 {** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec une seule case allumée. }
 function ToBoard(const AIdx: integer): TBoard; overload;
 {** Case pour deux nombres donnés de 0 à 7. }
@@ -33,11 +35,11 @@ function MoveToStr(const AFrom, ATo: integer): string; overload;
 {** Nom d'un coup à partir de sa représentation par un nombre entier. }
 function MoveToStr(const AMove: integer): string; overload;
 {** Conversion d'un coup en nombre entier. }
-function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveType = mtCommon): integer;
+function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveTypeSet = []): integer;
 {** Conversion d'un nombre entier en cases de départ et d'arrivée. }
 procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer); overload;
 {** Décodage d'un nombre entier représentant un coup. }
-procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveType); overload;
+procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveTypeSet); overload;
 {** Index de la case d'arrivée pour un coup représenté par un nombre entier. }
 function TargetIndex(const AMove: integer): integer;
 {** Type de pièce pour un coup représenté par un nombre entier. }
@@ -130,13 +132,21 @@ begin
   result := Concat(SquareToStr(AFrom), SquareToStr(ATo));
 end;
 
-function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveType): integer;
+function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveTypeSet): integer;
+var
+  LMoveType: byte;
 begin
-  result :=
-    Ord(APieceType) shl 24
-  + Ord(AMoveType)  shl 16
-  + AFrom           shl  8
-  + ATo;
+  LMoveType := 0;
+  if mtCapture in AMoveType then
+    LMoveType := LMoveType or 1;
+  if mtCastling in AMoveType then
+    LMoveType := LMoveType or 2;
+  if mtEnPassant in AMoveType then
+    LMoveType := LMoveType or 4;
+  if mtPromotion in AMoveType then
+    LMoveType := LMoveType or 8;
+  
+  result := Ord(APieceType) shl 24 + Ord(LMoveType) shl 16 + AFrom shl 8 + ATo;
 end;
 
 procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer);
@@ -145,11 +155,22 @@ begin
   ATo := (AMove and $000000FF);
 end;
 
-procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveType); overload;
+procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveTypeSet); overload;
+var
+  LMoveType: byte;
 begin
   DecodeMove(AMove, AFrom, ATo);
   APieceType := TPieceType((AMove and $FF000000) shr 24);
-  AMoveType := TMoveType ((AMove and $00FF0000) shr 16);
+  LMoveType := (AMove and $00FF0000) shr 16;
+  AMoveType := [];
+  if (LMoveType and 1) = 1 then
+    AMoveType := AMoveType + [mtCapture];
+  if (LMoveType and 2) = 2 then
+    AMoveType := AMoveType + [mtCastling];
+  if (LMoveType and 4) = 4 then
+    AMoveType := AMoveType + [mtEnPassant];
+  if (LMoveType and 8) = 8 then
+    AMoveType := AMoveType + [mtPromotion];
 end;
 
 function TargetIndex(const AMove: integer): integer;

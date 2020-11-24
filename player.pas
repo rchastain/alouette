@@ -14,7 +14,7 @@ uses
 procedure Reset;
 procedure LoadStartPosition;
 procedure DoMove(const AMove: string);
-function BestMove(const ATimeAvailable: integer): string;
+function BestMove(const ATimeAvailable: integer; const ARandomMove: boolean = FALSE): string;
 function InstantMove: string;
 procedure SetVariant(const AValue: boolean);
 function CurrentVariant: boolean;
@@ -50,10 +50,10 @@ begin
     Log.Append(Format('** Impossible move: %s', [AMove]));
 end;
 
-function BestMove(const ATimeAvailable: integer): string;
+function BestMove(const ATimeAvailable: integer; const ARandomMove: boolean): string;
 begin
   LMove := 'a1a1';
-  result := GetBestMove(LPos, LVariant, ATimeAvailable, LMove);
+  result := GetBestMove(LPos, LVariant, ATimeAvailable, LMove, ARandomMove);
 end;
 
 function InstantMove: string;
