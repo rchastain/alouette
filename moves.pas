@@ -11,7 +11,7 @@ interface
 uses
   Chess, Board, Move;
 
-function GenMoves(const APos: TPosition; var AList: array of integer; out ACount: integer; const AQuick: boolean = FALSE): TBoard; overload;
+function GenMoves(const APos: TPosition; var AList: array of TMove; out ACount: integer; const AQuick: boolean = FALSE): TBoard; overload;
 {** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
 function GenMoves(const APos: TPosition): TBoard; overload;
 function GetMovesCount(const APos: TPosition): integer;
@@ -25,23 +25,23 @@ implementation
 uses
   SysUtils, Tables, Log;
 
-function GenMoves(const APos: TPosition; var AList: array of integer; out ACount: integer; const AQuick: boolean): TBoard;
+function GenMoves(const APos: TPosition; var AList: array of TMove; out ACount: integer; const AQuick: boolean): TBoard;
 var
   LCompte: integer = 0;
 
-  procedure SaveMove(const i, j: integer; const p: TPieceType; const c: TMoveTypeSet = []);
+  procedure SaveMove(const i, j: integer; const pt: TPieceType; const mt: TMoveTypeSet = []);
   begin
     SwitchOn(result, CIdxToSqr[j]);
     Inc(LCompte);
     if not AQuick then
       if LCompte <= Length(AList) then
-        AList[Pred(LCompte)] := EncodeMove(i, j, p, c)
+        AList[Pred(LCompte)] := EncodeMove(i, j, pt, mt)
       else
         Log.Append('** Cannot append move');
   end;
 
 const
-  CPion: array[boolean] of TPieceType = (ptWhitePawn, ptBlackPawn);
+  CPawn: array[boolean] of TPieceType = (ptWhitePawn, ptBlackPawn);
 var
   { Toutes les pièces. }
   LPieces: TBoard;
@@ -64,42 +64,46 @@ begin
       begin
         if ((j div 8 = 7) and not APos.Side)
         or ((j div 8 = 0) and APos.Side) then
-          SaveMove(i, j, CPion[APos.Side], [mtPromotion])
-        else
-          SaveMove(i, j, CPion[APos.Side]);
+        begin
+          SaveMove(i, j, CPawn[APos.Side], [mtPromo]);
+          SaveMove(i, j, CPawn[APos.Side], [mtPromo, mtKPromo]);
+          SaveMove(i, j, CPawn[APos.Side], [mtPromo, mtBPromo]);
+          SaveMove(i, j, CPawn[APos.Side], [mtPromo, mtRPromo]);
+        end else
+          SaveMove(i, j, CPawn[APos.Side]);
         if ((j div 8 = 2) and not APos.Side)
         or ((j div 8 = 5) and APos.Side) then
         begin
           j := j + k;
           if not IsOn(LPieces, CIdxToSqr[j]) then
-            SaveMove(i, j, CPion[APos.Side]);
+            SaveMove(i, j, CPawn[APos.Side]);
         end;
       end;
       if i mod 8 > 0 then
       begin
         j := Pred(i + k);
         if j = APos.EnPassant then
-          SaveMove(i, j, CPion[APos.Side], [mtCapture, mtEnPassant])
+          SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtEnPassant])
         else
           if IsOn(LPassive, CIdxToSqr[j]) then
             if ((j div 8 = 7) and not APos.Side)
             or ((j div 8 = 0) and APos.Side) then
-              SaveMove(i, j, CPion[APos.Side], [mtCapture, mtPromotion])
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo])
             else
-              SaveMove(i, j, CPion[APos.Side], [mtCapture]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture]);
       end;
       if i mod 8 < 7 then
       begin
         j := Succ(i + k);
         if j = APos.EnPassant then
-          SaveMove(i, j, CPion[APos.Side], [mtCapture, mtEnPassant])
+          SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtEnPassant])
         else
           if IsOn(LPassive, CIdxToSqr[j]) then
             if ((j div 8 = 7) and not APos.Side)
             or ((j div 8 = 0) and APos.Side) then
-              SaveMove(i, j, CPion[APos.Side], [mtCapture, mtPromotion])
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo])
             else
-              SaveMove(i, j, CPion[APos.Side], [mtCapture]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture]);
       end;
     end else
     { Tour. }

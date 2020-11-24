@@ -95,21 +95,18 @@ begin
   
   LRandomMove := (ParamCount = 1) and ((ParamStr(1) = '-r') or (ParamStr(1) = '--random'));
   
-  if not LRandomMove then
+  LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
+  LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
+  for LColor := FALSE to TRUE do
   begin
-    LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
-    LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
-    for LColor := FALSE to TRUE do
-    begin
-      LBook[LColor] := TTreeList.Create;
-      if FileExists(LBookName[LColor]) then
-        LBook[LColor].LoadFromFileCompact(LBookName[LColor])
-      else
-        Log.Append(Format('** File not found: %s', [LBookName[LColor]]));
-    end;
-    LBookLine := '';
-    LCanUseBook := FALSE;
+    LBook[LColor] := TTreeList.Create;
+    if FileExists(LBookName[LColor]) then
+      LBook[LColor].LoadFromFileCompact(LBookName[LColor])
+    else
+      Log.Append(Format('** File not found: %s', [LBookName[LColor]]));
   end;
+  LBookLine := '';
+  LCanUseBook := FALSE;
   
   Send(Format('%s %s', [CAppName, CAppVersion]));
   while not Eof do
@@ -144,7 +141,7 @@ begin
                 begin
                   LFen := GetFen(LCmd);
                   Player.SetPosition(LFen);
-                  LCanUseBook := IsConventionalStartPosition(LFen) and not LRandomMove;  
+                  LCanUseBook := IsUsualStartPos(LFen) and not LRandomMove;  
                 end else
                   Log.Append(Format('** Unknown command: %s', [LCmd]));
               
@@ -230,7 +227,7 @@ begin
                             '  uci' + LineEnding +
                             '  ucinewgame' + LineEnding +
                             'Custom commands:' + LineEnding +
-                            '  board (displays the current board)' + LineEnding +
+                            '  board (display the current board)' + LineEnding +
                             '  help' + LineEnding +
                             '  perft <x>'
                           )
@@ -238,9 +235,6 @@ begin
                           Log.Append(Format('** Unknown command: %s', [LCmd]));
   end;
   
-  if not LRandomMove then
-  begin
-    LBook[FALSE].Free;
-    LBook[TRUE].Free;
-  end;
+  LBook[FALSE].Free;
+  LBook[TRUE].Free;
 end.

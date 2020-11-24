@@ -15,7 +15,7 @@ function IsGoCmd(const AStr: string; out WTime, BTime: integer): boolean; overlo
 function IsGoCmd(const AStr: string; out WTime, BTime, MTG: integer): boolean; overload; // go wtime 59559 btime 56064 movestogo 38
 function IsGoCmd(const AStr: string; out WTime, BTime, WInc, BInc: integer): boolean; overload; // go wtime 60000 btime 60000 winc 1000 binc 1000
 function IsPerftCmd(const AStr: string; out ADepth: integer): boolean;
-function IsConventionalStartPosition(const AStr: string): boolean;
+function IsUsualStartPos(const AStr: string): boolean;
 
 implementation
 
@@ -137,7 +137,7 @@ begin
     ADepth := i;
 end;
 
-function IsConventionalStartPosition(const AStr: string): boolean;
+function IsUsualStartPos(const AStr: string): boolean;
 begin
   result :=
     (GetWord(1, AStr) = GetWord(1, CStartPos)) and

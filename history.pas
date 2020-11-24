@@ -10,8 +10,6 @@ interface
 
 procedure NewHistory;
 procedure AppendMove(const AMove: string);
-function PreviousMove: string;
-function PreviousPreviousMove: string;
 
 implementation
 
@@ -29,22 +27,6 @@ end;
 procedure AppendMove(const AMove: string);
 begin
   LList.Append(AMove);
-end;
-
-function PreviousMove: string;
-begin
-  if LList.Count < 2 then
-    result := ''
-  else
-    result := LList[LList.Count - 2];
-end;
-
-function PreviousPreviousMove: string;
-begin
-  if LList.Count < 4 then
-    result := ''
-  else
-    result := LList[LList.Count - 4];
 end;
 
 initialization

@@ -16,9 +16,11 @@ type
   {** Type de pièce. }
   TPieceType = ptWhitePawn..ptKing;
   {** Type de coup. }
-  TMoveType = (mtCommon, mtCapture, mtCastling, mtEnPassant, mtPromotion);
+  TMoveType = (mtCapture, mtCastling, mtEnPassant, mtPromo, mtKPromo, mtBPromo, mtRPromo);
   {** }
   TMoveTypeSet = set of TMoveType;
+  {** }
+  TMove = longint;
 
 {** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec une seule case allumée. }
 function ToBoard(const AIdx: integer): TBoard; overload;
@@ -31,23 +33,23 @@ function SquareToStr(const ACol, ARow: integer; const AUpCase: boolean = FALSE):
 {** Nom d'une case à partir de son index. }
 function SquareToStr(const AIdx: integer; const AUpCase: boolean = FALSE): string; overload;
 {** Nom d'un coup à partir de l'index des cases. }
-function MoveToStr(const AFrom, ATo: integer): string; overload;
+function MoveToStr(const AFr, ATo: integer): string; overload;
 {** Nom d'un coup à partir de sa représentation par un nombre entier. }
-function MoveToStr(const AMove: integer): string; overload;
+function MoveToStr(const AMove: TMove): string; overload;
 {** Conversion d'un coup en nombre entier. }
-function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveTypeSet = []): integer;
+function EncodeMove(const AFr, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveTypeSet = []): integer;
 {** Conversion d'un nombre entier en cases de départ et d'arrivée. }
-procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer); overload;
+procedure DecodeMove(const AMove: TMove; out AFr, ATo: integer); overload;
 {** Décodage d'un nombre entier représentant un coup. }
-procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveTypeSet); overload;
+procedure DecodeMove(const AMove: TMove; out AFr, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveTypeSet); overload;
 {** Index de la case d'arrivée pour un coup représenté par un nombre entier. }
-function TargetIndex(const AMove: integer): integer;
+function TargetIndex(const AMove: TMove): integer;
 {** Type de pièce pour un coup représenté par un nombre entier. }
-function PieceType(const AMove: integer): TPieceType;
+function PieceType(const AMove: TMove): TPieceType;
 {** Type de coup pour un coup représenté par un nombre entier. }
-function MoveType(const AMove: integer): TMoveType;
+//function MoveType(const AMove: TMove): TMoveType;
 {** Index de la case de départ pour un coup représenté par un nombre entier. }
-function StartIndex(const AMove: integer): integer;
+function StartIndex(const AMove: TMove): integer;
 {** Convertit une chaîne de la forme "a1" en un nombre de 0 à 63. }
 function DecodeSquareName(const AName: string): integer;
 {** Pour savoir si une case est allumée dans un damier. }
@@ -57,7 +59,7 @@ procedure SwitchOn(var ABrd: TBoard; const ASqr: TBoard);
 {** Éteint une case. }
 procedure SwitchOff(var ABrd: TBoard; const ASqr: TBoard);
 {** Éteint une case et en allume une autre, dans deux damiers à la fois. }
-procedure MovePiece(var AType, AColor: TBoard; const AFrom, ATo: TBoard);
+procedure MovePiece(var AType, AColor: TBoard; const AFr, ATo: TBoard);
 {** Chaîne de chiffres binaires. }
 function BoardToStr(const ABrd: TBoard): string;
 {** Chaîne de chiffres binaires en forme de damier. }
@@ -67,7 +69,7 @@ function IsMovePossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: inte
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
 function GetTargets(const APiece: TPieceType; const AIdx: integer): TBoard;
 {** Les cases à traverser pour aller d'un endroit à un autre. }
-function GetPath(const AFrom, ATo: integer): TBoard;
+function GetPath(const AFr, ATo: integer): TBoard;
 
 const
   {** Numérotation des cases de 0 à 63. }
@@ -127,78 +129,101 @@ begin
   result := SquareToStr(AIdx mod 8, AIdx div 8, AUpCase);
 end;
 
-function MoveToStr(const AFrom, ATo: integer): string;
+function MoveToStr(const AFr, ATo: integer): string;
 begin
-  result := Concat(SquareToStr(AFrom), SquareToStr(ATo));
+  result := Concat(SquareToStr(AFr), SquareToStr(ATo));
 end;
 
-function EncodeMove(const AFrom, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveTypeSet): integer;
+function EncodeMove(const AFr, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveTypeSet): integer;
 var
   LMoveType: byte;
 begin
   LMoveType := 0;
-  if mtCapture in AMoveType then
-    LMoveType := LMoveType or 1;
   if mtCastling in AMoveType then
-    LMoveType := LMoveType or 2;
-  if mtEnPassant in AMoveType then
-    LMoveType := LMoveType or 4;
-  if mtPromotion in AMoveType then
-    LMoveType := LMoveType or 8;
-  
-  result := Ord(APieceType) shl 24 + Ord(LMoveType) shl 16 + AFrom shl 8 + ATo;
+    LMoveType := LMoveType or 2
+  else
+  begin
+    if mtCapture in AMoveType then
+      LMoveType := LMoveType or 1;
+    if mtEnPassant in AMoveType then
+      LMoveType := LMoveType or 4
+    else
+      if mtPromo in AMoveType then
+      begin
+        LMoveType := LMoveType or 8;
+        if mtKPromo in AMoveType then
+          LMoveType := LMoveType or 16
+        else if mtBPromo in AMoveType then
+          LMoveType := LMoveType or 32
+        else if mtRPromo in AMoveType then
+          LMoveType := LMoveType or 64;
+      end;
+  end;
+  result := Ord(APieceType) shl 24 + Ord(LMoveType) shl 16 + AFr shl 8 + ATo;
 end;
 
-procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer);
+procedure DecodeMove(const AMove: TMove; out AFr, ATo: integer);
 begin
-  AFrom := (AMove and $0000FF00) shr 8;
+  AFr := (AMove and $0000FF00) shr 8;
   ATo := (AMove and $000000FF);
 end;
 
-procedure DecodeMove(const AMove: integer; out AFrom, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveTypeSet); overload;
+procedure DecodeMove(const AMove: TMove; out AFr, ATo: integer; out APieceType: TPieceType; out AMoveType: TMoveTypeSet); overload;
 var
   LMoveType: byte;
 begin
-  DecodeMove(AMove, AFrom, ATo);
+  DecodeMove(AMove, AFr, ATo);
   APieceType := TPieceType((AMove and $FF000000) shr 24);
   LMoveType := (AMove and $00FF0000) shr 16;
   AMoveType := [];
-  if (LMoveType and 1) = 1 then
-    AMoveType := AMoveType + [mtCapture];
   if (LMoveType and 2) = 2 then
-    AMoveType := AMoveType + [mtCastling];
-  if (LMoveType and 4) = 4 then
-    AMoveType := AMoveType + [mtEnPassant];
-  if (LMoveType and 8) = 8 then
-    AMoveType := AMoveType + [mtPromotion];
+    AMoveType := AMoveType + [mtCastling]
+  else
+  begin
+    if (LMoveType and 1) = 1 then
+      AMoveType := AMoveType + [mtCapture];
+    if (LMoveType and 4) = 4 then
+      AMoveType := AMoveType + [mtEnPassant]
+    else
+      if (LMoveType and 8) = 8 then
+      begin
+        AMoveType := AMoveType + [mtPromo];
+        if (LMoveType and 16) = 16 then
+          AMoveType := AMoveType + [mtKPromo]
+        else if (LMoveType and 32) = 32 then
+          AMoveType := AMoveType + [mtBPromo]
+        else if (LMoveType and 64) = 64 then
+          AMoveType := AMoveType + [mtRPromo];
+      end;
+  end;
 end;
 
-function TargetIndex(const AMove: integer): integer;
+function TargetIndex(const AMove: TMove): integer;
 begin
-  result := (AMove and $000000FF) shr 0;
+  result := AMove and $000000FF;
 end;
 
-function StartIndex(const AMove: integer): integer;
+function StartIndex(const AMove: TMove): integer;
 begin
   result := (AMove and $0000FF00) shr 8;
 end;
 
-function PieceType(const AMove: integer): TPieceType;
+function PieceType(const AMove: TMove): TPieceType;
 begin
   result := TPieceType((AMove and $FF000000) shr 24);
 end;
-
-function MoveType(const AMove: integer): TMoveType;
+(*
+function MoveType(const AMove: TMove): TMoveType;
 begin
   result := TMoveType ((AMove and $00FF0000) shr 16);
 end;
-
-function MoveToStr(const AMove: integer): string;
+*)
+function MoveToStr(const AMove: TMove): string;
 var
-  LStartIndex, LArriv: integer;
+  LFr, LTo: integer;
 begin
-  DecodeMove(AMove, LStartIndex, LArriv);
-  result := Concat(SquareToStr(LStartIndex), SquareToStr(LArriv));
+  DecodeMove(AMove, LFr, LTo);
+  result := Concat(SquareToStr(LFr), SquareToStr(LTo));
 end;
 
 function DecodeSquareName(const AName: string): integer;
@@ -223,10 +248,10 @@ begin
   ABrd := ABrd and not ASqr;
 end;
 
-procedure MovePiece(var AType, AColor: TBoard; const AFrom, ATo: TBoard);
+procedure MovePiece(var AType, AColor: TBoard; const AFr, ATo: TBoard);
 begin
-  AType := AType and not AFrom or ATo;
-  AColor := AColor and not AFrom or ATo;
+  AType := AType and not AFr or ATo;
+  AColor := AColor and not AFr or ATo;
 end;
 
 function BoardToStr(const ABrd: TBoard): string;
@@ -289,13 +314,13 @@ begin
         SwitchOn(result, ToBoard(x2, y2));
 end;
 
-function GetPath(const AFrom, ATo: integer): TBoard;
+function GetPath(const AFr, ATo: integer): TBoard;
 var
   x1, y1, x2, y2, dx, dy: integer;
 begin
   result := 0;
-  x1 := AFrom mod 8;
-  y1 := AFrom div 8;
+  x1 := AFr mod 8;
+  y1 := AFr div 8;
   x2 := ATo mod 8;
   y2 := ATo div 8;
   dx := x2 - x1;

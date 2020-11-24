@@ -86,7 +86,7 @@ var
   LPos: TPosition;
 begin
   LPos := APos;
-  if DoMove(LPos, MoveToStr(AMove)) then
+  if DoMove(LPos, AMove) then
   begin
     result := TRUE;
     LPos.Side := not LPos.Side;
@@ -106,21 +106,21 @@ var
 begin
   LPos[1] := APos;
   result := Low(integer);
-  if DoMove(LPos[1], MoveToStr(AMove)) then
+  if DoMove(LPos[1], AMove) then
   begin
     GenMoves(LPos[1], LMov[1], LCnt[1]);
     result := High(integer);
     for i := 0 to Pred(LCnt[1]) do
     begin
       LPos[2] := LPos[1];
-      if DoMove(LPos[2], MoveToStr(LMov[1][i])) then
+      if DoMove(LPos[2], LMov[1][i]) then
       begin
         GenMoves(LPos[2], LMov[2], LCnt[2]);
         LMax := Low(integer);
         for j := 0 to Pred(LCnt[2]) do
         begin
           LPos[3] := LPos[2];
-          if DoMove(LPos[3], MoveToStr(LMov[2][j])) then
+          if DoMove(LPos[3], LMov[2][j]) then
           begin
             LPos[3].Side := not LPos[3].Side;
             if IsCheck(LPos[3]) then
@@ -150,7 +150,6 @@ var
   LPieceType: TPieceType;
   LMoveType: TMoveTypeSet;
   LPos: TPosition;
-  LMoveStr: string;
   LCastling,
   LEnPassant,
   LCheck,
@@ -161,16 +160,11 @@ var
 begin
   DecodeMove(AMove, LFrom, LTo, LPieceType, LMoveType);
   LPos := APos;
-  Assert(LPieceType = PieceTypeIdx(LPos, StartIndex(AMove)));
   
-  LCastling := Ord(IsCastling(LPos, AMove));
-  if LCastling = 1 then
-    Assert(mtCastling in LMoveType);
-  
+  LCastling := Ord(mtCastling in LMoveType);
   LEnPassant := Ord(mtEnPassant in LMoveType);
   
-  LMoveStr := MoveToStr(AMove);
-  if DoMove(LPos, LMoveStr) then
+  if DoMove(LPos, AMove) then
   begin
     LCheck := Ord(IsCheck(LPos));
     LPos.Side := not LPos.Side;
@@ -195,7 +189,7 @@ begin
   {$IFDEF DEBUG}
   Log.Append(Format(
     '  %s Castling %0.2d EnPassant %0.2d Check %0.2d Protections %0.2d Attacks %0.2d Threatens %0.2d Targets %0.2d',
-    [LMoveStr, LCastling, LEnPassant, LCheck, LProtections, LAttacks, LThreatensKing, LTargetsNumber]
+    [MoveToStr(AMove), LCastling, LEnPassant, LCheck, LProtections, LAttacks, LThreatensKing, LTargetsNumber]
   ), TRUE);
   {$ENDIF}
   

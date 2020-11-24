@@ -9,16 +9,16 @@ unit Castling;
 interface
 
 uses
-  Chess, Log;
+  Chess, Board, Log;
 
-procedure GenCastling(const APos: TPosition; var AList: array of integer; var ACount: integer);
+procedure GenCastling(const APos: TPosition; var AList: array of TMove; var ACount: integer);
 
 implementation
 
 uses
-  SysUtils, Board, Tables, Moves;
+  SysUtils, Tables, Moves;
 
-procedure GenCastling(const APos: TPosition; var AList: array of integer; var ACount: integer);
+procedure GenCastling(const APos: TPosition; var AList: array of TMove; var ACount: integer);
 
   procedure SaveMove(const AFrom, ATo: integer);
   begin

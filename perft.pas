@@ -20,13 +20,13 @@ implementation
 uses
   SysUtils, Move, Moves, Castling, Board, Tables;
 
-function IsLegal(const APos: TPosition; const AMove: integer): boolean;
+function IsLegal(const APos: TPosition; const AMove: TMove): boolean;
 var
   LPos: TPosition;
 begin
   LPos := APos;
   result := FALSE;
-  if DoMove(LPos, MoveToStr(AMove)) then
+  if DoMove(LPos, AMove) then
     with LPos do
       result := (
         GenMoves(LPos)
@@ -44,10 +44,6 @@ var
     LList: array[0..99] of integer;
     LCount, LLegalCount, i: integer;
     LPos: TPosition;
-    LMove: string;
-    LFrom, LTo: integer;
-    LPieceType: TPieceType;
-    LMoveType: TMoveTypeSet;
   begin
     result := 0;
     
@@ -56,10 +52,7 @@ var
     LLegalCount := 0;
     for i := 0 to Pred(LCount) do
       if IsLegal(APos2, LList[i]) then
-      begin
-        DecodeMove(LList[i], LFrom, LTo, LPieceType, LMoveType);
-        Inc(LLegalCount, 3 * Ord(mtPromotion in LMoveType) + 1);
-      end;
+        Inc(LLegalCount);
     
     Inc(LResult[Pred(ADepth2)], LLegalCount);
     
@@ -69,8 +62,7 @@ var
       for i := 0 to Pred(LLegalCount) do
       begin
         LPos := APos2;
-        LMove := MoveToStr(LList[i]);
-        if DoMove(LPos, LMove) then
+        if DoMove(LPos, LList[i]) then
           Inc(result, GetMovesCount(LPos, Pred(ADepth2)))
         else
         begin

@@ -9,16 +9,13 @@ unit Log;
 interface
 
 uses
-  SysUtils;
+  SysUtils, Board;
 
 procedure Append(const AText: string; const ASecondFile: boolean = FALSE); overload;
-procedure Append(const AMoves: array of integer; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
-procedure Append(const AMoves, AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
+procedure Append(const AMoves: array of TMove; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
+procedure Append(const AMoves: array of TMove; const AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean = TRUE); overload;
 
 implementation
-
-uses
-  Board;
 
 const
   CNomDossier = 'log';
@@ -64,7 +61,7 @@ begin
 {$ENDIF}
 end;
 
-procedure Append(const AMoves: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
+procedure Append(const AMoves: array of TMove; const AMovesCount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
   i: integer;
@@ -84,7 +81,7 @@ begin
 end;
 {$ENDIF}
 
-procedure Append(const AMoves, AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
+procedure Append(const AMoves: array of TMove; const AValues: array of integer; const AMovesCount: integer; const ASecondFile: boolean);
 {$IFDEF DEBUG}
 var
   i: integer;

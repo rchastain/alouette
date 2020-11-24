@@ -3,8 +3,8 @@ unit Settings;
 
 interface
 
-procedure LoadSettings(out AVariante: boolean);
-procedure SaveSettings(const AVariante: boolean);
+procedure LoadSettings(out AFRC: boolean);
+procedure SaveSettings(const AFRC: boolean);
 function SettingsFileExists: boolean;
 
 implementation
@@ -20,21 +20,21 @@ const
 var
   LChemin: string;
   
-procedure LoadSettings(out AVariante: boolean);
+procedure LoadSettings(out AFRC: boolean);
 begin
   with TIniFile.Create(LChemin) do
   try
-    AVariante := UpperCase(ReadString(SECTION, 'frc', DEFAUT_VARIANTE)) = 'TRUE';
+    AFRC := UpperCase(ReadString(SECTION, 'frc', DEFAUT_VARIANTE)) = 'TRUE';
   finally
     Free;
   end;
 end;
 
-procedure SaveSettings(const AVariante: boolean);
+procedure SaveSettings(const AFRC: boolean);
 begin
   with TIniFile.Create(LChemin) do
   try
-    WriteString(SECTION, 'frc', CBoolStr[AVariante]);
+    WriteString(SECTION, 'frc', CBoolStr[AFRC]);
     UpdateFile;
   finally
     Free;
