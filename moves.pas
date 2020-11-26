@@ -66,7 +66,7 @@ begin
         or ((j div 8 = 0) and APos.Side) then
         begin
           SaveMove(i, j, CPawn[APos.Side], [mtPromo]);
-          SaveMove(i, j, CPawn[APos.Side], [mtPromo, mtKPromo]);
+          SaveMove(i, j, CPawn[APos.Side], [mtPromo, mtNPromo]);
           SaveMove(i, j, CPawn[APos.Side], [mtPromo, mtBPromo]);
           SaveMove(i, j, CPawn[APos.Side], [mtPromo, mtRPromo]);
         end else
@@ -88,8 +88,12 @@ begin
           if IsOn(LPassive, CIdxToSqr[j]) then
             if ((j div 8 = 7) and not APos.Side)
             or ((j div 8 = 0) and APos.Side) then
-              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo])
-            else
+            begin
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo, mtNPromo]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo, mtBPromo]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo, mtRPromo]);
+            end else
               SaveMove(i, j, CPawn[APos.Side], [mtCapture]);
       end;
       if i mod 8 < 7 then
@@ -101,8 +105,12 @@ begin
           if IsOn(LPassive, CIdxToSqr[j]) then
             if ((j div 8 = 7) and not APos.Side)
             or ((j div 8 = 0) and APos.Side) then
-              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo])
-            else
+            begin
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo, mtNPromo]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo, mtBPromo]);
+              SaveMove(i, j, CPawn[APos.Side], [mtCapture, mtPromo, mtRPromo]);
+            end else
               SaveMove(i, j, CPawn[APos.Side], [mtCapture]);
       end;
     end else

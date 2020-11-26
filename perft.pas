@@ -13,12 +13,13 @@ interface
 uses
   Chess;
 
-function Start(const APos: TPosition; const ADepth: integer = 5; const AOutput: boolean = TRUE): integer;
+function Start(const AIniPos: TPosition; const ADepth: integer = 5; const AOutput: boolean = TRUE): integer;
+procedure DisplayLegalMoves(const APos: TPosition);
 
 implementation
 
 uses
-  SysUtils, Move, Moves, Castling, Board, Tables;
+  SysUtils, Classes, Move, Moves, Castling, Board, Tables;
 
 function IsLegal(const APos: TPosition; const AMove: TMove): boolean;
 var
@@ -35,35 +36,32 @@ begin
       ) = 0;
 end;
 
-function Start(const APos: TPosition; const ADepth: integer; const AOutput: boolean): integer;
+function Start(const AIniPos: TPosition; const ADepth: integer; const AOutput: boolean): integer;
 var
-  LRes: array of int64;
+  LRes: array of integer;
 
-  function GetMovesCount(const APos2: TPosition; const ADepth2: integer): int64;
+  procedure GetMovesCount(const APos: TPosition; const ARecurse: integer);
   var
-    LList: array[0..99] of integer;
+    LList: array[0..199] of TMove;
     LCount, LLegalCount, i: integer;
     LPos: TPosition;
   begin
     result := 0;
     
-    GenMoves(APos2, LList, LCount);
-    GenCastling(APos2, LList, LCount);
+    GenMoves(APos, LList, LCount);
+    GenCastling(APos, LList, LCount);
     LLegalCount := 0;
     for i := 0 to Pred(LCount) do
-      if IsLegal(APos2, LList[i]) then
+      if IsLegal(APos, LList[i]) then
         Inc(LLegalCount);
+    Inc(LRes[Pred(ADepth - ARecurse)], LLegalCount);
     
-    Inc(LRes[Pred(ADepth2)], LLegalCount);
-    
-    if ADepth2 = 1 then
-      result := LLegalCount
-    else
+    if ARecurse > 0 then
       for i := 0 to Pred(LLegalCount) do
       begin
-        LPos := APos2;
+        LPos := APos;
         if DoMove(LPos, LList[i]) then
-          Inc(result, GetMovesCount(LPos, Pred(ADepth2)))
+          GetMovesCount(LPos, Pred(ARecurse))
         else
         begin
           WriteLn('Unexpected error');
@@ -82,22 +80,59 @@ begin
     LRes[i] := 0;
   
   t := GetTickCount64;
-  GetMovesCount(APos, ADepth);
+  GetMovesCount(AIniPos, Pred(ADepth));
   t := GetTickCount64 - t;
   
   result := LRes[Pred(ADepth)];
   
   if AOutput then
   begin
-    s := Format('Perft(%%%dd) = %%%dd', [Length(IntToStr(ADepth)), Length(IntToStr(LRes[0]))]);
-    
-    for i := Pred(ADepth) downto 0 do
-      WriteLn(Format(s, [ADepth - i, LRes[i]]));
-    
+    s := Format('Perft(%%%dd) = %%%dd', [Length(IntToStr(ADepth)), Length(IntToStr(LRes[Pred(ADepth)]))]);
+    for i := 0 to Pred(ADepth) do
+      WriteLn(Format(s, [Succ(i), LRes[i]]));
     WriteLn('Time elapsed: ', FormatDateTime('hh:nn:ss:zzz', t / (1000 * SECSPERDAY)));
   end;
   
   SetLength(LRes, 0);
+end;
+
+procedure DisplayLegalMoves(const APos: TPosition);
+var
+  LList: array[0..199] of TMove;
+  LCount, i: integer;
+  LMoves: TStringList;
+  LSqr, LPrevSqr: string;
+begin
+  LMoves := TStringList.Create;
+  LMoves.Sorted := TRUE;
+  
+  GenMoves(APos, LList, LCount);
+  GenCastling(APos, LList, LCount);
+  
+  for i := 0 to Pred(LCount) do
+    if IsLegal(APos, LList[i]) then
+      LMoves.Append(MoveToStr(LList[i]));
+  
+  WriteLn(Format('%d legal moves', [LMoves.Count]));
+  
+  if LMoves.Count > 0 then
+  begin
+    LPrevSqr := Copy(LMoves[0], 1, 2);
+    for i := 0 to Pred(LMoves.Count) do
+    begin
+      LSqr := Copy(LMoves[i], 1, 2);
+      if LSqr = LPrevSqr then
+        Write(Format('%-6s', [LMoves[i]]))
+      else
+      begin
+        LPrevSqr := LSqr;
+        Write(LineEnding, Format('%-6s', [LMoves[i]]));
+      end;
+    end;
+    WriteLn;
+  end;
+  
+  LMoves.Free;
 end;
 
 end.

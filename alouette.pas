@@ -201,31 +201,35 @@ begin
                     if LCmd = 'board' then
                       Send(PositionToText(CurrentPosition))
                     else
-                      if IsPerftCmd(LCmd, LDepth) then
-                        Start(CurrentPosition, LDepth)
+                      if LCmd = 'moves' then
+                        DisplayLegalMoves(CurrentPosition)
                       else
-                        if LCmd = 'help' then
-                          Send(
-                            'UCI commands:' + LineEnding +
-                            '  go movetime <x>' + LineEnding +
-                            '  go wtime <x> btime <x>' + LineEnding +
-                            '  go wtime <x> btime <x> movestogo <x>' + LineEnding +
-                            '  go wtime <x> btime <x> winc <x> binc <x>' + LineEnding +
-                            '  isready' + LineEnding +
-                            '  position fen <fen> [moves ...]' + LineEnding +
-                            '  position startpos [moves ...]' + LineEnding +
-                            '  quit' + LineEnding +
-                            '  setoption name UCI_Chess960 value <true,false>' + LineEnding +
-                            '  stop' + LineEnding +
-                            '  uci' + LineEnding +
-                            '  ucinewgame' + LineEnding +
-                            'Custom commands:' + LineEnding +
-                            '  board (display the current board)' + LineEnding +
-                            '  help' + LineEnding +
-                            '  perft <x>'
-                          )
+                        if IsPerftCmd(LCmd, LDepth) then
+                          Start(CurrentPosition, IfThen(LDepth < 5, LDepth, 5))
                         else
-                          Log.Append(Format('** Unknown command: %s', [LCmd]));
+                          if LCmd = 'help' then
+                            Send(
+                              'UCI commands:' + LineEnding +
+                              '  go movetime <x>' + LineEnding +
+                              '  go wtime <x> btime <x>' + LineEnding +
+                              '  go wtime <x> btime <x> movestogo <x>' + LineEnding +
+                              '  go wtime <x> btime <x> winc <x> binc <x>' + LineEnding +
+                              '  isready' + LineEnding +
+                              '  position fen <fen> [moves ...]' + LineEnding +
+                              '  position startpos [moves ...]' + LineEnding +
+                              '  quit' + LineEnding +
+                              '  setoption name UCI_Chess960 value <true,false>' + LineEnding +
+                              '  stop' + LineEnding +
+                              '  uci' + LineEnding +
+                              '  ucinewgame' + LineEnding +
+                              'Custom commands:' + LineEnding +
+                              '  board (display the current board)' + LineEnding +
+                              '  help' + LineEnding +
+                              '  moves (display legal moves for the current position)' + LineEnding +
+                              '  perft <x>'
+                            )
+                          else
+                            Log.Append(Format('** Unknown command: %s', [LCmd]));
   end;
   
   LBook[FALSE].Free;

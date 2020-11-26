@@ -16,7 +16,7 @@ type
   {** Type de pièce. }
   TPieceType = ptWhitePawn..ptKing;
   {** Type de coup. }
-  TMoveType = (mtCapture, mtCastling, mtEnPassant, mtPromo, mtKPromo, mtBPromo, mtRPromo);
+  TMoveType = (mtCapture, mtCastling, mtEnPassant, mtPromo, mtNPromo, mtBPromo, mtRPromo);
   {** }
   TMoveTypeSet = set of TMoveType;
   {** }
@@ -151,7 +151,7 @@ begin
       if mtPromo in AMoveType then
       begin
         LMoveType := LMoveType or 8;
-        if mtKPromo in AMoveType then
+        if mtNPromo in AMoveType then
           LMoveType := LMoveType or 16
         else if mtBPromo in AMoveType then
           LMoveType := LMoveType or 32
@@ -189,7 +189,7 @@ begin
       begin
         AMoveType := AMoveType + [mtPromo];
         if (LMoveType and 16) = 16 then
-          AMoveType := AMoveType + [mtKPromo]
+          AMoveType := AMoveType + [mtNPromo]
         else if (LMoveType and 32) = 32 then
           AMoveType := AMoveType + [mtBPromo]
         else if (LMoveType and 64) = 64 then
@@ -221,9 +221,16 @@ end;
 function MoveToStr(const AMove: TMove): string;
 var
   LFr, LTo: integer;
+  LPieceType: TPieceType;
+  LMoveType: TMoveTypeSet;
 begin
-  DecodeMove(AMove, LFr, LTo);
+  DecodeMove(AMove, LFr, LTo, LPieceType, LMoveType);
   result := Concat(SquareToStr(LFr), SquareToStr(LTo));
+  if mtPromo in LMoveType then
+    if      mtNPromo in LMoveType then result := Concat(result, 'n')
+    else if mtBPromo in LMoveType then result := Concat(result, 'b')
+    else if mtRPromo in LMoveType then result := Concat(result, 'r')
+    else                               result := Concat(result, 'q')
 end;
 
 function DecodeSquareName(const AName: string): integer;

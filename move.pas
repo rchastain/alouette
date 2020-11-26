@@ -146,7 +146,7 @@ begin
   begin
     { Promotion. }
     if mtPromo in LMoveType then
-      if mtKPromo in LMoveType then
+      if mtNPromo in LMoveType then
       begin
         SwitchOffIdx(APos.Pawns, LFr);
         SwitchOnIdx(APos.Knights, LFr);
