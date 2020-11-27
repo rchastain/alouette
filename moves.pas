@@ -9,7 +9,7 @@ unit Moves;
 interface
 
 uses
-  Chess, Board, Move;
+  Chess, Board;
 
 function GenMoves(const APos: TPosition; var AList: array of TMove; out ACount: integer; const AQuick: boolean = FALSE): TBoard; overload;
 {** Renvoie un damier représentant les cases pouvant être atteintes. Les coups ne sont pas conservés. }
@@ -203,6 +203,7 @@ var
   LList: array[0..0] of integer;
   LCount: integer;
 begin
+  Initialize(LList);
   result := GenMoves(APos, LList, LCount, TRUE);
 end;
 
@@ -210,6 +211,7 @@ function GetMovesCount(const APos: TPosition): integer;
 var
   LList: array[0..0] of integer;
 begin
+  Initialize(LList);
   GenMoves(APos, LList, result, TRUE);
 end;
 

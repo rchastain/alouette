@@ -24,7 +24,7 @@ const
 function IsOnIdx(const ABrd: TBoard; const AIdx: integer): boolean;
 procedure SwitchOnIdx(var ABrd: TBoard; const AIdx: integer);
 procedure SwitchOffIdx(var ABrd: TBoard; const AIdx: integer);
-procedure MovePieceIdx(var AType, ASide: TBoard; const AFrom, ATo: integer; const APreserve: boolean = FALSE);
+procedure MovePieceIdx(var AType, ASide: TBoard; const AFr, ATo: integer; const APreserve: boolean = FALSE);
 
 implementation
 
@@ -44,17 +44,17 @@ begin
   ABrd := ABrd and not CIdxToSqr[AIdx];
 end;
 
-procedure MovePieceIdx(var AType, ASide: TBoard; const AFrom, ATo: integer; const APreserve: boolean);
+procedure MovePieceIdx(var AType, ASide: TBoard; const AFr, ATo: integer; const APreserve: boolean);
 begin
-  Assert((AFrom >= 0) and (AFrom <= 63));
-  Assert((ATo   >= 0) and (ATo   <= 63));
+  Assert((AFr >= 0) and (AFr <= 63));
+  Assert((ATo >= 0) and (ATo <= 63));
   
-  AType := AType and not CIdxToSqr[AFrom] or CIdxToSqr[ATo];
+  AType := AType and not CIdxToSqr[AFr] or CIdxToSqr[ATo];
   
   if APreserve then
     ASide := ASide or CIdxToSqr[ATo]
   else
-    ASide := ASide and not CIdxToSqr[AFrom] or CIdxToSqr[ATo];
+    ASide := ASide and not CIdxToSqr[AFr] or CIdxToSqr[ATo];
 end;
 
 end.

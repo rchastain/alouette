@@ -66,14 +66,14 @@ begin
   begin
     if IsOnIdx(APos.Rooks and APos.Pieces[APos.Side], LTo) then
     begin
-      if LToCol = APos.Roque[APos.Side].HRookFile then
+      if LToCol = APos.Castling[APos.Side].HRookCol then
       begin
         //Log.Append(Format('** Castling on H side: %s', [AMove]));
         MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCR[APos.Side]);
         LTo := ToIndex(CColG, LToRow);
         LPreserve := LFrCol = CATCR[APos.Side] mod 8;
       end else
-        if LToCol = APos.Roque[APos.Side].ARookFile then
+        if LToCol = APos.Castling[APos.Side].ARookCol then
         begin
           //Log.Append(Format('** Castling on A side: %s', [AMove]));
           MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCD[APos.Side]);
@@ -103,31 +103,31 @@ begin
           end;
       end;
     
-    APos.Roque[APos.Side].HRookFile := CNil;
-    APos.Roque[APos.Side].ARookFile := CNil;
+    APos.Castling[APos.Side].HRookCol := CNil;
+    APos.Castling[APos.Side].ARookCol := CNil;
     APos.KingSquare[APos.Side] := CIdxToSqr[LTo];
   end;
   
   { Si la pièce déplacée est une tour... }
   if LPieceType = ptRook then
-    with APos.Roque[APos.Side] do
-      if LFrCol = HRookFile then
-        HRookFile := CNil
+    with APos.Castling[APos.Side] do
+      if LFrCol = HRookCol then
+        HRookCol := CNil
       else
-        if LFrCol = ARookFile then
-          ARookFile := CNil;
+        if LFrCol = ARookCol then
+          ARookCol := CNil;
   
   { S'il y a une pièce sur la case d'arrivée... }
   if IsOnIdx(APos.Pieces[not APos.Side], LTo) then
   begin
     if IsOnIdx(APos.Rooks, LTo)
     and (LToRow = CCastlingRow[not APos.Side]) then
-      with APos.Roque[not APos.Side] do
-        if (LToCol = HRookFile) then
-          HRookFile := CNil
+      with APos.Castling[not APos.Side] do
+        if (LToCol = HRookCol) then
+          HRookCol := CNil
         else
-        if LToCol = HRookFile then
-          HRookFile := CNil;
+        if LToCol = HRookCol then
+          HRookCol := CNil;
         
     with APos do
     begin
@@ -232,14 +232,14 @@ begin
   begin
     if IsOnIdx(APos.Rooks and APos.Pieces[APos.Side], LTo) then
     begin
-      if LToCol = APos.Roque[APos.Side].HRookFile then
+      if LToCol = APos.Castling[APos.Side].HRookCol then
       begin
         Log.Append(Format('** Castling on H side: %s', [AMove]));
         MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCR[APos.Side]);
         LTo := ToIndex(CColG, LToRow);
         LPreserve := LFrCol = CATCR[APos.Side] mod 8;
       end else
-        if LToCol = APos.Roque[APos.Side].ARookFile then
+        if LToCol = APos.Castling[APos.Side].ARookCol then
         begin
           Log.Append(Format('** Castling on A side: %s', [AMove]));
           MovePieceIdx(APos.Rooks, APos.Pieces[APos.Side], LTo, CATCD[APos.Side]);
@@ -269,31 +269,31 @@ begin
           end;
       end;
     
-    APos.Roque[APos.Side].HRookFile := CNil;
-    APos.Roque[APos.Side].ARookFile := CNil;
+    APos.Castling[APos.Side].HRookCol := CNil;
+    APos.Castling[APos.Side].ARookCol := CNil;
     APos.KingSquare[APos.Side] := CIdxToSqr[LTo];
   end;
   
   { Si la pièce déplacée est une tour... }
   if LType = ptRook then
-    with APos.Roque[APos.Side] do
-      if LFrCol = HRookFile then
-        HRookFile := CNil
+    with APos.Castling[APos.Side] do
+      if LFrCol = HRookCol then
+        HRookCol := CNil
       else
-      if LFrCol = ARookFile then
-        ARookFile := CNil;
+      if LFrCol = ARookCol then
+        ARookCol := CNil;
   
   { S'il y a une pièce sur la case d'arrivée... }
   if IsOnIdx(APos.Pieces[not APos.Side], LTo) then
   begin
     if IsOnIdx(APos.Rooks, LTo)
     and (LToRow = CCastlingRow[not APos.Side]) then
-      with APos.Roque[not APos.Side] do
-        if (LToCol = HRookFile) then
-          HRookFile := CNil
+      with APos.Castling[not APos.Side] do
+        if (LToCol = HRookCol) then
+          HRookCol := CNil
         else
-        if LToCol = HRookFile then
-          HRookFile := CNil;
+        if LToCol = HRookCol then
+          HRookCol := CNil;
         
     with APos do
     begin
@@ -392,14 +392,14 @@ end;
 function IsCastling(const APos: TPosition; const AMove: TMove): boolean;
 var
   LFr, LTo: integer;
-  LBlanc, LNoir: TBoard;
+  LWhite, LBlack: TBoard;
 begin
-  LBlanc := APos.Pieces[FALSE];
-  LNoir := APos.Pieces[TRUE];
+  LWhite := APos.Pieces[FALSE];
+  LBlack := APos.Pieces[TRUE];
   DecodeMove(AMove, LFr, LTo);
   result :=
-    (IsOnIdx(LBlanc, LFr) and IsOnIdx(LBlanc, LTo)) or
-    (IsOnIdx(LNoir,  LFr) and IsOnIdx(LNoir,  LTo));
+    (IsOnIdx(LWhite, LFr) and IsOnIdx(LWhite, LTo)) or
+    (IsOnIdx(LBlack, LFr) and IsOnIdx(LBlack, LTo));
   if result then
     Log.Append(Format('** Castling move: %s', [MoveToStr(AMove)]));
 end;
@@ -407,11 +407,11 @@ end;
 procedure RenameCastling(var AMove: TMove);
 var
   LFr, LTo, LFrRow, LToRow, LToCol: integer;
-  LOldName: string;
+  LName: string;
 begin
   DecodeMove(AMove, LFr, LTo);
   Assert((LFr >= 0) and (LFr <= 63) and (LTo >= 0) and (LTo <= 63));
-  LOldName := Concat(CSqrToStr[LFr], CSqrToStr[LTo]);
+  LName := Concat(CSqrToStr[LFr], CSqrToStr[LTo]);
   LFrRow := LFr div 8;
   LToRow := LTo div 8;
   Assert((LToRow = LFrRow) and ((LFrRow = CRow1) or (LFrRow = CRow8)));
@@ -421,7 +421,7 @@ begin
     LToCol := CColC;
   LTo := 8 * LToRow + LToCol;
   AMove := EncodeMove(LFr, LTo, ptKing, [mtCastling]);
-  Log.Append(Format('** Reformulate %s to %s', [LOldName, Concat(CSqrToStr[LFr], CSqrToStr[LTo])]));
+  Log.Append(Format('** Reformulate %s to %s', [LName, Concat(CSqrToStr[LFr], CSqrToStr[LTo])]));
 end;
 
 end.

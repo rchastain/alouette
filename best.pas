@@ -11,7 +11,7 @@ interface
 uses
   Chess;
 
-function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean = FALSE): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandMove: boolean = FALSE): string;
   
 implementation
 
@@ -104,6 +104,7 @@ var
   LRes, LMax: integer;
   i, j: integer;
 begin
+  Initialize(LMov);
   LPos[1] := APos;
   result := Low(integer);
   if DoMove(LPos[1], AMove) then
@@ -146,7 +147,7 @@ end;
 
 function Eval2(const APos: TPosition; const AMove: integer): integer;
 var
-  LFrom, LTo: integer;
+  LFr, LTo: integer;
   LPieceType: TPieceType;
   LMoveType: TMoveTypeSet;
   LPos: TPosition;
@@ -158,7 +159,7 @@ var
   LProtections,
   LAttacks: integer;
 begin
-  DecodeMove(AMove, LFrom, LTo, LPieceType, LMoveType);
+  DecodeMove(AMove, LFr, LTo, LPieceType, LMoveType);
   LPos := APos;
   
   LCastling := Ord(mtCastling in LMoveType);
@@ -203,11 +204,12 @@ begin
     Inc(result);
 end;
 
-function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandomMove: boolean): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandMove: boolean): string;
 var
   LList, LEval: array[0..199] of integer;
   LCount, LMove, i: integer;
-begin  
+begin
+  Initialize(LList);
   LEndTime := GetTickCount64 + ATime;
   Log.Append(Concat('** Position: ', DecodePosition(APos)), TRUE);
   Log.Append(Format('** Time available: %d ms', [ATime]), TRUE);
@@ -227,7 +229,7 @@ begin
   if IsPromotion(APos, AMove) then
     AMove := Concat(AMove, 'q');
 
-  if ARandomMove then
+  if ARandMove then
   begin
     result := AMove;
     Exit;

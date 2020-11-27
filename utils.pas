@@ -127,7 +127,6 @@ begin
 end;
 
 function IsPerftCmd(const AStr: string; out ADepth: integer): boolean;
-// perft 1
 var
   i: integer;
 begin

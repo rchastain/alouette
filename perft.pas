@@ -19,7 +19,7 @@ procedure DisplayLegalMoves(const APos: TPosition);
 implementation
 
 uses
-  SysUtils, Classes, Move, Moves, Castling, Board, Tables;
+  SysUtils, Classes, Move, Moves, Castling, Board;
 
 function IsLegal(const APos: TPosition; const AMove: TMove): boolean;
 var
@@ -47,7 +47,7 @@ var
     LPos: TPosition;
   begin
     result := 0;
-    
+    Initialize(LList);
     GenMoves(APos, LList, LCount);
     GenCastling(APos, LList, LCount);
     LLegalCount := 0;
@@ -103,6 +103,7 @@ var
   LMoves: TStringList;
   LSqr, LPrevSqr: string;
 begin
+  Initialize(LList);
   LMoves := TStringList.Create;
   LMoves.Sorted := TRUE;
   

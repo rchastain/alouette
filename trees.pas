@@ -244,7 +244,7 @@ end;
 function TTree.GetTextCompact: string;
 begin
   FText := '';
-  WriteSiblings(GetRoot{^.Child});
+  WriteSiblings(GetRoot);
   result := FText;
 end;
 
@@ -468,7 +468,7 @@ begin
   LFile.Free;
 end;
 
-procedure TTree.SaveToFile(const {AFileName: TFileName}AList: TStringList); 
+procedure TTree.SaveToFile(const AList: TStringList); 
 var
   LNode: PTreeNode;
   LLine, LLine2: TStringList;

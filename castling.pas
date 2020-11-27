@@ -36,34 +36,37 @@ var
   LThreats: TBoard;
   LRow,
 {** Colonne de départ du roi. }
-  LKingFromCol,
+  LKFrCol,
 {** Colonne de départ de la tour. }
-  LRookFromCol: integer;
+  LRFrCol: integer;
   LPos: TPosition;
   
-procedure Search(const AKingToCol, ARookToCol: integer); { Colonnes d'arrivée. }
+procedure Search(const AKToCol, ARToCol: integer); { Colonnes d'arrivée. }
 var
-  LKingFromIdx, LRookFromIdx, LKingToIdx, LRookToIdx: integer;
+  LKFrIdx, LRFrIdx, LKToIdx, LRToIdx: integer;
 { Chemin à parcourir, y compris la case d'arrivée. }
   LKingPath, LRookPath, LPath: TBoard;
 { Pièces autorisées sur le parcours. }
   LRooks, LKing: TBoard;
 begin
-  LKingFromIdx := ToIndex(LKingFromCol, LRow);
-  LKingToIdx := ToIndex(AKingToCol, LRow);
-  LRookFromIdx := ToIndex(LRookFromCol, LRow);
-  LRookToIdx := ToIndex(ARookToCol, LRow);
-  Log.Append(Format('** Generate castling king %s rook %s', [MoveToStr(LKingFromIdx, LKingToIdx), MoveToStr(LRookFromIdx, LRookToIdx)]));
-
+  LKFrIdx := ToIndex(LKFrCol, LRow);
+  LKToIdx := ToIndex(AKToCol, LRow);
+  LRFrIdx := ToIndex(LRFrCol, LRow);
+  LRToIdx := ToIndex(ARToCol, LRow);
+{$IFDEF DEBUG_CASTLING}
+  Log.Append(Format('** Generate castling king %s rook %s', [MoveToStr(LKFrIdx, LKToIdx), MoveToStr(LRFrIdx, LRToIdx)]));
+{$ENDIF}
 { Vérification de la première condition : il y a bien une tour à l'endroit prévu. }
-  with APos do if IsOn(Pieces[Side] and Rooks, CIdxToSqr[LRookFromIdx]) then
+  with APos do if IsOn(Pieces[Side] and Rooks, CIdxToSqr[LRFrIdx]) then
+{$IFDEF DEBUG_CASTLING}
     Log.Append('** Rook on square (cond. 1/3)')
+{$ENDIF}
   else
     Exit;
 
 { Deuxième condition : aucune pièce n'est sur le passage du roi ni sur celui de la tour. }
-  LKingPath := CPath[LKingFromIdx, LKingToIdx] or CIdxToSqr[LKingToIdx];
-  LRookPath := CPath[LRookFromIdx, LRookToIdx] or CIdxToSqr[LRookToIdx];
+  LKingPath := CPath[LKFrIdx, LKToIdx] or CIdxToSqr[LKToIdx];
+  LRookPath := CPath[LRFrIdx, LRToIdx] or CIdxToSqr[LRToIdx];
 {$IFDEF DEBUG_CASTLING}
   Log.Append(Concat(
     '** King path:',  LineEnding, BoardToFormattedStr(LKingPath), LineEnding,
@@ -81,38 +84,40 @@ begin
   and (PopCnt(QWord(LPath and LRooks)) <= 1)
   and (PopCnt(QWord(LPath and LKing)) <= 1)
   then
+{$IFDEF DEBUG_CASTLING}
     Log.Append('** Path free (cond. 2/3)')
+{$ENDIF}
   else
     Exit;
 
 { Dernière condition : aucune des cases sur lesquelles le roi se trouve ou se trouvera n'est menacée. }
-  LKingPath := CIdxToSqr[LKingFromIdx] or CPath[LKingFromIdx, LKingToIdx] or CIdxToSqr[LKingToIdx];
+  LKingPath := CIdxToSqr[LKFrIdx] or CPath[LKFrIdx, LKToIdx] or CIdxToSqr[LKToIdx];
 {$IFDEF DEBUG_CASTLING}
   Log.Append(Concat('** Threats:', LineEnding, BoardToFormattedStr(LThreats)));
 {$ENDIF}
   if (LThreats and LKingPath) = 0 then
+{$IFDEF DEBUG_CASTLING}
     Log.Append('** No attacked square (cond. 3/3)')
+{$ENDIF}
   else
     Exit;
 
 { Enregistrement du coup. Le coup est noté comme la prise de la tour par le roi. }
-  SaveMove(LKingFromIdx, LRookFromIdx);
+  SaveMove(LKFrIdx, LRFrIdx);
 end;
 
 begin
-  if APos.Side then LRow := CRow8 else LRow := CRow1;
+  LRow := CCastlingRow[APos.Side];
   LPieces := APos.Pieces[FALSE] or APos.Pieces[TRUE];
   LPos := APos;
   LPos.Side := not LPos.Side;
   LThreats := GenMoves(LPos) or GenPotentialPawnMoves(LPos);
-  LKingFromCol := SquareToCol(APos.KingSquare[APos.Side]);
-  
-  LRookFromCol := APos.Roque[APos.Side].HRookFile;
-  if (LRookFromCol >= 0) and (LRookFromCol <= 7) then
+  LKFrCol := SquareToCol(APos.KingSquare[APos.Side]);
+  LRFrCol := APos.Castling[APos.Side].HRookCol;
+  if (LRFrCol >= 0) and (LRFrCol <= 7) then
     Search(CColG, CColF);
-  
-  LRookFromCol := APos.Roque[APos.Side].ARookFile;
-  if (LRookFromCol >= 0) and (LRookFromCol <= 7) then
+  LRFrCol := APos.Castling[APos.Side].ARookCol;
+  if (LRFrCol >= 0) and (LRFrCol <= 7) then
     Search(CColC, CColD);
 end;
 

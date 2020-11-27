@@ -8,9 +8,19 @@ else
 endif
 
 alouette: alouette.pas
+ifeq ($(OS),Windows_NT)
+	if not exist units mkdir units
+	$(PC) $^ -o$@.exe $(PFLAGS)
+else
 	mkdir -p units
 	$(PC) $^ -o$@ $(PFLAGS)
+endif
 
 clean:
+ifeq ($(OS),Windows_NT)
+	del /q units\*.o
+	del /q units\*.ppu
+else
 	rm -f units/*.o
 	rm -f units/*.ppu
+endif

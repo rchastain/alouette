@@ -10,7 +10,7 @@ interface
 
 type
   {** Le damier est représenté par un nombre entier de 64 chiffres binaires. }
-  TBoard = Int64;
+  TBoard = type Int64;
   {** Type de pièce, incluant la valeur néant. }
   TWidePieceType = (ptNil, ptWhitePawn, ptBlackPawn, ptRook, ptKnight, ptBishop, ptQueen, ptKing);
   {** Type de pièce. }
@@ -20,7 +20,7 @@ type
   {** }
   TMoveTypeSet = set of TMoveType;
   {** }
-  TMove = longint;
+  TMove = type longint;
 
 {** Case pour un nombre donné de 0 à 63. La fonction renvoie un damier avec une seule case allumée. }
 function ToBoard(const AIdx: integer): TBoard; overload;

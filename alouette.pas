@@ -39,29 +39,28 @@ begin
 end;
 
 type
-  {** Processus de recherche du meilleur coup. }
+  {** Fil d'exécution pour la recherche du meilleur coup. }
   TSearchThread = class(TThread)
     protected
       procedure Execute; override;
   end;
 
 var
-  LTimeAvailable: cardinal;
-  LRandomMove: boolean;
+  LTimeAv: cardinal;
+  LRandMove: boolean;
 
-{** L'action du processus consiste à demander un coup au joueur d'échecs artificiel et à l'envoyer à l'utilisateur. }
 procedure TSearchThread.Execute;
 var
-  LTimeUsed: cardinal;
+  LTime: cardinal;
   LMove: string;
 begin
-  LTimeUsed := GetTickCount64;
-  LMove := Player.BestMove(LTimeAvailable, LRandomMove);
-  LTimeUsed := GetTickCount64 - LTimeUsed;
+  LTime := GetTickCount64;
+  LMove := Player.BestMove(LTimeAv, LRandMove);
+  LTime := GetTickCount64 - LTime;
   if not Terminated then
   begin
     Send(Format('bestmove %s', [LMove]));
-    Log.Append(Format('** Move computed in %0.3f s', [LTimeUsed / 1000]), TRUE);
+    Log.Append(Format('** Move computed in %0.3f s', [LTime / 1000]), TRUE);
   end;
 end;
 
@@ -81,12 +80,12 @@ var
   LBook: array[boolean] of TTreeList;
   LBookName: array[boolean] of TFileName;
   LColor: boolean;
-  LCanUseBook: boolean;
+  LUseBook: boolean;
   
 begin
   Randomize;
   SetVariant(FALSE);
-  LRandomMove := (ParamCount = 1) and ((ParamStr(1) = '-r') or (ParamStr(1) = '--random'));
+  LRandMove := (ParamCount = 1) and ((ParamStr(1) = '-r') or (ParamStr(1) = '--random'));
   LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
   LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
   for LColor := FALSE to TRUE do
@@ -98,7 +97,7 @@ begin
       Log.Append(Format('** File not found: %s', [LBookName[LColor]]));
   end;
   LBookLine := '';
-  LCanUseBook := FALSE;
+  LUseBook := FALSE;
   
   Send(Format('%s %s', [CAppName, CAppVersion]));
   
@@ -128,13 +127,13 @@ begin
               if WordPresent('startpos', LCmd) then
               begin
                 Player.LoadStartPosition;
-                LCanUseBook := not LRandomMove;
+                LUseBook := not LRandMove;
               end else
                 if WordPresent('fen', LCmd) then
                 begin
                   LFen := GetFen(LCmd);
                   Player.SetPosition(LFen);
-                  LCanUseBook := IsUsualStartPos(LFen) and not LRandomMove;  
+                  LUseBook := IsUsualStartPos(LFen) and not LRandMove;  
                 end else
                   Log.Append(Format('** Unknown command: %s', [LCmd]));
               
@@ -154,23 +153,23 @@ begin
               begin
                 LPos := Player.CurrentPosition;
                 if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
-                  LTimeAvailable := IfThen(LPos.Side, LBTime div 100 + LBinc, LWTime div 100 + LWInc)
+                  LTimeAv := IfThen(LPos.Side, LBTime div 100 + LBinc, LWTime div 100 + LWInc)
                 else
                   if IsGoCmd(LCmd, LWTime, LBTime, LMTG) then       // go wtime 59559 btime 56064 movestogo 38
-                    LTimeAvailable := IfThen(LPos.Side, LBTime div LMTG, LWTime div LMTG)
+                    LTimeAv := IfThen(LPos.Side, LBTime div LMTG, LWTime div LMTG)
                   else
                     if IsGoCmd(LCmd, LWTime, LBTime) then           // go wtime 600000 btime 600000
-                      LTimeAvailable := IfThen(LPos.Side, LBTime div 100, LWTime div 100)
+                      LTimeAv := IfThen(LPos.Side, LBTime div 100, LWTime div 100)
                     else
                       if IsGoCmd(LCmd, LMTime) then                 // go movetime 500
-                        LTimeAvailable := LMTime
+                        LTimeAv := LMTime
                       else
                       begin
-                        LTimeAvailable := 1000;
+                        LTimeAv := 1000;
                         Log.Append(Format('** Unknown command: %s', [LCmd]));
                       end;
 
-                if LCanUseBook then
+                if LUseBook then
                 begin
                   LBookMove := LBook[LPos.Side].FindMoveToPlay(Trim(LBookLine), TRUE);
                   if LBookMove <> '' then
@@ -199,7 +198,7 @@ begin
                     SetVariant(WordPresent('true', LCmd))
                   else
                     if LCmd = 'board' then
-                      Send(PositionToText(CurrentPosition))
+                      Send(PosToText(CurrentPosition))
                     else
                       if LCmd = 'moves' then
                         DisplayLegalMoves(CurrentPosition)

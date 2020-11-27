@@ -14,9 +14,9 @@ uses
 procedure Reset;
 procedure LoadStartPosition;
 procedure DoMove(const AMove: string);
-function BestMove(const ATimeAv: integer; const ARandomMove: boolean = FALSE): string;
+function BestMove(const ATimeAv: integer; const ARandMove: boolean = FALSE): string;
 function InstantMove: string;
-procedure SetVariant(const AValue: boolean);
+procedure SetVariant(const AFrc: boolean);
 function CurrentVariant: boolean;
 procedure SetPosition(const APos: string);
 function CurrentPosition: TPosition;
@@ -50,10 +50,10 @@ begin
     Log.Append(Format('** Impossible move: %s', [AMove]));
 end;
 
-function BestMove(const ATimeAv: integer; const ARandomMove: boolean): string;
+function BestMove(const ATimeAv: integer; const ARandMove: boolean): string;
 begin
   LMove := 'a1a1';
-  result := GetBestMove(LPos, LVariant, ATimeAv, LMove, ARandomMove);
+  result := GetBestMove(LPos, LVariant, ATimeAv, LMove, ARandMove);
 end;
 
 function InstantMove: string;
@@ -61,12 +61,12 @@ begin
   result := LMove;
 end;
 
-procedure SetVariant(const AValue: boolean);
+procedure SetVariant(const AFrc: boolean);
 const
   CBoolToStr: array[boolean] of string = ('false', 'true');
 begin
-  Log.Append(Format('** SetVariant(%s)', [CBoolToStr[AValue]]));
-  LVariant := AValue;
+  Log.Append(Format('** SetVariant(%s)', [CBoolToStr[AFrc]]));
+  LVariant := AFrc;
 end;
 
 function CurrentVariant: boolean;

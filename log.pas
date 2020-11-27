@@ -18,45 +18,45 @@ procedure Append(const AMoves: array of TMove; const AValues: array of integer; 
 implementation
 
 const
-  CNomDossier = 'log';
+  CDir = 'log';
   
 var
-  LFichier: array[boolean] of text;
-  LLogCreated: boolean = FALSE;
+  LFile: array[boolean] of text;
+  LCreated: boolean = FALSE;
   
 procedure OpenLog;
 var
   LFileName: string;
   LIdx: boolean;
 begin
-  LFileName := CNomDossier + DirectorySeparator + FormatDateTime('yyyymmddhhnnsszzz"-%d.log"', Now);
-  if DirectoryExists(CNomDossier) or CreateDir(CNomDossier) then
+  LFileName := CDir + DirectorySeparator + FormatDateTime('yyyymmddhhnnsszzz"-%d.log"', Now);
+  if DirectoryExists(CDir) or CreateDir(CDir) then
   begin
     for LIdx := FALSE to TRUE do
     begin
-      Assign(LFichier[LIdx], Format(LFileName, [Ord(LIdx)]));
-      Rewrite(LFichier[LIdx]);
+      Assign(LFile[LIdx], Format(LFileName, [Ord(LIdx)]));
+      Rewrite(LFile[LIdx]);
     end;
-    LLogCreated := TRUE;
+    LCreated := TRUE;
   end;
 end;
 
 procedure CloseLog;
 begin
-  if LLogCreated then
+  if LCreated then
   begin
-    Close(LFichier[FALSE]);
-    Close(LFichier[TRUE]);
+    Close(LFile[FALSE]);
+    Close(LFile[TRUE]);
   end;
 end;
 
 procedure Append(const AText: string; const ASecondFile: boolean);
 begin
 {$IFDEF DEBUG}
-  if LLogCreated then
+  if LCreated then
   begin
-    WriteLn(LFichier[ASecondFile], AText);
-    Flush(LFichier[ASecondFile]);
+    WriteLn(LFile[ASecondFile], AText);
+    Flush(LFile[ASecondFile]);
   end;
 {$ENDIF}
 end;
@@ -66,14 +66,14 @@ procedure Append(const AMoves: array of TMove; const ACount: integer; const ASec
 var
   i: integer;
 begin
-  if LLogCreated then
+  if LCreated then
   begin
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
+    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
     for i := 0 to Pred(ACount) do
-      Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
-    WriteLn(LFichier[ASecondFile]);
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
-    Flush(LFichier[ASecondFile]);
+      Write(LFile[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
+    WriteLn(LFile[ASecondFile]);
+    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
+    Flush(LFile[ASecondFile]);
   end;
 end;
 {$ELSE}
@@ -86,17 +86,17 @@ procedure Append(const AMoves: array of TMove; const AValues: array of integer; 
 var
   i: integer;
 begin
-  if LLogCreated then
+  if LCreated then
   begin
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
+    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
     for i := 0 to Pred(ACount) do
-      Write(LFichier[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
-    WriteLn(LFichier[ASecondFile]);
+      Write(LFile[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
+    WriteLn(LFile[ASecondFile]);
     for i := 0 to Pred(ACount) do
-      Write(LFichier[ASecondFile], Format('%6d', [AValues[i]]));
-    WriteLn(LFichier[ASecondFile]);
-    WriteLn(LFichier[ASecondFile], StringOfChar('=', 6 * ACount));
-    Flush(LFichier[ASecondFile]);
+      Write(LFile[ASecondFile], Format('%6d', [AValues[i]]));
+    WriteLn(LFile[ASecondFile]);
+    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
+    Flush(LFile[ASecondFile]);
   end;
 end;
 {$ELSE}

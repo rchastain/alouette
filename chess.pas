@@ -18,8 +18,8 @@ const
   
 type
   TCastlingData = record
-    HRookFile,
-    ARookFile: integer;
+    HRookCol,
+    ARookCol: integer;
   end;
   
   TCastling = array[boolean] of TCastlingData;
@@ -33,7 +33,7 @@ type
     Queens,
     Kings: TBoard;
     Side: boolean;
-    Roque: TCastling;
+    Castling: TCastling;
     EnPassant: integer;
     KingSquare: array[boolean] of TBoard;
   end;
@@ -48,9 +48,9 @@ const
     Queens: 0;
     Kings: 0;
     Side: FALSE;
-    Roque: (
-      (HRookFile: CNil; ARookFile: CNil),
-      (HRookFile: CNil; ARookFile: CNil)
+    Castling: (
+      (HRookCol: CNil; ARookCol: CNil),
+      (HRookCol: CNil; ARookCol: CNil)
     );
     EnPassant: CNil;
     KingSquare: (0, 0)
@@ -79,7 +79,7 @@ const
 function EncodePosition(const APos: string = CStartPos; const AVariant: boolean = FALSE): TPosition;
 function DecodePosition(const APos: TPosition; const AVariant: boolean = FALSE): string;
 function SquareToCol(const ASqr: TBoard): integer;
-function PositionToText(const APos: TPosition): string;
+function PosToText(const APos: TPosition): string;
 
 implementation
 
@@ -87,27 +87,27 @@ uses
   SysUtils, Classes;
 
 const
-  CColorSymbol: array[boolean] of char = ('w', 'b');
+  CSideSymbol: array[boolean] of char = ('w', 'b');
   
-procedure Reinitialize(var ARoque: TCastling);
+procedure Reinitialize(out ACastling: TCastling);
 var
-  LColor: boolean;
+  LSide: boolean;
 begin
-  for LColor := CWhite to CBlack do
-  with ARoque[LColor] do
-  begin
-    HRookFile := CNil;
-    ARookFile := CNil;
-  end;
+  for LSide := CWhite to CBlack do
+    with ACastling[LSide] do
+    begin
+      HRookCol := CNil;
+      ARookCol := CNil;
+    end;
 end;
 
 function DecodeTraditionalCastlingString(const ACastlingStr: string): TCastling;
 begin
   Reinitialize(result);
-  if Pos('K', ACastlingStr) > 0 then result[CWhite].HRookFile := 7;
-  if Pos('Q', ACastlingStr) > 0 then result[CWhite].ARookFile := 0;
-  if Pos('k', ACastlingStr) > 0 then result[CBlack].HRookFile := 7;
-  if Pos('q', ACastlingStr) > 0 then result[CBlack].ARookFile := 0;
+  if Pos('K', ACastlingStr) > 0 then result[CWhite].HRookCol := 7;
+  if Pos('Q', ACastlingStr) > 0 then result[CWhite].ARookCol := 0;
+  if Pos('k', ACastlingStr) > 0 then result[CBlack].HRookCol := 7;
+  if Pos('q', ACastlingStr) > 0 then result[CBlack].ARookCol := 0;
 end;
 
 function DecodeCastlingString(const ACastlingStr: string; const AWhiteKingCol, ABlackKingCol: integer): TCastling;
@@ -126,30 +126,30 @@ begin
   begin
     a := Ord(CChar[b, 0]);
     if b then c1 := Chr(AWhiteKingCol + a) else c1 := Chr(ABlackKingCol + a);
-    for c2 := CChar[b, 7] downto Succ(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].HRookFile := Ord(c2) - a;
-    for c2 := CChar[b, 0] to Pred(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].ARookFile := Ord(c2) - a;
+    for c2 := CChar[b, 7] downto Succ(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].HRookCol := Ord(c2) - a;
+    for c2 := CChar[b, 0] to Pred(c1) do if Pos(c2, ACastlingStr) > 0 then result[b].ARookCol := Ord(c2) - a;
   end;
 end;
 
-function EncodeCastlingString(const ARoque: TCastling; const AVariant: boolean = FALSE): string;
+function EncodeCastlingString(const ACastling: TCastling; const AVariant: boolean = FALSE): string;
 begin
   result := '';
   if AVariant then
   begin
-    with ARoque[CWhite] do begin
-      if (HRookFile  >= 0) and (HRookFile  <= 7) then result := Chr(HRookFile + Ord('A'));
-      if (ARookFile >= 0) and (ARookFile <= 7) then result := Concat(result, Chr(ARookFile + Ord('A')));
+    with ACastling[CWhite] do begin
+      if (HRookCol  >= 0) and (HRookCol  <= 7) then result := Chr(HRookCol + Ord('A'));
+      if (ARookCol >= 0) and (ARookCol <= 7) then result := Concat(result, Chr(ARookCol + Ord('A')));
     end;
-    with ARoque[CBlack] do begin
-      if (HRookFile  >= 0) and (HRookFile  <= 7) then result := Concat(result, Chr(HRookFile + Ord('a')));
-      if (ARookFile >= 0) and (ARookFile <= 7) then result := Concat(result, Chr(ARookFile + Ord('a')));
+    with ACastling[CBlack] do begin
+      if (HRookCol  >= 0) and (HRookCol  <= 7) then result := Concat(result, Chr(HRookCol + Ord('a')));
+      if (ARookCol >= 0) and (ARookCol <= 7) then result := Concat(result, Chr(ARookCol + Ord('a')));
     end;
   end else
   begin
-    if ARoque[CWhite].HRookFile  <> CNil then result := 'K';
-    if ARoque[CWhite].ARookFile <> CNil then result := Concat(result, 'Q');
-    if ARoque[CBlack].HRookFile  <> CNil then result := Concat(result, 'k');
-    if ARoque[CBlack].ARookFile <> CNil then result := Concat(result, 'q');
+    if ACastling[CWhite].HRookCol  <> CNil then result := 'K';
+    if ACastling[CWhite].ARookCol <> CNil then result := Concat(result, 'Q');
+    if ACastling[CBlack].HRookCol  <> CNil then result := Concat(result, 'k');
+    if ACastling[CBlack].ARookCol <> CNil then result := Concat(result, 'q');
   end;
   if result = '' then
     result := '-';
@@ -222,11 +222,11 @@ begin
         end;
         Inc(i);
       end;
-      Side := Strings[1] = CColorSymbol[CBlack];
+      Side := Strings[1] = CSideSymbol[CBlack];
       if AVariant then
-        Roque := DecodeCastlingString(Strings[2], SquareToCol(KingSquare[CWhite]), SquareToCol(KingSquare[CBlack]))
+        Castling := DecodeCastlingString(Strings[2], SquareToCol(KingSquare[CWhite]), SquareToCol(KingSquare[CBlack]))
       else
-        Roque := DecodeTraditionalCastlingString(Strings[2]);
+        Castling := DecodeTraditionalCastlingString(Strings[2]);
       if Strings[3] = '-' then
         EnPassant := CNil
       else
@@ -286,15 +286,15 @@ begin
       '%s %s %s %s',
       [
         result,
-        CColorSymbol[Side],
-        EncodeCastlingString(Roque, AVariant),
+        CSideSymbol[Side],
+        EncodeCastlingString(Castling, AVariant),
         s
       ]
     );
   end;
 end;
 
-function PositionToText(const APos: TPosition): string;
+function PosToText(const APos: TPosition): string;
 const
   CArrow: array[boolean] of string = ('', ' <--');
 const
@@ -351,9 +351,9 @@ begin
     c[0, 1], c[1, 1], c[2, 1], c[3, 1], c[4, 1], c[5, 1], c[6, 1], c[7, 1],
     c[0, 0], c[1, 0], c[2, 0], c[3, 0], c[4, 0], c[5, 0], c[6, 0], c[7, 0],
     CArrow[not APos.Side],
-    EncodeCastlingString(APos.Roque, TRUE),
+    EncodeCastlingString(APos.Castling, TRUE),
     s,
-    Decodeposition(APos, TRUE)
+    DecodePosition(APos, TRUE)
   ]);
 end;
 
