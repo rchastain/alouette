@@ -226,9 +226,6 @@ begin
   if IsCastling(APos, LMove) and not AFrc then
     RenameCastling(LMove);
   AMove := MoveToStr(LMove);
-  if IsPromotion(APos, AMove) then
-    AMove := Concat(AMove, 'q');
-
   if ARandMove then
   begin
     result := AMove;
@@ -245,8 +242,6 @@ begin
   if IsCastling(APos, LMove) and not AFrc then
     RenameCastling(LMove);
   AMove := MoveToStr(LMove);
-  if IsPromotion(APos, AMove) then
-    AMove := Concat(AMove, 'q');
 
   { III }
   for i := 0 to Pred(LCount) do
@@ -258,8 +253,6 @@ begin
   if IsCastling(APos, LMove) and not AFrc then
     RenameCastling(LMove);
   result := MoveToStr(LMove);
-  if IsPromotion(APos, result) then
-    result := Concat(result, 'q');
 end;
 
 end.
