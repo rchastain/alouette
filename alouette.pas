@@ -10,7 +10,7 @@ uses
 {$IFDEF UNIX}
   CWString, CThreads,
 {$ENDIF}
-  Classes, SysUtils, Math, Log, Player, Chess, Utils, Perft, Trees;
+  Classes, SysUtils, Math, Log, Chess, Move, Best, Utils, Perft, Trees;
 
 const
   CAppName    = 'Alouette';
@@ -46,16 +46,18 @@ type
   end;
 
 var
+  LPos: TPosition;
+  LFrc: boolean;
+  LMove: string;
   LTimeAv: cardinal;
   LRandMove: boolean;
-
+  
 procedure TSearchThread.Execute;
 var
   LTime: cardinal;
-  LMove: string;
 begin
   LTime := GetTickCount64;
-  LMove := Player.BestMove(LTimeAv, LRandMove);
+  LMove := GetBestMove(LPos, LFrc, LTimeAv, LMove, LRandMove);
   LTime := GetTickCount64 - LTime;
   if not Terminated then
   begin
@@ -70,9 +72,7 @@ const
 var
   LCmd: string;
   LIdx: integer;
-  LMove: string;
   LMTime, LWTime, LBTime, LMTG, LWInc, LBInc: integer;
-  LPos: TPosition;
   LThread: TSearchThread;
   LDepth: integer;
   LFen: string;
@@ -84,7 +84,7 @@ var
   
 begin
   Randomize;
-  SetVariant(FALSE);
+  LFrc := FALSE;
   LRandMove := (ParamCount = 1) and ((ParamStr(1) = '-r') or (ParamStr(1) = '--random'));
   LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
   LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
@@ -112,7 +112,7 @@ begin
       begin
         Send(Format('id name %s %s', [CAppName, CAppVersion]), FALSE);
         Send(Format('id author %s', [CAppAuthor]), FALSE);
-        Send(Format('option name UCI_Chess960 type check default %s', [CBoolStr[CurrentVariant]]), FALSE);
+        Send(Format('option name UCI_Chess960 type check default %s', [CBoolStr[LFrc]]), FALSE);
         Send('uciok');
       end else
         if LCmd = 'isready' then
@@ -120,19 +120,19 @@ begin
           Send('readyok');
         end else
           if LCmd = 'ucinewgame' then
-            Player.Reset
+            LPos := CNewPos
           else
             if BeginsWith('position ', LCmd) then
             begin
               if WordPresent('startpos', LCmd) then
               begin
-                Player.LoadStartPosition;
+                LPos := EncodePosition;
                 LUseBook := not LRandMove;
               end else
                 if WordPresent('fen', LCmd) then
                 begin
                   LFen := GetFen(LCmd);
-                  Player.SetPosition(LFen);
+                  LPos := EncodePosition(LFen, LFrc);
                   LUseBook := IsUsualStartPos(LFen) and not LRandMove;  
                 end else
                   Log.Append(Format('** Unknown command: %s', [LCmd]));
@@ -144,14 +144,14 @@ begin
                   LMove := GetWord(LIdx, LCmd);
                   if IsChessMove(LMove) then
                   begin
-                    Player.DoMove(LMove);
+                    if not Move.DoMove(LPos, LMove) then
+                      Log.Append(Format('** Impossible move: %s', [LMove]));
                     LBookLine := Concat(LBookLine, ' ', LMove);
                   end;
                 end;
             end else
               if BeginsWith('go', LCmd) then
               begin
-                LPos := Player.CurrentPosition;
                 if IsGoCmd(LCmd, LWTime, LBTime, LWInc, LBinc) then // go wtime 60000 btime 60000 winc 1000 binc 1000
                   LTimeAv := IfThen(LPos.Side, LBTime div 100 + LBinc, LWTime div 100 + LWInc)
                 else
@@ -192,19 +192,19 @@ begin
                 begin
                   if Assigned(LThread) then
                     LThread.Terminate;
-                  Send(Format('bestmove %s', [Player.InstantMove]));
+                  Send(Format('bestmove %s', [LMove]));
                 end else
                   if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
-                    SetVariant(WordPresent('true', LCmd))
+                    LFrc := WordPresent('true', LCmd)
                   else
                     if LCmd = 'board' then
-                      Send(PosToText(CurrentPosition))
+                      Send(PosToText(LPos))
                     else
                       if LCmd = 'moves' then
-                        DisplayLegalMoves(CurrentPosition)
+                        DisplayLegalMoves(LPos)
                       else
                         if IsPerftCmd(LCmd, LDepth) then
-                          Start(CurrentPosition, IfThen(LDepth < 5, LDepth, 5))
+                          Start(LPos, IfThen(LDepth < 5, LDepth, 5))
                         else
                           if LCmd = 'help' then
                             Send(
