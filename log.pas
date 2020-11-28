@@ -68,11 +68,9 @@ var
 begin
   if LCreated then
   begin
-    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
     for i := 0 to Pred(ACount) do
       Write(LFile[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
     WriteLn(LFile[ASecondFile]);
-    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
     Flush(LFile[ASecondFile]);
   end;
 end;
@@ -88,14 +86,12 @@ var
 begin
   if LCreated then
   begin
-    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
     for i := 0 to Pred(ACount) do
       Write(LFile[ASecondFile], Format('%6s', [MoveToStr(AMoves[i])]));
     WriteLn(LFile[ASecondFile]);
     for i := 0 to Pred(ACount) do
       Write(LFile[ASecondFile], Format('%6d', [AValues[i]]));
     WriteLn(LFile[ASecondFile]);
-    WriteLn(LFile[ASecondFile], StringOfChar('=', 6 * ACount));
     Flush(LFile[ASecondFile]);
   end;
 end;
@@ -107,9 +103,7 @@ end;
 {$IFDEF DEBUG}
 initialization
   OpenLog;
-  
 finalization
   CloseLog;
 {$ENDIF}
-
 end.

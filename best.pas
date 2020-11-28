@@ -18,87 +18,69 @@ implementation
 uses
   SysUtils, Move, Moves, Castling, Board, Tables, Log, History;
 
-procedure Swap(var AArr: array of integer; const AIdx: integer);
-var
-  LAux: integer;
-begin
-  LAux := AArr[AIdx];
-  AArr[AIdx] := AArr[AIdx + 1];
-  AArr[AIdx + 1] := LAux;
-end;
-
-procedure Sort(var AMoves, AValues: array of integer; const ACount: integer);
-var
-  LIdx: integer;
-  LDone: boolean;
-begin
-  repeat
-    LDone := TRUE;
-    for LIdx := 0 to ACount - 2 do
-      if AValues[LIdx] < AValues[LIdx + 1] then
-      begin
-        Swap(AMoves, LIdx);
-        Swap(AValues, LIdx);
-        LDone := FALSE;
-      end;
-  until LDone;
-end;
-
 const
   CInfinite = 99999;
-  CPieceValue: array[ptWhitePawn..ptQueen] of integer = (100, 100, 500, 320, 330, 900);
+  CValue: array[ptWhitePawn..ptQueen] of integer = (100, 100, 500, 320, 330, 900);
   
 var
   LEndTime: cardinal;
 
-function MaterialAdvantage(const APos: TPosition): integer;
-var
-  LIdx, LSgn: integer;
-  LPiece: TPieceType;
-  LWPieces, LBPieces, LSqr: TBoard;
-begin
-  if (APos.Pieces[APos.Side] and APos.Kings) = 0 then
-    Exit(-1 * CInfinite);
-  if (APos.Pieces[not APos.Side] and APos.Kings) = 0 then
-    Exit(CInfinite);
-  result := 0;
-  LWPieces := APos.Pieces[FALSE];
-  LBPieces := APos.Pieces[TRUE];
-  for LIdx := A1 to H8 do
-  begin
-    LSqr := CIdxToSqr[LIdx];
-    if IsOn(LWPieces, LSqr) then
-      LSgn :=  1
-    else if IsOn(LBPieces, LSqr) then
-      LSgn := -1
-    else
-      Continue;
-    LPiece := PieceTypeIdx(APos, LIdx);
-    if LPiece <> ptKing then
-      Inc(result, CPieceValue[LPiece] * LSgn);
-  end;
-  if APos.Side then
-    result := -1 * result;
-end;
+type
+  TEvalFunc = function(const APos: TPosition; const AMove: TMove): integer;
 
-function IsLegal(const APos: TPosition; const AMove: integer): boolean;
+function Eval0(const APos: TPosition; const AMove: TMove): integer;
 var
   LPos: TPosition;
 begin
   LPos := APos;
+  result := 0;
   if DoMove(LPos, AMove) then
   begin
-    result := TRUE;
     LPos.Side := not LPos.Side;
-    if IsCheck(LPos) then
-      result := FALSE;
-  end else
-    result := FALSE;
+    result := Ord(not IsCheck(LPos));
+  end;
 end;
 
-function Eval1(const APos: TPosition; const AMove: integer): integer;
+function Eval1(const APos: TPosition; const AMove: TMove): integer;
+
+  function MaterialAdvantage(const APos: TPosition): integer;
+  var
+    LIdx: integer;
+    LType: TPieceType;
+    LPieces: TBoard;
+  begin
+    if (APos.Pieces[APos.Side] and APos.Kings) = 0 then
+      Exit(-1 * CInfinite);
+    
+    if (APos.Pieces[not APos.Side] and APos.Kings) = 0 then
+      Exit(CInfinite);
+    
+    result := 0;
+    
+    LPieces := APos.Pieces[FALSE] and not APos.Kings;
+    while LPieces <> 0 do
+    begin
+      LIdx := BsfQWord(QWord(LPieces));
+      LType := PieceTypeIdx(APos, LIdx);
+      Inc(result, CValue[LType]);
+      LPieces := LPieces and not CIdxToSqr[LIdx];
+    end;
+    
+    LPieces := APos.Pieces[TRUE] and not APos.Kings;
+    while LPieces <> 0 do
+    begin
+      LIdx := BsfQWord(QWord(LPieces));
+      LType := PieceTypeIdx(APos, LIdx);
+      Dec(result, CValue[LType]);
+      LPieces := LPieces and not CIdxToSqr[LIdx];
+    end;
+
+    if APos.Side then
+      result := -1 * result;
+  end;
+
 var
-  LMov: array[1..2, 0..199] of integer;
+  LMov: array[1..2, 0..199] of TMove;
   LPos: array[1..3] of TPosition;
   LCnt: array[1..2] of integer;
   LRes, LMax: integer;
@@ -145,7 +127,7 @@ begin
   end;
 end;
 
-function Eval2(const APos: TPosition; const AMove: integer): integer;
+function Eval2(const APos: TPosition; const AMove: TMove): integer;
 var
   LFr, LTo: integer;
   LPieceType: TPieceType;
@@ -154,17 +136,17 @@ var
   LCastling,
   LEnPassant,
   LCheck,
-  LThreatensKing,
-  LTargetsNumber,
+  LMajorTargets,
+  LTargets,
   LProtections,
   LAttacks: integer;
+  LPieces: TBoard;
 begin
   DecodeMove(AMove, LFr, LTo, LPieceType, LMoveType);
-  LPos := APos;
-  
   LCastling := Ord(mtCastling in LMoveType);
   LEnPassant := Ord(mtEnPassant in LMoveType);
   
+  LPos := APos;
   if DoMove(LPos, AMove) then
   begin
     LCheck := Ord(IsCheck(LPos));
@@ -173,86 +155,117 @@ begin
     LProtections := GetProtectionsCount(LPos);
     LAttacks := GetAttacksCount(LPos);
     
-    LThreatensKing := PopCnt(QWord((CTargets[LPieceType, LTo] and (LPos.KingSquare[not LPos.Side] or (LPos.Pieces[not LPos.Side] and LPos.Queens)))));
-    
-    if LPieceType in [ptKnight, ptBishop] then
-      LTargetsNumber := PopCnt(QWord(CTargets[LPieceType, LTo]))
-    else
-      LTargetsNumber := 0;
+    LPieces := LPos.Pieces[LPos.Side];
+    LMajorTargets := 0;
+    LTargets := 0;
+    while LPieces <> 0 do
+    begin
+      LFr := BsfQWord(QWord(LPieces));
+      LPieceType := PieceTypeIdx(LPos, LFr);
+      Inc(LMajorTargets, PopCnt(QWord(
+        CTargets[LPieceType, LFr] and LPos.Pieces[not LPos.Side] and (LPos.Kings or LPos.Queens)
+      )));
+      if LPieceType in [ptKnight, ptBishop, ptRook, ptQueen] then
+        Inc(LTargets, PopCnt(QWord(CTargets[LPieceType, LFr] and not LPos.Pieces[LPos.Side])));
+      LPieces := LPieces and not CIdxToSqr[LFr];
+    end;
   end else
     Assert(FALSE, 'Cannot do move');
   
   LCastling := 10 * LCastling;
   LEnPassant := 10 * LEnPassant;
   LCheck := 10 * LCheck;
-  LThreatensKing := 10 * LThreatensKing;
+  LMajorTargets := 2 * LMajorTargets;
   
   {$IFDEF DEBUG}
   Log.Append(Format(
-    '  %s Castling %0.2d EnPassant %0.2d Check %0.2d Protections %0.2d Attacks %0.2d Threatens %0.2d Targets %0.2d',
-    [MoveToStr(AMove), LCastling, LEnPassant, LCheck, LProtections, LAttacks, LThreatensKing, LTargetsNumber]
+    '%-5s Castling %0.2d EnPassant %0.2d Check %0.2d Protections %0.2d Attacks %0.2d MajorTargets %0.2d Targets %0.2d',
+    [MoveToStr(AMove), LCastling, LEnPassant, LCheck, LProtections, LAttacks, LMajorTargets, LTargets]
   ), TRUE);
   {$ENDIF}
   
-  result := LCastling + LEnPassant + LCheck + LProtections + LAttacks + LThreatensKing + LTargetsNumber;
-end;
-
-function CountBestMoves(const ANotes: array of integer; const AMax: integer): integer;
-begin
-  result := 1;
-  while (result < AMax) and (ANotes[result] = ANotes[0]) do
-    Inc(result);
+  result := LCastling + LEnPassant + LCheck + LProtections + LAttacks + LMajorTargets + LTargets;
 end;
 
 function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandMove: boolean): string;
 var
-  LList, LEval: array[0..199] of integer;
-  LCount, LMove, i: integer;
+  LList: array[0..199] of TMove;
+  LEval: array[0..199] of integer;
+  LCount: integer;
+  
+  procedure Evaluate(AFunc: TEvalFunc);
+
+    procedure Sort(var AMoves: array of TMove; var AValues: array of integer; const ACount: integer);
+    
+      procedure Swap(var AArr: array of integer; const AIdx: integer);
+      var
+        LAux: integer;
+      begin
+        LAux := AArr[AIdx];
+        AArr[AIdx] := AArr[AIdx + 1];
+        AArr[AIdx + 1] := LAux;
+      end;
+
+      procedure Swap(var AArr: array of TMove; const AIdx: integer);
+      var
+        LAux: TMove;
+      begin
+        LAux := AArr[AIdx];
+        AArr[AIdx] := AArr[AIdx + 1];
+        AArr[AIdx + 1] := LAux;
+      end;
+    
+    var
+      LIdx: integer;
+      LDone: boolean;
+    begin
+      repeat
+        LDone := TRUE;
+        for LIdx := 0 to ACount - 2 do
+          if AValues[LIdx] < AValues[LIdx + 1] then
+          begin
+            Swap(AMoves, LIdx);
+            Swap(AValues, LIdx);
+            LDone := FALSE;
+          end;
+      until LDone;
+    end;
+    
+    function CountBestMoves(const AValues: array of integer; const AStop: integer): integer;
+    begin
+      result := 1;
+      while (result < AStop) and (AValues[result] = AValues[0]) do
+        Inc(result);
+    end;
+  
+  var
+    i: integer;
+    LMove: TMove;
+  begin
+    for i := 0 to Pred(LCount) do
+      LEval[i] := AFunc(APos, LList[i]);
+    Sort(LList, LEval, LCount);
+    Log.Append(LList, LEval, LCount);
+    LCount := CountBestMoves(LEval, LCount);
+    LMove := LList[Random(LCount)];
+    if IsCastling(APos, LMove) and not AFrc then
+      RenameCastling(LMove);
+    AMove := MoveToStr(LMove);
+  end;
+
 begin
   Initialize(LList);
   LEndTime := GetTickCount64 + ATime;
   Log.Append(Concat('** Position: ', DecodePosition(APos)), TRUE);
   Log.Append(Format('** Time available: %d ms', [ATime]), TRUE);
-  
   GenMoves(APos, LList, LCount);
   GenCastling(APos, LList, LCount);
-  
-  { I }
-  for i := 0 to Pred(LCount) do
-    LEval[i] := Ord(IsLegal(APos, LList[i]));
-  Sort(LList, LEval, LCount);
-  LCount := CountBestMoves(LEval, LCount);
-  LMove := LList[Random(LCount)];
-  if IsCastling(APos, LMove) and not AFrc then
-    RenameCastling(LMove);
-  AMove := MoveToStr(LMove);
+  Evaluate(@Eval0);
   if ARandMove then
-  begin
-    result := AMove;
-    Exit;
-  end;
-  
-  { II }
-  for i := 0 to Pred(LCount) do
-    LEval[i] := Eval1(APos, LList[i]);
-  Sort(LList, LEval, LCount);
-  Log.Append(LList, LEval, LCount);
-  LCount := CountBestMoves(LEval, LCount);
-  LMove := LList[Random(LCount)];
-  if IsCastling(APos, LMove) and not AFrc then
-    RenameCastling(LMove);
-  AMove := MoveToStr(LMove);
-
-  { III }
-  for i := 0 to Pred(LCount) do
-    LEval[i] := Eval2(APos, LList[i]);
-  Sort(LList, LEval, LCount);
-  Log.Append(LList, LEval, LCount);
-  LCount := CountBestMoves(LEval, LCount);
-  LMove := LList[Random(LCount)];
-  if IsCastling(APos, LMove) and not AFrc then
-    RenameCastling(LMove);
-  result := MoveToStr(LMove);
+    Exit(AMove);
+  Evaluate(@Eval1);
+  Evaluate(@Eval2);
+  result := AMove;
 end;
 
 end.
