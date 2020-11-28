@@ -24,7 +24,7 @@ function CurrentPosition: TPosition;
 implementation
 
 uses
-  SysUtils, Log, Move, History, Best;
+  SysUtils, Log, Move, Best;
 
 var
   LPos: TPosition;
@@ -39,14 +39,11 @@ end;
 procedure LoadStartPosition;
 begin
   LPos := EncodePosition;
-  ResetHistory;
 end;
 
 procedure DoMove(const AMove: string);
 begin
-  if Move.DoMove(LPos, AMove) then
-    History.AppendMove(AMove)
-  else
+  if not Move.DoMove(LPos, AMove) then
     Log.Append(Format('** Impossible move: %s', [AMove]));
 end;
 
@@ -77,7 +74,6 @@ end;
 procedure SetPosition(const APos: string);
 begin
   LPos := EncodePosition(APos, LVariant);
-  ResetHistory;
 end;
 
 function CurrentPosition: TPosition;

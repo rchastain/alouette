@@ -16,7 +16,7 @@ function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: in
 implementation
 
 uses
-  SysUtils, Move, Moves, Castling, Board, Tables, Log, History;
+  SysUtils, Move, Moves, Castling, Board, Tables, Log;
 
 const
   CInfinite = 99999;
