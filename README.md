@@ -18,6 +18,10 @@ This format has been previously used by Marc-Philippe Huget in his engine [La Da
 
 *Alouette* understands (a part of) the UCI protocol, plus some custom commands. To see a list of all available commands, run *Alouette* and type `help`.
 
+## Random mode
+
+If you call the engine with the option `-r` (or `--random`), it will play pure random moves. 
+
 ## Author
 
 *Alouette* is an open source program written for the Free Pascal Compiler by Roland Chastain.
