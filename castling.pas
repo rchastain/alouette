@@ -69,9 +69,9 @@ begin
   LRookPath := CPath[LRFrIdx, LRToIdx] or CIdxToSqr[LRToIdx];
 {$IFDEF DEBUG_CASTLING}
   Log.Append(Concat(
-    '** King path:',  LineEnding, BoardToFormattedStr(LKingPath), LineEnding,
-    '** Rook path:',  LineEnding, BoardToFormattedStr(LRookPath), LineEnding,
-    '** All pieces:', LineEnding, BoardToFormattedStr(LPieces)
+    '** King path:',  LineEnding, BoardToFmtStr(LKingPath), LineEnding,
+    '** Rook path:',  LineEnding, BoardToFmtStr(LRookPath), LineEnding,
+    '** All pieces:', LineEnding, BoardToFmtStr(LPieces)
   ));
 {$ENDIF}
   LPath := LKingPath or LRookPath;
@@ -93,7 +93,7 @@ begin
 { Dernière condition : aucune des cases sur lesquelles le roi se trouve ou se trouvera n'est menacée. }
   LKingPath := CIdxToSqr[LKFrIdx] or CPath[LKFrIdx, LKToIdx] or CIdxToSqr[LKToIdx];
 {$IFDEF DEBUG_CASTLING}
-  Log.Append(Concat('** Threats:', LineEnding, BoardToFormattedStr(LThreats)));
+  Log.Append(Concat('** Threats:', LineEnding, BoardToFmtStr(LThreats)));
 {$ENDIF}
   if (LThreats and LKingPath) = 0 then
 {$IFDEF DEBUG_CASTLING}

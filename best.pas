@@ -11,7 +11,7 @@ interface
 uses
   Chess;
 
-function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandMove: boolean = FALSE): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARnd: boolean = FALSE): string;
   
 implementation
 
@@ -289,7 +289,7 @@ begin
   result := LCastling + LEnPassant + LCheck + LProtections + LAttacks + LMajorTargets + LTargets + LPST;
 end;
 
-function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandMove: boolean): string;
+function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARnd: boolean): string;
 var
   LList: array[0..199] of TMove;
   LEval: array[0..199] of integer;
@@ -363,7 +363,7 @@ begin
   GenMoves(APos, LList, LCount);
   GenCastling(APos, LList, LCount);
   Evaluate(@Eval0);
-  if ARandMove then
+  if ARnd then
     Exit(AMove);
   Evaluate(@Eval1);
   Evaluate(@Eval2);

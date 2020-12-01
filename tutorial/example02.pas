@@ -4,7 +4,7 @@ uses
   
 begin
   { Cases pouvant être atteintes par une tour se trouvant en B2. }
-  WriteLn(BoardToFormattedStr(GetTargets(ptRook, B2)));
+  WriteLn(BoardToFmtStr(GetTargets(ptRook, B2)));
 end.
 
 {

@@ -10,7 +10,7 @@ begin
   for LType in TPieceType do
   begin
     LName := GetEnumName(TypeInfo(TPieceType), Ord(LType));
-    WriteLn(LName, LineEnding, BoardToFormattedStr(CTargets[LType, E2]));
+    WriteLn(LName, LineEnding, BoardToFmtStr(CTargets[LType, E2]));
   end;
 end.
 

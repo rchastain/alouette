@@ -71,13 +71,13 @@ type
   TRookSquare = array[boolean] of integer;
   
 const
-  CATCR: TRookSquare = (F1, F8); { Arrivée tour côté roi. }
+  CATCR: TRookSquare = (F1, F8); { Arrivée tour côté roi.  }
   CATCD: TRookSquare = (D1, D8); { Arrivée tour côté dame. }
-  CDTCR: TRookSquare = (H1, H8); { Départ tour côté roi. }
-  CDTCD: TRookSquare = (A1, A8); { Départ tour côté dame. }
+  CDTCR: TRookSquare = (H1, H8); { Départ tour côté roi.   }
+  CDTCD: TRookSquare = (A1, A8); { Départ tour côté dame.  }
 
-function EncodePosition(const APos: string = CStartPos; const AVariant: boolean = FALSE): TPosition;
-function DecodePosition(const APos: TPosition; const AVariant: boolean = FALSE): string;
+function EncodePosition(const APos: string = CStartPos; const AFrc: boolean = FALSE): TPosition;
+function DecodePosition(const APos: TPosition; const AFrc: boolean = FALSE): string;
 function SquareToCol(const ASqr: TBoard): integer;
 function PosToText(const APos: TPosition): string;
 
@@ -131,10 +131,10 @@ begin
   end;
 end;
 
-function EncodeCastlingString(const ACastling: TCastling; const AVariant: boolean = FALSE): string;
+function EncodeCastlingString(const ACastling: TCastling; const AFrc: boolean = FALSE): string;
 begin
   result := '';
-  if AVariant then
+  if AFrc then
   begin
     with ACastling[CWhite] do begin
       if (HRookCol  >= 0) and (HRookCol  <= 7) then result := Chr(HRookCol + Ord('A'));
@@ -168,7 +168,7 @@ begin
       Inc(x);
 end;
   
-function EncodePosition(const APos: string; const AVariant: boolean): TPosition;
+function EncodePosition(const APos: string; const AFrc: boolean): TPosition;
 const
   CEpdCount = 4;
   CFenCount = 6;
@@ -223,7 +223,7 @@ begin
         Inc(i);
       end;
       Side := Strings[1] = CSideSymbol[CBlack];
-      if AVariant then
+      if AFrc then
         Castling := DecodeCastlingString(Strings[2], SquareToCol(KingSquare[CWhite]), SquareToCol(KingSquare[CBlack]))
       else
         Castling := DecodeTraditionalCastlingString(Strings[2]);
@@ -236,7 +236,7 @@ begin
   end;
 end;
 
-function DecodePosition(const APos: TPosition; const AVariant: boolean): string;
+function DecodePosition(const APos: TPosition; const AFrc: boolean): string;
 var
   x, y, n: integer;
   c: char;
@@ -287,7 +287,7 @@ begin
       [
         result,
         CSideSymbol[Side],
-        EncodeCastlingString(Castling, AVariant),
+        EncodeCastlingString(Castling, AFrc),
         s
       ]
     );

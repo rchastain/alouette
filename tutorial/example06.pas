@@ -14,7 +14,7 @@ begin
   { Initialisation d'une position à partir d'une chaîne FEN. }
   LPos := EncodePosition(CPos);
   { Affichage des pions blancs. }
-  WriteLn(BoardToFormattedStr(LPos.Pieces[FALSE] and LPos.Pawns));
+  WriteLn(BoardToFmtStr(LPos.Pieces[FALSE] and LPos.Pawns));
   { Production d'une chaîne FEN, qu'on compare avec la chaîne initiale. }
   Assert(DecodePosition(LPos) = CPos);
 end.

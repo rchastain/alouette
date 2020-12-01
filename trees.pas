@@ -650,7 +650,7 @@ begin
       LData := LData + c;
     Inc(LPos);
   end;
-  Store(0, 'Au revoir !');
+  Store(0, '***');
 end;
 var
   LFile: TStringList;

@@ -48,9 +48,7 @@ procedure MovePieceIdx(var AType, ASide: TBoard; const AFr, ATo: integer; const 
 begin
   Assert((AFr >= 0) and (AFr <= 63));
   Assert((ATo >= 0) and (ATo <= 63));
-  
   AType := AType and not CIdxToSqr[AFr] or CIdxToSqr[ATo];
-  
   if APreserve then
     ASide := ASide or CIdxToSqr[ATo]
   else

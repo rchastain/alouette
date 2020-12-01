@@ -13,7 +13,7 @@ interface
 uses
   Chess;
 
-function Start(const AIniPos: TPosition; const ADepth: integer = 5; const AOutput: boolean = TRUE): integer;
+function Start(const AIniPos: TPosition; const ADepth: integer; const AOutput: boolean = TRUE): integer;
 procedure DisplayLegalMoves(const APos: TPosition);
 
 implementation

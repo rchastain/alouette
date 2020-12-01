@@ -4,9 +4,9 @@ uses
 
 begin
   { Cases à traverser pour aller d'une case à une autre. }
-  WriteLn(BoardToFormattedStr(GetPath(A1, H8)));
-  WriteLn(BoardToFormattedStr(GetPath(A1, A8)));
-  WriteLn(BoardToFormattedStr(GetPath(A1, H1)));
+  WriteLn(BoardToFmtStr(GetPath(A1, H8)));
+  WriteLn(BoardToFmtStr(GetPath(A1, A8)));
+  WriteLn(BoardToFmtStr(GetPath(A1, H1)));
 end.
 
 {

@@ -16,7 +16,7 @@ var
 begin
   { Les cavaliers blancs. }
   LBoard := CWhitePieces and CKnights;
-  WriteLn(BoardToFormattedStr(LBoard));
+  WriteLn(BoardToFmtStr(LBoard));
 end.
 
 {

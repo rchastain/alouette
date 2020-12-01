@@ -4,7 +4,7 @@
 
 *Alouette* is a UCI chess engine able to play Fischer Random Chess. It was initially a programming exercise around *bitboards*.
 
-It is not a very formidable opponent. You should be able to beat him easily.
+It is not a very formidable opponent. You should manage to beat him easily.
 
 ## Opening book
 

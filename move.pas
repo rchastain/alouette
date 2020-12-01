@@ -1,7 +1,7 @@
 
 {**
   @abstract(Déplacement des pièces.)
-  Complément de l'unité Chess.
+  Déplacement des pièces.
 }
 
 unit Move;

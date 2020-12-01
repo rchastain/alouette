@@ -27,15 +27,15 @@ uses
 
 function GenMoves(const APos: TPosition; var AList: array of TMove; out ACount: integer; const AQuick: boolean): TBoard;
 var
-  LCompte: integer = 0;
+  LCnt: integer = 0;
 
   procedure SaveMove(const i, j: integer; const pt: TPieceType; const mt: TMoveTypeSet = []);
   begin
     SwitchOn(result, CIdxToSqr[j]);
-    Inc(LCompte);
+    Inc(LCnt);
     if not AQuick then
-      if LCompte <= Length(AList) then
-        AList[Pred(LCompte)] := EncodeMove(i, j, pt, mt)
+      if LCnt <= Length(AList) then
+        AList[Pred(LCnt)] := EncodeMove(i, j, pt, mt)
       else
         Log.Append('** Cannot append move');
   end;
@@ -195,7 +195,7 @@ begin
     LActive := LActive and not CIdxToSqr[i];
     i := BsfQWord(QWord(LActive));
   end;
-  ACount := LCompte;
+  ACount := LCnt;
 end;
 
 function GenMoves(const APos: TPosition): TBoard;

@@ -26,15 +26,15 @@ var
   
 procedure OpenLog;
 var
-  LFileName: string;
+  LName: string;
   LIdx: boolean;
 begin
-  LFileName := CDir + DirectorySeparator + FormatDateTime('yyyymmddhhnnsszzz"-%d.log"', Now);
+  LName := CDir + DirectorySeparator + FormatDateTime('yyyymmddhhnnsszzz"-%d.log"', Now);
   if DirectoryExists(CDir) or CreateDir(CDir) then
   begin
     for LIdx := FALSE to TRUE do
     begin
-      Assign(LFile[LIdx], Format(LFileName, [Ord(LIdx)]));
+      Assign(LFile[LIdx], Format(LName, [Ord(LIdx)]));
       Rewrite(LFile[LIdx]);
     end;
     LCreated := TRUE;

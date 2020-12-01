@@ -1,4 +1,9 @@
 
+{**
+  @abstract(Fonctions pour l'analyse des commandes.)
+  Fonctions pour l'analyse des commandes.
+}
+
 unit Utils;
 
 interface

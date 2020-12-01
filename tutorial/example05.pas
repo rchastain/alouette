@@ -4,7 +4,7 @@ uses
 
 begin
   { Même chose que dans l'exemple précédent, mais avec un damier précalculé. }
-  WriteLn(BoardToFormattedStr(CPath[A1, H8]));
+  WriteLn(BoardToFmtStr(CPath[A1, H8]));
 end.
 
 {

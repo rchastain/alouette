@@ -1,7 +1,7 @@
 
 {**
   @abstract(Programme principal du moteur d'échecs.)
-  Interface UCI du moteur d'échecs.
+  Interface du moteur d'échecs.
 }
 
 program Alouette;
@@ -10,7 +10,8 @@ uses
 {$IFDEF UNIX}
   CWString, CThreads,
 {$ENDIF}
-  Classes, SysUtils, Math, Log, Chess, Move, Best, Utils, Perft, Trees;
+  Classes, SysUtils, Math,
+  Log, Chess, Move, Best, Utils, Perft, Trees;
 
 const
   CAppName    = 'Alouette';
@@ -48,7 +49,7 @@ type
 var
   LPos: TPosition;
   LFrc: boolean;
-  LMove: string;
+  LMoveStr: string;
   LTimeAv: cardinal;
   LRandMove: boolean;
   
@@ -57,11 +58,11 @@ var
   LTime: cardinal;
 begin
   LTime := GetTickCount64;
-  LMove := GetBestMove(LPos, LFrc, LTimeAv, LMove, LRandMove);
+  LMoveStr := GetBestMove(LPos, LFrc, LTimeAv, LMoveStr, LRandMove);
   LTime := GetTickCount64 - LTime;
   if not Terminated then
   begin
-    Send(Format('bestmove %s', [LMove]));
+    Send(Format('bestmove %s', [LMoveStr]));
     Log.Append(Format('** Move computed in %0.3f s', [LTime / 1000]), TRUE);
   end;
 end;
@@ -87,7 +88,7 @@ begin
   LFrc := FALSE;
   LRandMove := (ParamCount = 1) and ((ParamStr(1) = '-r') or (ParamStr(1) = '--random'));
   LBookName[FALSE] := Concat(ExtractFilePath(ParamStr(0)), 'white.txt');
-  LBookName[TRUE] := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
+  LBookName[TRUE]  := Concat(ExtractFilePath(ParamStr(0)), 'black.txt');
   for LColor := FALSE to TRUE do
   begin
     LBook[LColor] := TTreeList.Create;
@@ -141,12 +142,12 @@ begin
               if WordPresent('moves', LCmd) then
                 for LIdx := 4 to WordsNumber(LCmd) do
                 begin
-                  LMove := GetWord(LIdx, LCmd);
-                  if IsChessMove(LMove) then
+                  LMoveStr := GetWord(LIdx, LCmd);
+                  if IsChessMove(LMoveStr) then
                   begin
-                    if not Move.DoMove(LPos, LMove) then
-                      Log.Append(Format('** Impossible move: %s', [LMove]));
-                    LBookLine := Concat(LBookLine, ' ', LMove);
+                    if not Move.DoMove(LPos, LMoveStr) then
+                      Log.Append(Format('** Impossible move: %s', [LMoveStr]));
+                    LBookLine := Concat(LBookLine, ' ', LMoveStr);
                   end;
                 end;
             end else
@@ -192,7 +193,7 @@ begin
                 begin
                   if Assigned(LThread) then
                     LThread.Terminate;
-                  Send(Format('bestmove %s', [LMove]));
+                  Send(Format('bestmove %s', [LMoveStr]));
                 end else
                   if BeginsWith('setoption name UCI_Chess960 value ', LCmd) then
                     LFrc := WordPresent('true', LCmd)

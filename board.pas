@@ -63,7 +63,7 @@ procedure MovePiece(var AType, AColor: TBoard; const AFr, ATo: TBoard);
 {** Chaîne de chiffres binaires. }
 function BoardToStr(const ABrd: TBoard): string;
 {** Chaîne de chiffres binaires en forme de damier. }
-function BoardToFormattedStr(const ABrd: TBoard): string;
+function BoardToFmtStr(const ABrd: TBoard): string;
 {** Pour savoir si la nature d'une pièce lui permet tel déplacement. }
 function IsPossible(const APiece: TPieceType; const AX1, AY1, AX2, AY2: integer): boolean;
 {** Toutes les cases que la pièce, selon son type, peut atteindre. }
@@ -132,6 +132,21 @@ end;
 function MoveToStr(const AFr, ATo: integer): string;
 begin
   result := Concat(SquareToStr(AFr), SquareToStr(ATo));
+end;
+
+function MoveToStr(const AMove: TMove): string;
+var
+  LFr, LTo: integer;
+  LPieceType: TPieceType;
+  LMoveType: TMoveTypeSet;
+begin
+  DecodeMove(AMove, LFr, LTo, LPieceType, LMoveType);
+  result := Concat(SquareToStr(LFr), SquareToStr(LTo));
+  if mtPromo in LMoveType then
+    if      mtNPromo in LMoveType then result := Concat(result, 'n')
+    else if mtBPromo in LMoveType then result := Concat(result, 'b')
+    else if mtRPromo in LMoveType then result := Concat(result, 'r')
+    else                               result := Concat(result, 'q')
 end;
 
 function EncodeMove(const AFr, ATo: integer; const APieceType: TPieceType; const AMoveType: TMoveTypeSet): integer;
@@ -212,26 +227,13 @@ function PieceType(const AMove: TMove): TPieceType;
 begin
   result := TPieceType((AMove and $FF000000) shr 24);
 end;
+
 (*
 function MoveType(const AMove: TMove): TMoveType;
 begin
   result := TMoveType ((AMove and $00FF0000) shr 16);
 end;
 *)
-function MoveToStr(const AMove: TMove): string;
-var
-  LFr, LTo: integer;
-  LPieceType: TPieceType;
-  LMoveType: TMoveTypeSet;
-begin
-  DecodeMove(AMove, LFr, LTo, LPieceType, LMoveType);
-  result := Concat(SquareToStr(LFr), SquareToStr(LTo));
-  if mtPromo in LMoveType then
-    if      mtNPromo in LMoveType then result := Concat(result, 'n')
-    else if mtBPromo in LMoveType then result := Concat(result, 'b')
-    else if mtRPromo in LMoveType then result := Concat(result, 'r')
-    else                               result := Concat(result, 'q')
-end;
 
 function DecodeSquareName(const AName: string): integer;
 begin
@@ -272,7 +274,7 @@ begin
     result[64 - i] := CChar[IsOn(ABrd, ToBoard(i))];
 end;
 
-function BoardToFormattedStr(const ABrd: TBoard): string;
+function BoardToFmtStr(const ABrd: TBoard): string;
 var
   x, y: integer;
   LBrd: string;
