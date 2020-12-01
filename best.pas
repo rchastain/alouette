@@ -21,7 +21,90 @@ uses
 const
   CInfinite = 99999;
   CValue: array[ptWhitePawn..ptQueen] of integer = (100, 100, 500, 320, 330, 900);
+
+type
+  TPieceSquareTable = array[0..63] of integer;
   
+(* https://www.chessprogramming.org/Simplified_Evaluation_Function *)
+
+const
+  CPPST: TPieceSquareTable = (
+     0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+     5,  5, 10, 25, 25, 10,  5,  5,
+     0,  0,  0, 20, 20,  0,  0,  0,
+     5, -5,-10,  0,  0,-10, -5,  5,
+     5, 10, 10,-20,-20, 10, 10,  5,
+     0,  0,  0,  0,  0,  0,  0,  0
+  );
+
+  CNPST: TPieceSquareTable = (
+   -50,-40,-30,-30,-30,-30,-40,-50,
+   -40,-20,  0,  0,  0,  0,-20,-40,
+   -30,  0, 10, 15, 15, 10,  0,-30,
+   -30,  5, 15, 20, 20, 15,  5,-30,
+   -30,  0, 15, 20, 20, 15,  0,-30,
+   -30,  5, 10, 15, 15, 10,  5,-30,
+   -40,-20,  0,  5,  5,  0,-20,-40,
+   -50,-40,-30,-30,-30,-30,-40,-50
+  );
+  
+  CBPST: TPieceSquareTable = (
+   -20,-10,-10,-10,-10,-10,-10,-20,
+   -10,  0,  0,  0,  0,  0,  0,-10,
+   -10,  0,  5, 10, 10,  5,  0,-10,
+   -10,  5,  5, 10, 10,  5,  5,-10,
+   -10,  0, 10, 10, 10, 10,  0,-10,
+   -10, 10, 10, 10, 10, 10, 10,-10,
+   -10,  5,  0,  0,  0,  0,  5,-10,
+   -20,-10,-10,-10,-10,-10,-10,-20
+  );
+
+  CRPST: TPieceSquareTable = (
+     0,  0,  0,  0,  0,  0,  0,  0,
+     5, 10, 10, 10, 10, 10, 10,  5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+     0,  0,  0,  5,  5,  0,  0,  0
+  );
+
+  CQPST: TPieceSquareTable = (
+   -20,-10,-10, -5, -5,-10,-10,-20,
+   -10,  0,  0,  0,  0,  0,  0,-10,
+   -10,  0,  5,  5,  5,  5,  0,-10,
+    -5,  0,  5,  5,  5,  5,  0, -5,
+     0,  0,  5,  5,  5,  5,  0, -5,
+   -10,  5,  5,  5,  5,  5,  0,-10,
+   -10,  0,  5,  0,  0,  0,  0,-10,
+   -20,-10,-10, -5, -5,-10,-10,-20
+  );
+
+  CKPST_MidGame: TPieceSquareTable = (
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -20,-30,-30,-40,-40,-30,-30,-20,
+   -10,-20,-20,-20,-20,-20,-20,-10,
+    20, 20,  0,  0,  0,  0, 20, 20,
+    20, 30, 10,  0,  0, 10, 30, 20
+  );
+  
+  CKPST_EndGame: TPieceSquareTable = (
+   -50,-40,-30,-20,-20,-30,-40,-50,
+   -30,-20,-10,  0,  0,-10,-20,-30,
+   -30,-10, 20, 30, 30, 20,-10,-30,
+   -30,-10, 30, 40, 40, 30,-10,-30,
+   -30,-10, 30, 40, 40, 30,-10,-30,
+   -30,-10, 20, 30, 30, 20,-10,-30,
+   -30,-30,  0,  0,  0,  0,-30,-30,
+   -50,-30,-30,-30,-30,-30,-30,-50
+  );
+
 var
   LEndTime: cardinal;
 
@@ -129,7 +212,7 @@ end;
 
 function Eval2(const APos: TPosition; const AMove: TMove): integer;
 var
-  LFr, LTo: integer;
+  LFr, LTo, LFrInv: integer;
   LPieceType: TPieceType;
   LMoveType: TMoveTypeSet;
   LPos: TPosition;
@@ -139,7 +222,8 @@ var
   LMajorTargets,
   LTargets,
   LProtections,
-  LAttacks: integer;
+  LAttacks,
+  LPST: integer;
   LPieces: TBoard;
 begin
   DecodeMove(AMove, LFr, LTo, LPieceType, LMoveType);
@@ -158,15 +242,33 @@ begin
     LPieces := LPos.Pieces[LPos.Side];
     LMajorTargets := 0;
     LTargets := 0;
+    LPST := 0;
     while LPieces <> 0 do
     begin
       LFr := BsfQWord(QWord(LPieces));
       LPieceType := PieceTypeIdx(LPos, LFr);
+      
       Inc(LMajorTargets, PopCnt(QWord(
         CTargets[LPieceType, LFr] and LPos.Pieces[not LPos.Side] and (LPos.Kings or LPos.Queens)
       )));
+      
       if LPieceType in [ptKnight, ptBishop, ptRook, ptQueen] then
         Inc(LTargets, PopCnt(QWord(CTargets[LPieceType, LFr] and not LPos.Pieces[LPos.Side])));
+      
+      if LPos.Side then
+        LFrInv := LFr
+      else
+        LFrInv := 63 - LFr;
+      case LPieceType of
+        ptWhitePawn,
+        ptBlackPawn: Inc(LPST, CPPST[LFrInv]);
+        ptRook:      Inc(LPST, CRPST[LFrInv]);
+        ptKnight:    Inc(LPST, CNPST[LFrInv]);
+        ptBishop:    Inc(LPST, CBPST[LFrInv]);
+        ptQueen:     Inc(LPST, CQPST[LFrInv]);
+        ptKing:      Inc(LPST, CKPST_MidGame[LFrInv]);
+      end;
+      
       LPieces := LPieces and not CIdxToSqr[LFr];
     end;
   end else
@@ -179,12 +281,12 @@ begin
   
   {$IFDEF DEBUG}
   Log.Append(Format(
-    '%-5s Castling %0.2d EnPassant %0.2d Check %0.2d Protections %0.2d Attacks %0.2d MajorTargets %0.2d Targets %0.2d',
-    [MoveToStr(AMove), LCastling, LEnPassant, LCheck, LProtections, LAttacks, LMajorTargets, LTargets]
+    '%-5s Castling %0.2d EnPassant %0.2d Check %0.2d Protections %0.2d Attacks %0.2d MajorTargets %0.2d Targets %0.2d PST %0.3d',
+    [MoveToStr(AMove), LCastling, LEnPassant, LCheck, LProtections, LAttacks, LMajorTargets, LTargets, LPST]
   ), TRUE);
   {$ENDIF}
   
-  result := LCastling + LEnPassant + LCheck + LProtections + LAttacks + LMajorTargets + LTargets;
+  result := LCastling + LEnPassant + LCheck + LProtections + LAttacks + LMajorTargets + LTargets + LPST;
 end;
 
 function GetBestMove(const APos: TPosition; const AFrc: boolean; const ATime: integer; var AMove: string; const ARandMove: boolean): string;
