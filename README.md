@@ -1,3 +1,3 @@
 # Alouette
 
-Project moved to https://gitlab.com/rchastain/alouette
+Project moved to [Codeberg](https://codeberg.org/rchastain/alouette).
